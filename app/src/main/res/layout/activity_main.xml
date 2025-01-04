@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,27 +9,27 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/primary_color"
         android:alpha="0.7"
+        android:background="@color/primary_color"
         android:focusable="false"
         android:focusableInTouchMode="false" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="28dp"
+        android:layout_alignParentTop="true"
         android:gravity="center"
-        android:layout_alignParentTop="true">
+        android:orientation="vertical"
+        android:padding="28dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
             android:text="SkipQ"
-            android:textSize="50sp"
             android:textColor="#F2E5BF"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium" />
+            android:textSize="30sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <androidx.cardview.widget.CardView
@@ -50,27 +49,27 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Welcome"
+                android:textColor="@color/secondary_color"
                 android:textSize="32sp"
-                android:textStyle="bold"
-                android:textColor="@color/secondary_color" />
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Please enter your login information below"
-                android:alpha="0.7" />
+                android:alpha="0.7"
+                android:text="Please enter your login information below" />
 
             <EditText
-                android:id="@+id/email"
+                android:id="@+id/Loginemail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Enter your email"
-                android:padding="15dp"
                 android:inputType="textEmailAddress"
+                android:padding="15dp"
                 tools:ignore="HardcodedText" />
 
             <EditText
-                android:id="@+id/password"
+                android:id="@+id/Loginpassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Enter your password"
@@ -83,60 +82,40 @@
                 android:layout_height="wrap_content">
 
                 <CheckBox
+                    android:id="@+id/checkbox"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Remember me"
-                    android:alpha="0.7" />
+                    android:alpha="0.7"
+                    android:text="Remember me" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Forgot password?"
                     android:layout_alignParentEnd="true"
-                    android:textColor="@color/secondary_color"
-                    android:layout_marginEnd="8dp" />
+                    android:layout_marginEnd="8dp"
+                    android:text="Forgot password?"
+                    android:textColor="@color/secondary_color" />
             </RelativeLayout>
 
             <Button
                 android:id="@+id/LoginButton"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:text="Login"
+                android:layout_marginTop="16dp"
                 android:backgroundTint="@color/primary_color"
-                android:textColor="#FFFFFF"
-                android:layout_marginTop="16dp" />
+                android:text="Login"
+                android:textColor="#FFFFFF" />
 
             <TextView
+                android:id="@+id/SignUpRedirectText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Or login with"
                 android:layout_gravity="center"
-                android:alpha="0.7"
-                android:layout_marginTop="16dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:layout_marginTop="8dp">
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_margin="12dp"
-                    android:id="@+id/Facebook_login"
-                    android:background="@drawable/facebook"
-                    android:contentDescription="Login with Facebook" />
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_margin="12dp"
-                    android:id="@+id/Gmail_login"
-                    android:background="@drawable/google"
-                    android:contentDescription="Login with Google" />
-            </LinearLayout>
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="15dp"
+                android:text="Don't have an account? Sign up!"
+                android:textColor="@color/secondary_color"
+                android:textSize="18sp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </RelativeLayout>
