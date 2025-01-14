@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-medium"
             android:text="SkipQ"
-            android:textColor="#F2E5BF"
+            android:textColor="@color/secondary_color"
             android:textSize="30sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -41,7 +41,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="429dp"
             android:orientation="vertical"
             android:padding="28dp">
 

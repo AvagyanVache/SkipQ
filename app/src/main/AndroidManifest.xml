@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.skipq">
+
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
@@ -27,11 +29,11 @@
             android:name=".SignupActivity"
             android:exported="false">
         </activity>
+
         <activity
             android:name=".HomeActivity"
             android:exported="false">
         </activity>
-
 
     </application>
 </manifest>

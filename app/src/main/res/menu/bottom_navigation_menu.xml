@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="Home"
+        android:icon="@drawable/homeicon"
+        android:id="@+id/navigationbar_home"/>
+
+    <item android:title="Search"
+        android:icon="@drawable/search"
+        android:id="@+id/navigationbar_search"/>
+    <item android:title="Settings"
+        android:icon="@drawable/settingsicon"
+        android:id="@+id/navigationbar_settings"/>
+
+</menu>

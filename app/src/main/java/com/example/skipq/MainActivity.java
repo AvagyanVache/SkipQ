@@ -1,41 +1,40 @@
 package com.example.skipq;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
-import com.google.firebase.database.ValueEventListener;
-
-import java.util.Objects;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.FirebaseApp;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button LoginButton;
-    EditText Loginpassword;
-    EditText Loginemail;
-    CheckBox CheckBox;
-    TextView signupRedirectText;
+    private FirebaseAuth mAuth;
+    private Button LoginButton;
+    private EditText Loginpassword;
+    private EditText Loginemail;
+    private CheckBox CheckBox;
+    private TextView signupRedirectText;
 
-    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (FirebaseApp.getApps(this).isEmpty()) {
+            FirebaseApp.initializeApp(this);
+        }
+
+        mAuth = FirebaseAuth.getInstance();
 
         Loginemail = findViewById(R.id.Loginemail);
         Loginpassword = findViewById(R.id.Loginpassword);
@@ -43,39 +42,50 @@ public class MainActivity extends AppCompatActivity {
         signupRedirectText = findViewById(R.id.SignUpRedirectText);
         CheckBox = findViewById(R.id.checkbox);
 
-        loadRememberMeState();
 
-        LoginButton.setOnClickListener(new View.OnClickListener() {
+     /*   SharedPreferences preferences = getSharedPreferences("checkbox", MODE_PRIVATE);
+        String checkbox = preferences.getString("remember", "");
+        if (checkbox.equals("true")){
+            Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+            startActivity(intent);
+        } else if (checkbox.equals("false")) {
+
+        }
+
+        CheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View view) {
-                if (!validateEmail() || !validatePassword()) {
-                    Toast.makeText(MainActivity.this, "Invalid information", Toast.LENGTH_SHORT).show();
-                } else {
-                    checkUser();
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+
+                if (compoundButton.isChecked()){
+
+                    SharedPreferences  preferences = getSharedPreferences("checkbox", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString("remember", "true");
+                    editor.apply();
+
+                } else if (!compoundButton.isChecked()) {
+                    SharedPreferences  preferences = getSharedPreferences("checkbox", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString("remember", "false");
+                    editor.apply();
                 }
             }
         });
 
-        signupRedirectText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, SignupActivity.class);
-                startActivity(intent);
+      */
+
+        LoginButton.setOnClickListener(view -> {
+            if (!validateEmail() || !validatePassword()) {
+                Toast.makeText(MainActivity.this, "Invalid information", Toast.LENGTH_SHORT).show();
+            } else {
+                signInUser();
             }
         });
-    }
 
-    private void saveRememberMeState(boolean isChecked) {
-        SharedPreferences sharedPreferences = getSharedPreferences("loginPrefs", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean("rememberMe", isChecked);
-        editor.apply();
-    }
-
-    private void loadRememberMeState() {
-        SharedPreferences sharedPreferences = getSharedPreferences("loginPrefs", MODE_PRIVATE);
-        boolean rememberMe = sharedPreferences.getBoolean("rememberMe", false);
-        CheckBox.setChecked(rememberMe);
+        signupRedirectText.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, SignupActivity.class);
+            startActivity(intent);
+        });
     }
 
     public boolean validateEmail() {
@@ -100,46 +110,28 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void checkUser() {
-        String userEmail = Loginemail.getText().toString().trim();
-        String userPassword = Loginpassword.getText().toString().trim();
+    public void signInUser() {
+        String email = Loginemail.getText().toString().trim();
+        String password = Loginpassword.getText().toString().trim();
 
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users");
-        Query checkUserDatabase = reference.orderByChild("Email").equalTo(userEmail);
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null && user.isEmailVerified()) {
 
-        checkUserDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    Loginemail.setError(null);
-
-                    for (DataSnapshot userSnapshot : snapshot.getChildren()) {
-                        String passwordfromDB = userSnapshot.child("password").getValue(String.class);
-                        String emailFromDB = userSnapshot.child("Email").getValue(String.class);
-
-                        if (Objects.equals(emailFromDB, userEmail) && Objects.equals(passwordfromDB, userPassword)) {
-                            // If email and password match
-                            if (CheckBox.isChecked()) {
-                                saveRememberMeState(true);
-                            }
-                            Toast.makeText(MainActivity.this, "Going home", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                            startActivity(intent);
-                            finish();
+                            startActivity(intent); // Transition to HomeActivity
+                            finish(); // Close MainActivity
                         } else {
-                            Loginpassword.setError("Invalid Password!");
-                            Loginpassword.requestFocus();
+                            Toast.makeText(MainActivity.this, "Please verify your email address.", Toast.LENGTH_LONG).show();
                         }
+                    } else {
+                        Toast.makeText(MainActivity.this, "Authentication failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
-                } else {
-                    Loginemail.setError("User does not exist!");
-                    Loginemail.requestFocus();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-            }
-        });
+                });
     }
+
+
 }
