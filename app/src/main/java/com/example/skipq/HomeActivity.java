@@ -29,10 +29,15 @@ public class HomeActivity extends AppCompatActivity {
 
                 if (item.getItemId() == R.id.navigationbar_home) {
                     selectedFragment = new HomeFragment();
-                } else if (item.getItemId() == R.id.navigationbar_search) {
-                    selectedFragment = new SearchFragment();
-                } else if (item.getItemId() == R.id.navigationbar_settings) {
-                    selectedFragment = new SettingsFragment();
+                } else if (item.getItemId() == R.id.navigationbar_favourites) {
+                    selectedFragment = new FavouritesFragment();
+
+
+                } else if (item.getItemId() == R.id.navigationbar_cart) {
+                    selectedFragment = new CartFragment();
+                }
+                else if (item.getItemId() == R.id.navigationbar_profilepicture) {
+                    selectedFragment = new ProfileFragment();
                 }
 
                 return loadFragment(selectedFragment);

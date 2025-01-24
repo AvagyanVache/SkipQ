@@ -9,15 +9,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Switch;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
 import java.util.Locale;
 
-public class SettingsFragment extends Fragment {
+public class ProfileFragment extends Fragment {
 
     private Switch switchNotifications;
     private Switch switchDarkMode;
@@ -69,7 +69,7 @@ public class SettingsFragment extends Fragment {
         });
     }
 
-    public SettingsFragment() {
+    public ProfileFragment() {
         // Required empty constructor
     }
 
