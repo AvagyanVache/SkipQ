@@ -23,6 +23,7 @@ public class HomeFragment extends Fragment {
 
     private RecyclerView recyclerViewCategoryList;
     private RecyclerView recyclerViewRestaurantList;
+    private RestaurantAdaptor restaurantAdaptor;
 
     private final ArrayList<CategoryDomain> categoryName = new ArrayList<>();
     private final ArrayList<RestaurantDomain> restaurantList = new ArrayList<>();
@@ -35,17 +36,35 @@ public class HomeFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // Initialize and setup the category RecyclerView
+        // Initialize RecyclerView for restaurant list
+        recyclerViewRestaurantList = view.findViewById(R.id.recyclerViewRestaurants);
+        setupRestaurantList();
+        restaurantAdaptor = new RestaurantAdaptor(requireContext(), restaurantList, new RestaurantAdaptor.OnItemClickListener() {
+            @Override
+            public void onItemClick(RestaurantDomain restaurant) {
+                // Create a bundle to pass data
+                Bundle bundle = new Bundle();
+                bundle.putString("restaurantId", restaurant.getName());
+
+                // Instantiate the new fragment (MenuFragment in this case)
+                MenuFragment menuFragment = new MenuFragment();
+                menuFragment.setArguments(bundle);
+
+                // Replace the fragment dynamically (without needing a container)
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(android.R.id.content, menuFragment) // Replace the entire activity content
+                        .addToBackStack(null)  // Optional: adds the transaction to the back stack
+                        .commit();
+            }
+        });
+        recyclerViewRestaurantList.setAdapter(restaurantAdaptor);
+        recyclerViewRestaurantList.setLayoutManager(new GridLayoutManager(getContext(), 2));
+
+        // Initialize category RecyclerView
         recyclerViewCategoryList = view.findViewById(R.id.recyclerViewCategories);
         setupCategoryName();
         CategoryAdaptor categoryAdaptor = new CategoryAdaptor(requireContext(), categoryName);
         recyclerViewCategoryList.setAdapter(categoryAdaptor);
-
-        // Initialize and setup the restaurant RecyclerView
-        recyclerViewRestaurantList = view.findViewById(R.id.recyclerViewRestaurants);
-        setupRestaurantList();
-        RestaurantAdaptor restaurantAdaptor = new RestaurantAdaptor(requireContext(), restaurantList);
-        recyclerViewRestaurantList.setAdapter(restaurantAdaptor);
 
         return view;
     }
@@ -63,9 +82,6 @@ public class HomeFragment extends Fragment {
 
     private void setupRestaurantList() {
         // Set GridLayoutManager for the restaurants RecyclerView (2 columns)
-        GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
-        recyclerViewRestaurantList.setLayoutManager(layoutManager);
-
         String[] restaurantNames = getResources().getStringArray(R.array.restaurant_array);
         for (int i = 0; i < restaurantNames.length; i++) {
             restaurantList.add(new RestaurantDomain(restaurantNames[i], restaurantImg[i]));

@@ -19,10 +19,17 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
 
     private final ArrayList<RestaurantDomain> restaurantDomains;
     private final Context context;
+    private final OnItemClickListener listener;
 
-    public RestaurantAdaptor(Context context, ArrayList<RestaurantDomain> restaurantDomains) {
+    // Interface for item click listener
+    public interface OnItemClickListener {
+        void onItemClick(RestaurantDomain restaurant);
+    }
+
+    public RestaurantAdaptor(Context context, ArrayList<RestaurantDomain> restaurantDomains, OnItemClickListener listener) {
         this.restaurantDomains = restaurantDomains;
         this.context = context;
+        this.listener = listener;
     }
 
     @NonNull
@@ -39,6 +46,9 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
 
         holder.restaurantName.setText(restaurant.getName());
         holder.restaurantImage.setImageResource(restaurant.getImage());
+
+        // Handle click event
+        holder.itemView.setOnClickListener(v -> listener.onItemClick(restaurant));
     }
 
     @Override

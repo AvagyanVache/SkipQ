@@ -30,7 +30,7 @@ public class ProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         // Set listeners for switches
-        switchNotifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
+       /* switchNotifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
             SharedPreferences prefs = getContext().getSharedPreferences("settings", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit();
             editor.putBoolean("notificationsEnabled", isChecked);
@@ -48,11 +48,13 @@ public class ProfileFragment extends Fragment {
             Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
         });
 
+        */
+
         // Set language spinner item selection listener
-        languageSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+        /*languageSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(android.widget.AdapterView<?> parentView, View view, int position, long id) {
-                changeLanguage(position); // Handle language change
+         //       changeLanguage(position); // Handle language change
             }
 
             @Override
@@ -60,6 +62,8 @@ public class ProfileFragment extends Fragment {
                 // No action needed
             }
         });
+
+         */
 
 
         btnLogout.setOnClickListener(v -> {
@@ -76,21 +80,19 @@ public class ProfileFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for the fragment
-        View view = inflater.inflate(R.layout.fragment_settings, container, false);
+        View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
         // Initialize views
-        switchNotifications = view.findViewById(R.id.switchNotifications);
-        switchDarkMode = view.findViewById(R.id.switchDarkMode);
-        languageSpinner = view.findViewById(R.id.languageSpinner);
+
         btnLogout = view.findViewById(R.id.btnLogout);
 
         // Set current language in spinner based on saved preferences
-        setInitialLanguage();
+    //    setInitialLanguage();
 
         return view;
     }
 
-    private void setInitialLanguage() {
+ /*   private void setInitialLanguage() {
         // Get saved language preference (default to English)
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("Settings", Context.MODE_PRIVATE);
         String language = sharedPreferences.getString("language", "en");
@@ -157,16 +159,20 @@ public class ProfileFragment extends Fragment {
         getActivity().recreate();
     }
 
+  */
+
     @Override
     public void onResume() {
         super.onResume();
 
         // Only show the toast if the language has been changed
-        if (languageChanged) {
+    /*    if (languageChanged) {
             SharedPreferences sharedPreferences = getActivity().getSharedPreferences("Settings", Context.MODE_PRIVATE);
             String language = sharedPreferences.getString("language", "en");
             Toast.makeText(getContext(), "Language changed to " + language, Toast.LENGTH_SHORT).show();
             languageChanged = false; // Reset the flag
         }
+
+     */
     }
 }

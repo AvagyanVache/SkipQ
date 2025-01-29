@@ -3,6 +3,7 @@ package com.example.skipq;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -24,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText Loginemail;
     private CheckBox CheckBox;
     private TextView signupRedirectText;
+    private TextView forgotPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
         LoginButton = findViewById(R.id.LoginButton);
         signupRedirectText = findViewById(R.id.SignUpRedirectText);
         CheckBox = findViewById(R.id.checkbox);
+        forgotPassword = findViewById(R.id.forgot_password);
+
 
 
      /*   SharedPreferences preferences = getSharedPreferences("checkbox", MODE_PRIVATE);
@@ -73,7 +77,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
       */
-
+forgotPassword.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View view) {
+        Intent intent = new Intent(MainActivity.this, ForgotPasswordActivity.class);
+        startActivity(intent);
+    }
+});
         LoginButton.setOnClickListener(view -> {
             if (!validateEmail() || !validatePassword()) {
                 Toast.makeText(MainActivity.this, "Invalid information", Toast.LENGTH_SHORT).show();
