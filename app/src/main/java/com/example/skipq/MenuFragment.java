@@ -47,7 +47,6 @@ public class MenuFragment extends Fragment {
             fetchMenuItems();
         }
 
-        // Initialize RecyclerView
         recyclerView = view.findViewById(R.id.recycleViewMenu);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -58,7 +57,6 @@ public class MenuFragment extends Fragment {
     }
 
     private void fetchMenuItems() {
-        // Log Firestore path for debugging
         String path = "FoodPlaces/" + restaurantId + "/Menu/" + restaurantId + " Menu/Items";
         Log.d("MenuFragment", "Fetching data from Firestore path: " + path);
 
@@ -80,7 +78,6 @@ public class MenuFragment extends Fragment {
                             menuItem.setItemPrice(document.getString("Item Price"));
                             menuItem.setItemImg(document.getString("Item Img"));
 
-                            // Log fetched data for debugging
                             Log.d("MenuFragment", "Fetched menu item: " + menuItem.getItemName());
 
                             menuList.add(menuItem);

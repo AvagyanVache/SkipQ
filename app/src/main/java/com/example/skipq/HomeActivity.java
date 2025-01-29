@@ -13,11 +13,10 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home); // Assuming this activity contains the bottom navigation
+        setContentView(R.layout.activity_home);
 
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
-        // Set default fragment (HomeFragment)
         if (savedInstanceState == null) {
             loadFragment(new HomeFragment());
         }

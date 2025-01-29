@@ -16,9 +16,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.FirebaseApp;
+import android.content.SharedPreferences;
 
 public class MainActivity extends AppCompatActivity {
-
     private FirebaseAuth mAuth;
     private Button LoginButton;
     private EditText Loginpassword;
@@ -35,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
         if (FirebaseApp.getApps(this).isEmpty()) {
             FirebaseApp.initializeApp(this);
         }
-
         mAuth = FirebaseAuth.getInstance();
 
         Loginemail = findViewById(R.id.Loginemail);
@@ -44,46 +43,45 @@ public class MainActivity extends AppCompatActivity {
         signupRedirectText = findViewById(R.id.SignUpRedirectText);
         CheckBox = findViewById(R.id.checkbox);
         forgotPassword = findViewById(R.id.forgot_password);
+        CheckBox.setChecked(false);
 
 
+        SharedPreferences preferences = getSharedPreferences("loginPrefs", MODE_PRIVATE);
+        String savedEmail = preferences.getString("email", "");
+        String savedPassword = preferences.getString("password", "");
+        boolean isChecked = preferences.getBoolean("rememberMe", false);
 
-     /*   SharedPreferences preferences = getSharedPreferences("checkbox", MODE_PRIVATE);
-        String checkbox = preferences.getString("remember", "");
-        if (checkbox.equals("true")){
-            Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-            startActivity(intent);
-        } else if (checkbox.equals("false")) {
+        if (isChecked) {
+            Loginemail.setText(savedEmail);
+            Loginpassword.setText(savedPassword);
+            CheckBox.setChecked(true);
 
+            signInUser();
         }
 
         CheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-
-                if (compoundButton.isChecked()){
-
-                    SharedPreferences  preferences = getSharedPreferences("checkbox", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = preferences.edit();
-                    editor.putString("remember", "true");
-                    editor.apply();
-
-                } else if (!compoundButton.isChecked()) {
-                    SharedPreferences  preferences = getSharedPreferences("checkbox", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = preferences.edit();
-                    editor.putString("remember", "false");
-                    editor.apply();
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                SharedPreferences.Editor editor = preferences.edit();
+                if (isChecked) {
+                    editor.putString("email", Loginemail.getText().toString());
+                    editor.putString("password", Loginpassword.getText().toString());
+                    editor.putBoolean("rememberMe", true);
+                } else {
+                    editor.clear();
                 }
+                editor.apply();
             }
         });
 
-      */
-forgotPassword.setOnClickListener(new View.OnClickListener() {
-    @Override
-    public void onClick(View view) {
-        Intent intent = new Intent(MainActivity.this, ForgotPasswordActivity.class);
-        startActivity(intent);
-    }
-});
+        forgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, ForgotPasswordActivity.class);
+                startActivity(intent);
+            }
+        });
+
         LoginButton.setOnClickListener(view -> {
             if (!validateEmail() || !validatePassword()) {
                 Toast.makeText(MainActivity.this, "Invalid information", Toast.LENGTH_SHORT).show();
@@ -124,16 +122,30 @@ forgotPassword.setOnClickListener(new View.OnClickListener() {
         String email = Loginemail.getText().toString().trim();
         String password = Loginpassword.getText().toString().trim();
 
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(MainActivity.this, "Email or password cannot be empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null && user.isEmailVerified()) {
-
                             Toast.makeText(MainActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
+
+                            if (CheckBox.isChecked()) {
+                                SharedPreferences preferences = getSharedPreferences("loginPrefs", MODE_PRIVATE);
+                                SharedPreferences.Editor editor = preferences.edit();
+                                editor.putString("email", email);
+                                editor.putString("password", password);
+                                editor.putBoolean("rememberMe", true);
+                                editor.apply();
+                            }
+
                             Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                            startActivity(intent); // Transition to HomeActivity
-                            finish(); // Close MainActivity
+                            startActivity(intent);
+                            finish();
                         } else {
                             Toast.makeText(MainActivity.this, "Please verify your email address.", Toast.LENGTH_LONG).show();
                         }
@@ -142,6 +154,5 @@ forgotPassword.setOnClickListener(new View.OnClickListener() {
                     }
                 });
     }
-
 
 }
