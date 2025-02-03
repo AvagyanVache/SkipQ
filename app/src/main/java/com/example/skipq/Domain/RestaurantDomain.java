@@ -1,12 +1,14 @@
 package com.example.skipq.Domain;
-
 public class RestaurantDomain {
     private String name;
-    private int image;
+    private String imageUrl; // Firebase image URL
+    private int image; // Local image resource
 
-    public RestaurantDomain(String name, int image) {
+    // Constructor for local image and URL
+    public RestaurantDomain(String name, int image, String imageUrl) {
         this.name = name;
-        this.image = image;
+        this.image = image; // Local image resource ID
+        this.imageUrl = imageUrl; // Firebase image URL
     }
 
     public String getName() {
@@ -23,5 +25,13 @@ public class RestaurantDomain {
 
     public void setImage(int image) {
         this.image = image;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

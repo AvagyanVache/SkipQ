@@ -7,8 +7,8 @@
         android:iconTint="@color/white"
         android:id="@+id/navigationbar_home"/>
 
-    <item android:title="Favourites"
-        android:icon="@drawable/favourites"
+    <item android:title="Your Order"
+        android:icon="@drawable/yourorder"
         android:iconTint="@color/white"
         android:id="@+id/navigationbar_favourites"/>
     <item android:title="Cart"

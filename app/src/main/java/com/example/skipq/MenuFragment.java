@@ -5,24 +5,20 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.skipq.Adaptor.MenuAdaptor;
 import com.example.skipq.Domain.MenuDomain;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-
 import java.util.ArrayList;
 
 public class MenuFragment extends Fragment {
-
-    private RecyclerView recyclerView;
+    private RecyclerView recyclerViewMenu;
     private MenuAdaptor menuAdaptor;
     private ArrayList<MenuDomain> menuList = new ArrayList<>();
     private FirebaseFirestore db;
@@ -32,60 +28,63 @@ public class MenuFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_menu, container, false);
+        recyclerViewMenu = view.findViewById(R.id.recycleViewMenu);
+        recyclerViewMenu.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        FirebaseApp.initializeApp(requireContext());
         db = FirebaseFirestore.getInstance();
 
+        // Get restaurant ID from arguments
         if (getArguments() != null) {
             restaurantId = getArguments().getString("restaurantId");
-        }
-
-        if (restaurantId == null || restaurantId.isEmpty()) {
-            Log.e("MenuFragment", "restaurantId is null or empty");
-        } else {
-            Log.d("MenuFragment", "restaurantId: " + restaurantId);
             fetchMenuItems();
         }
 
-        recyclerView = view.findViewById(R.id.recycleViewMenu);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-
-        menuAdaptor = new MenuAdaptor(getContext(), menuList);
-        recyclerView.setAdapter(menuAdaptor);
+        menuAdaptor = new MenuAdaptor(requireContext(), menuList);
+        recyclerViewMenu.setAdapter(menuAdaptor);
 
         return view;
     }
 
     private void fetchMenuItems() {
-        String path = "FoodPlaces/" + restaurantId + "/Menu/" + restaurantId + " Menu/Items";
-        Log.d("MenuFragment", "Fetching data from Firestore path: " + path);
+        if (restaurantId == null) {
+            Log.e("MenuFragment", "Restaurant ID is null");
+            Toast.makeText(getContext(), "Error loading menu", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         db.collection("FoodPlaces")
                 .document(restaurantId)
                 .collection("Menu")
-                .document(restaurantId + " Menu")
-                .collection("Items")
                 .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        menuList.clear();
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            Log.d("MenuFragment", "Document data: " + document.getData());
+                .addOnSuccessListener(menuSnapshots -> {
+                    for (QueryDocumentSnapshot menuDoc : menuSnapshots) {
+                        String menuId = menuDoc.getId(); // e.g., "KFC_Menu"
 
-                            MenuDomain menuItem = new MenuDomain();
-                            menuItem.setItemName(document.getString("Item Name"));
-                            menuItem.setItemDescription(document.getString("Item Description"));
-                            menuItem.setItemPrice(document.getString("Item Price"));
-                            menuItem.setItemImg(document.getString("Item Img"));
+                        db.collection("FoodPlaces")
+                                .document(restaurantId)
+                                .collection("Menu")
+                                .document(menuId)
+                                .collection("Items")
+                                .get()
+                                .addOnSuccessListener(itemSnapshots -> {
+                                    menuList.clear();
+                                    for (QueryDocumentSnapshot itemDoc : itemSnapshots) {
+                                        MenuDomain menuItem = new MenuDomain();
+                                        menuItem.setItemName(itemDoc.getString("Item Name"));
+                                        menuItem.setItemDescription(itemDoc.getString("Item Description"));
+                                        menuItem.setItemPrice(itemDoc.getString("Item Price"));
+                                        menuItem.setItemImg(itemDoc.getString("Item Img"));
 
-                            Log.d("MenuFragment", "Fetched menu item: " + menuItem.getItemName());
-
-                            menuList.add(menuItem);
-                        }
-                        menuAdaptor.notifyDataSetChanged();
-                    } else {
-                        Log.e("MenuFragment", "Error getting menu items: ", task.getException());
+                                        menuList.add(menuItem);
+                                    }
+                                    menuAdaptor.notifyDataSetChanged();
+                                })
+                                .addOnFailureListener(e -> Log.e("Firestore", "Error fetching menu items", e));
                     }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error fetching menu", e);
+                    Toast.makeText(getContext(), "Failed to load menu", Toast.LENGTH_SHORT).show();
                 });
     }
 }

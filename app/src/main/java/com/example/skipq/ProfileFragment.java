@@ -8,26 +8,55 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import androidx.fragment.app.Fragment;
-import com.google.firebase.auth.FirebaseAuth;
+import android.widget.TextView;
 import android.widget.Toast;
+import androidx.fragment.app.Fragment;
+
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 public class ProfileFragment extends Fragment {
 
+    private TextView userNameSurname;
+    private TextView userEmail;
     private Button btnLogout;
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        userNameSurname = view.findViewById(R.id.UserNameSurname);
+        userEmail = view.findViewById(R.id.UserEmail);
+        btnLogout = view.findViewById(R.id.btnLogout);
+
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (firebaseUser != null) {
+            String name = firebaseUser.getDisplayName();
+            if (name == null || name.isEmpty()) {
+                GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(getContext());
+                if (googleSignInAccount != null) {
+                    name = googleSignInAccount.getDisplayName();
+                }
+            }
+
+            if (name == null || name.isEmpty()) {
+                name = "Name Surname";
+            }
+
+            userNameSurname.setText(name);
+            userEmail.setText(firebaseUser.getEmail());
+        }
+
         btnLogout.setOnClickListener(v -> {
+            FirebaseAuth.getInstance().signOut();
             SharedPreferences preferences = getContext().getSharedPreferences("loginPrefs", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = preferences.edit();
             editor.clear();
             editor.apply();
-
-            FirebaseAuth.getInstance().signOut();
-
             Intent intent = new Intent(getActivity(), MainActivity.class);
             startActivity(intent);
             getActivity().finish();
@@ -35,15 +64,9 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    public ProfileFragment() {
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
-
-        btnLogout = view.findViewById(R.id.btnLogout);
-
         return view;
     }
 }

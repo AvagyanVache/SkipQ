@@ -6,6 +6,9 @@
     android:layout_height="match_parent"
     android:background="@drawable/background">
 
+
+
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -15,6 +18,8 @@
         android:focusableInTouchMode="false" >
 
     </RelativeLayout>
+
+
 
     <LinearLayout
         android:layout_width="match_parent"

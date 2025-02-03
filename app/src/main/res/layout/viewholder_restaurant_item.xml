@@ -61,28 +61,19 @@
         android:id="@+id/MenuItemPrice"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="52dp"
+        android:layout_marginTop="64dp"
         android:text="Item Price"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.122"
         app:layout_constraintStart_toEndOf="@+id/MenuItemPhoto"
         app:layout_constraintTop_toTopOf="@+id/imageView" />
-
-    <ImageView
-        android:id="@+id/imageView9"
-        android:layout_width="24dp"
-        android:layout_height="27dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="20dp"
-        app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintTop_toTopOf="@+id/imageView"
-        app:srcCompat="@drawable/favourites" />
 
     <ImageView
         android:id="@+id/imageView8"
         android:layout_width="20dp"
         android:layout_height="17dp"
-        android:layout_marginStart="36dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
         app:layout_constraintStart_toEndOf="@+id/MenuItemPrice"
         app:layout_constraintTop_toBottomOf="@+id/MenuItemDescription"
         app:srcCompat="@drawable/timer" />

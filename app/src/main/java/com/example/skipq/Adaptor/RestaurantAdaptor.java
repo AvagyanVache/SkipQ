@@ -21,7 +21,6 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
     private final Context context;
     private final OnItemClickListener listener;
 
-    // Interface for item click listener
     public interface OnItemClickListener {
         void onItemClick(RestaurantDomain restaurant);
     }
@@ -47,7 +46,7 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
         holder.restaurantName.setText(restaurant.getName());
         holder.restaurantImage.setImageResource(restaurant.getImage());
 
-        // Handle click event
+
         holder.itemView.setOnClickListener(v -> listener.onItemClick(restaurant));
     }
 

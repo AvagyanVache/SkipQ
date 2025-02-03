@@ -10,15 +10,13 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.FirebaseApp;
-import android.content.SharedPreferences;
+import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
+
     private FirebaseAuth mAuth;
     private Button LoginButton;
     private EditText Loginpassword;
@@ -43,19 +41,15 @@ public class MainActivity extends AppCompatActivity {
         signupRedirectText = findViewById(R.id.SignUpRedirectText);
         CheckBox = findViewById(R.id.checkbox);
         forgotPassword = findViewById(R.id.forgot_password);
-        CheckBox.setChecked(false);
-
 
         SharedPreferences preferences = getSharedPreferences("loginPrefs", MODE_PRIVATE);
         String savedEmail = preferences.getString("email", "");
         String savedPassword = preferences.getString("password", "");
         boolean isChecked = preferences.getBoolean("rememberMe", false);
-
         if (isChecked) {
             Loginemail.setText(savedEmail);
             Loginpassword.setText(savedPassword);
             CheckBox.setChecked(true);
-
             signInUser();
         }
 
@@ -121,19 +115,19 @@ public class MainActivity extends AppCompatActivity {
     public void signInUser() {
         String email = Loginemail.getText().toString().trim();
         String password = Loginpassword.getText().toString().trim();
-
         if (email.isEmpty() || password.isEmpty()) {
             Toast.makeText(MainActivity.this, "Email or password cannot be empty", Toast.LENGTH_SHORT).show();
             return;
         }
-
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
+                        // Check if the user's email is verified
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null && user.isEmailVerified()) {
                             Toast.makeText(MainActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
 
+                            // Save login credentials if "Remember Me" is checked
                             if (CheckBox.isChecked()) {
                                 SharedPreferences preferences = getSharedPreferences("loginPrefs", MODE_PRIVATE);
                                 SharedPreferences.Editor editor = preferences.edit();
@@ -154,5 +148,4 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
-
 }
