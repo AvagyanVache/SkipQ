@@ -1,10 +1,12 @@
 package com.example.skipq.Domain;
 
 public class MenuDomain {
+
     private String itemName;
     private String itemDescription;
     private String itemPrice;
     private String itemImg;
+    private int itemCount = 0;  // Default count to 0
 
     // Getters and Setters
 
@@ -38,5 +40,13 @@ public class MenuDomain {
 
     public void setItemImg(String itemImg) {
         this.itemImg = itemImg;
+    }
+
+    public int getItemCount() {
+        return itemCount;
+    }
+
+    public void setItemCount(int itemCount) {
+        this.itemCount = itemCount;
     }
 }

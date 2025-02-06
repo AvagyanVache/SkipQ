@@ -69,23 +69,20 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     restaurantList.clear();
-                    int restaurantIndex = 0;  // Index to cycle through restaurantImg
+                    int restaurantIndex = 0;
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         String name = document.getId();
                         String imageUrl = document.getString("ImageUrl");
 
-                        // Get the local image from the restaurantImg array
                         int localImage = restaurantImg[restaurantIndex % restaurantImg.length];
 
-                        // If there is an imageUrl, we can use that image for Firebase (otherwise, local image will be used)
                         if (imageUrl != null && !imageUrl.isEmpty()) {
                             restaurantList.add(new RestaurantDomain(name, localImage, imageUrl));
                         } else {
-                            // Fallback to the local image if Firebase imageUrl is empty or null
                             restaurantList.add(new RestaurantDomain(name, localImage, ""));
                         }
 
-                        restaurantIndex++;  // Move to the next restaurant image
+                        restaurantIndex++;
                     }
 
                     restaurantAdaptor = new RestaurantAdaptor(requireContext(), restaurantList, restaurant -> openMenuFragment(restaurant.getName()));
@@ -93,9 +90,9 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
                     recyclerViewRestaurantList.setLayoutManager(new GridLayoutManager(getContext(), 2));
                 })
                 .addOnFailureListener(e -> {
-                    // Handle failure case
                 });
     }
+
 
     private void openMenuFragment(String restaurantId) {
         Bundle bundle = new Bundle();

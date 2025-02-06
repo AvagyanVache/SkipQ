@@ -6,18 +6,22 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.skipq.Adaptor.MenuAdaptor;
 import com.example.skipq.Domain.MenuDomain;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 import java.util.ArrayList;
 
 public class MenuFragment extends Fragment {
+
     private RecyclerView recyclerViewMenu;
     private MenuAdaptor menuAdaptor;
     private ArrayList<MenuDomain> menuList = new ArrayList<>();
@@ -33,13 +37,44 @@ public class MenuFragment extends Fragment {
 
         db = FirebaseFirestore.getInstance();
 
-        // Get restaurant ID from arguments
         if (getArguments() != null) {
             restaurantId = getArguments().getString("restaurantId");
             fetchMenuItems();
         }
 
-        menuAdaptor = new MenuAdaptor(requireContext(), menuList);
+        MenuAdaptor.OnAddToCartListener onAddToCartListener = new MenuAdaptor.OnAddToCartListener() {
+            @Override
+            public void onItemAdded(MenuDomain item) {
+            }
+
+            @Override
+            public void onAddToCart(MenuDomain menuItem) {
+                boolean itemExists = false;
+                for (MenuDomain cartItem : CartManager.getInstance().getCartList()) {
+                    if (cartItem.getItemName().equals(menuItem.getItemName())) {
+                        itemExists = true;
+                        cartItem.setItemCount(cartItem.getItemCount() + 1);
+                        break;
+                    }
+                }
+
+                if (!itemExists) {
+                    menuItem.setItemCount(1);
+                    CartManager.getInstance().addToCart(menuItem);
+                }
+
+                Toast.makeText(getContext(), "Added " + menuItem.getItemName() + " to cart", Toast.LENGTH_SHORT).show();
+
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).updateCart();
+                }
+            }
+
+
+
+        };
+
+        menuAdaptor = new MenuAdaptor(requireContext(), menuList, onAddToCartListener);
         recyclerViewMenu.setAdapter(menuAdaptor);
 
         return view;
@@ -58,7 +93,7 @@ public class MenuFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(menuSnapshots -> {
                     for (QueryDocumentSnapshot menuDoc : menuSnapshots) {
-                        String menuId = menuDoc.getId(); // e.g., "KFC_Menu"
+                        String menuId = menuDoc.getId();
 
                         db.collection("FoodPlaces")
                                 .document(restaurantId)

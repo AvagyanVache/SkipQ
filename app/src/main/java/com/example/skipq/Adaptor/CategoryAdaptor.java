@@ -48,7 +48,6 @@ public class CategoryAdaptor extends RecyclerView.Adapter<CategoryAdaptor.ViewHo
         holder.categoryPic.setImageResource(category.getPic());
 
         holder.mainLayout.setOnClickListener(v -> {
-            // Pass the selected category to the listener
             categoryClickListener.onCategoryClick(category.getTitle());
         });
     }

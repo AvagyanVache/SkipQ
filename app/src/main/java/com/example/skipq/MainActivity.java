@@ -148,4 +148,12 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
+
+    public void updateCart() {
+        CartFragment cartFragment = (CartFragment) getSupportFragmentManager().findFragmentByTag("CartFragment");
+        if (cartFragment != null) {
+            cartFragment.refreshCart(); // Call method in CartFragment
+        }
+    }
+
 }

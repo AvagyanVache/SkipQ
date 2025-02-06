@@ -1,32 +1,39 @@
 package com.example.skipq.Adaptor;
 
 import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.skipq.CartManager;
 import com.example.skipq.Domain.MenuDomain;
-import com.example.skipq.ItemDetailActivity;
+import com.example.skipq.MainActivity;
 import com.example.skipq.R;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
 
 public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
-    Context context;
-    ArrayList<MenuDomain> arrayListMenu;
 
-    public MenuAdaptor(Context context, ArrayList<MenuDomain> arrayListMenu) {
-        this.arrayListMenu = arrayListMenu;
+    private Context context;
+    private ArrayList<MenuDomain> menuList;
+    private OnAddToCartListener onAddToCartListener;
+
+    public interface OnAddToCartListener {
+        void onAddToCart(MenuDomain menuItem);
+        void onItemAdded(MenuDomain item);
+    }
+
+    public MenuAdaptor(Context context, ArrayList<MenuDomain> menuList, OnAddToCartListener onAddToCartListener) {
         this.context = context;
+        this.menuList = menuList;
+        this.onAddToCartListener = onAddToCartListener;
     }
 
     @NonNull
@@ -38,46 +45,71 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        MenuDomain menuItem = arrayListMenu.get(position);
+        MenuDomain menuItem = menuList.get(position);
 
-        holder.MenuItemTitle.setText(menuItem.getItemName());
-        holder.MenuItemDescription.setText(menuItem.getItemDescription());
-        holder.MenuItemPrice.setText(MessageFormat.format("$ {0}", menuItem.getItemPrice()));
+        holder.menuItemTitle.setText(menuItem.getItemName());
+        holder.menuItemDescription.setText(menuItem.getItemDescription());
+        holder.menuItemPrice.setText(MessageFormat.format("֏ {0}", menuItem.getItemPrice()));
 
         Glide.with(context)
                 .load(menuItem.getItemImg())
-                .into(holder.MenuItemPhoto);
+                .into(holder.menuItemPhoto);
 
-        holder.itemView.setOnClickListener(v -> {
-            Toast.makeText(context, "Clicked on " + menuItem.getItemName(), Toast.LENGTH_SHORT).show();
+        // Show current item count
+        holder.itemCount.setText(String.valueOf(menuItem.getItemCount()));
 
-            Intent intent = new Intent(context, ItemDetailActivity.class);
-            intent.putExtra("Item Name", menuItem.getItemName());
-            intent.putExtra("Item Description", menuItem.getItemDescription());
-            intent.putExtra("Item Price", menuItem.getItemPrice());
-            intent.putExtra("Item Img", menuItem.getItemImg());
-            context.startActivity(intent);
+        // Handle add to cart click
+        holder.addToCart.setOnClickListener(v -> {
+            if (menuItem.getItemCount() > 0) {
+                onAddToCartListener.onAddToCart(menuItem);
+            }
+        });
+
+
+        // Handle plus button click
+        holder.plusButton.setOnClickListener(v -> {
+            menuItem.setItemCount(menuItem.getItemCount() + 1);
+            holder.itemCount.setText(String.valueOf(menuItem.getItemCount())); // Update the count display
+            notifyItemChanged(position);  // Update the item at this position
+            onAddToCartListener.onItemAdded(menuItem);
+        });
+
+        // Handle minus button click
+        holder.minusButton.setOnClickListener(v -> {
+            if (menuItem.getItemCount() > 0) {
+                menuItem.setItemCount(menuItem.getItemCount() - 1);
+                holder.itemCount.setText(String.valueOf(menuItem.getItemCount())); // Update the count display
+                notifyItemChanged(position);  // Update the item at this position
+                onAddToCartListener.onItemAdded(menuItem);
+            }
         });
     }
 
     @Override
     public int getItemCount() {
-        return arrayListMenu.size();
+        return menuList.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView MenuItemTitle;
-        ImageView MenuItemPhoto;
-        TextView MenuItemDescription;
-        TextView MenuItemPrice;
+
+        TextView menuItemTitle;
+        ImageView menuItemPhoto;
+        TextView menuItemDescription;
+        TextView menuItemPrice;
+        TextView itemCount;
+        ImageView plusButton, minusButton;
+        View addToCart;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            MenuItemTitle = itemView.findViewById(R.id.MenuItemTitle);
-            MenuItemPhoto = itemView.findViewById(R.id.MenuItemPhoto);
-            MenuItemDescription = itemView.findViewById(R.id.MenuItemDescription);
-            MenuItemPrice = itemView.findViewById(R.id.MenuItemPrice);
+            menuItemTitle = itemView.findViewById(R.id.MenuItemTitle);
+            menuItemPhoto = itemView.findViewById(R.id.MenuItemPhoto);
+            menuItemDescription = itemView.findViewById(R.id.MenuItemDescription);
+            menuItemPrice = itemView.findViewById(R.id.MenuItemPrice);
+            itemCount = itemView.findViewById(R.id.ItemCount);
+            plusButton = itemView.findViewById(R.id.ItemPlus);
+            minusButton = itemView.findViewById(R.id.ItemMinus);
+            addToCart = itemView.findViewById(R.id.AddToCart);
         }
-
     }
 }
