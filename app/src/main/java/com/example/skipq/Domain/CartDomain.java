@@ -4,7 +4,7 @@ public class CartDomain {
     private String itemName;
     private double itemPrice;
     private int itemCount;
-    private String imageUrl; // Added imageUrl
+    private String imageUrl;
 
     public CartDomain(String itemName, double itemPrice, int itemCount, String imageUrl) {
         this.itemName = itemName;

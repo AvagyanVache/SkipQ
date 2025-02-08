@@ -6,9 +6,7 @@ public class MenuDomain {
     private String itemDescription;
     private String itemPrice;
     private String itemImg;
-    private int itemCount = 0;  // Default count to 0
-
-    // Getters and Setters
+    private int itemCount = 0;
 
     public String getItemName() {
         return itemName;

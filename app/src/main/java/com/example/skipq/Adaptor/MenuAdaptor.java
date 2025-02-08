@@ -55,10 +55,8 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
                 .load(menuItem.getItemImg())
                 .into(holder.menuItemPhoto);
 
-        // Show current item count
         holder.itemCount.setText(String.valueOf(menuItem.getItemCount()));
 
-        // Handle add to cart click
         holder.addToCart.setOnClickListener(v -> {
             if (menuItem.getItemCount() > 0) {
                 onAddToCartListener.onAddToCart(menuItem);
@@ -66,20 +64,18 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
         });
 
 
-        // Handle plus button click
         holder.plusButton.setOnClickListener(v -> {
             menuItem.setItemCount(menuItem.getItemCount() + 1);
-            holder.itemCount.setText(String.valueOf(menuItem.getItemCount())); // Update the count display
-            notifyItemChanged(position);  // Update the item at this position
+            holder.itemCount.setText(String.valueOf(menuItem.getItemCount()));
+            notifyItemChanged(position);
             onAddToCartListener.onItemAdded(menuItem);
         });
 
-        // Handle minus button click
         holder.minusButton.setOnClickListener(v -> {
             if (menuItem.getItemCount() > 0) {
                 menuItem.setItemCount(menuItem.getItemCount() - 1);
-                holder.itemCount.setText(String.valueOf(menuItem.getItemCount())); // Update the count display
-                notifyItemChanged(position);  // Update the item at this position
+                holder.itemCount.setText(String.valueOf(menuItem.getItemCount()));
+                notifyItemChanged(position);
                 onAddToCartListener.onItemAdded(menuItem);
             }
         });

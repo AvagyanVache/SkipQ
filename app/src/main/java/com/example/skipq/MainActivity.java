@@ -122,12 +122,10 @@ public class MainActivity extends AppCompatActivity {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        // Check if the user's email is verified
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null && user.isEmailVerified()) {
                             Toast.makeText(MainActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
 
-                            // Save login credentials if "Remember Me" is checked
                             if (CheckBox.isChecked()) {
                                 SharedPreferences preferences = getSharedPreferences("loginPrefs", MODE_PRIVATE);
                                 SharedPreferences.Editor editor = preferences.edit();
@@ -152,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
     public void updateCart() {
         CartFragment cartFragment = (CartFragment) getSupportFragmentManager().findFragmentByTag("CartFragment");
         if (cartFragment != null) {
-            cartFragment.refreshCart(); // Call method in CartFragment
+            cartFragment.refreshCart();
         }
     }
 

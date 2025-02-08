@@ -49,7 +49,6 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
                 .load(cartItem.getItemImg())
                 .into(holder.cartItemImage);
 
-        // Increase item count
         holder.addButton.setOnClickListener(v -> {
             cartItem.setItemCount(cartItem.getItemCount() + 1);
             CartManager.getInstance().updateItem(cartItem);
@@ -57,7 +56,6 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
             updateTotal();
         });
 
-        // Decrease item count
         holder.minusButton.setOnClickListener(v -> {
             if (cartItem.getItemCount() > 1) {
                 cartItem.setItemCount(cartItem.getItemCount() - 1);
@@ -82,7 +80,7 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
                 CartManager.getInstance().removeFromCart(cartItem);
                 cartList.remove(position);
                 notifyItemRemoved(position);
-                notifyItemRangeChanged(position, cartList.size()); // Prevents index issues
+                notifyItemRangeChanged(position, cartList.size());
             }
         } catch (IndexOutOfBoundsException e) {
             Log.e("CartAdaptor", "Attempted to remove item at invalid position: " + position, e);
