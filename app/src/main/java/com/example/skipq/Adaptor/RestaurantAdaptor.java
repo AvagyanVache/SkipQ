@@ -21,6 +21,8 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
     private final ArrayList<RestaurantDomain> restaurantDomains;
     private final Context context;
     private final OnItemClickListener listener;
+    private ArrayList<RestaurantDomain> restaurantList;
+
 
     public interface OnItemClickListener {
         void onItemClick(RestaurantDomain restaurant);
@@ -57,6 +59,14 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
     public int getItemCount() {
         return restaurantDomains.size();
     }
+    public void updateList(ArrayList<RestaurantDomain> newList) {
+        this.restaurantDomains.clear();
+        this.restaurantDomains.addAll(newList);
+        notifyDataSetChanged();
+    }
+
+
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView restaurantName;

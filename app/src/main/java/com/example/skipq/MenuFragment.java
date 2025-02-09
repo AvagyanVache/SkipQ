@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.skipq.Adaptor.MenuAdaptor;
 import com.example.skipq.Domain.MenuDomain;
+import com.example.skipq.Domain.RestaurantDomain;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -31,6 +33,8 @@ public class MenuFragment extends Fragment {
     private String restaurantId;
     public ImageView profileIcon;
 
+    private SearchView searchBar;
+
     public TextView backButton;
     @Nullable
     @Override
@@ -38,6 +42,40 @@ public class MenuFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_menu, container, false);
         recyclerViewMenu = view.findViewById(R.id.recycleViewMenu);
         recyclerViewMenu.setLayoutManager(new LinearLayoutManager(getContext()));
+
+
+        searchBar = view.findViewById(R.id.searchBar);
+        searchBar.clearFocus();
+
+        view.setOnTouchListener((v, event) -> {
+            if (searchBar.hasFocus()) {
+                searchBar.clearFocus();
+                searchBar.setIconified(true);
+            }
+            return false;
+        });
+
+
+
+        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterList(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.isEmpty()) {
+                    fetchMenuItems();
+                } else {
+                    filterList(newText);
+                }
+                return true;
+            }
+
+        });
+
 
         backButton = view.findViewById(R.id.backButton);
         backButton.setOnClickListener(v -> {
@@ -47,6 +85,7 @@ public class MenuFragment extends Fragment {
                     .replace(R.id.frame_layout, homeFragment)
                     .addToBackStack(null)
                     .commit();
+            stopSearchBar();
         });
         profileIcon = view.findViewById(R.id.profileIcon);
         profileIcon.setOnClickListener(v -> {
@@ -56,6 +95,7 @@ public class MenuFragment extends Fragment {
                     .replace(R.id.frame_layout, profileFragment)
                     .addToBackStack(null)
                     .commit();
+            stopSearchBar();
         });
         db = FirebaseFirestore.getInstance();
 
@@ -100,6 +140,23 @@ public class MenuFragment extends Fragment {
         recyclerViewMenu.setAdapter(menuAdaptor);
 
         return view;
+    }
+
+    private void stopSearchBar() {
+        searchBar.clearFocus();
+        searchBar.setIconified(true);
+    }
+
+    private void filterList(String text) {
+        ArrayList<MenuDomain> filteredList = new ArrayList<>();
+
+        for (MenuDomain menuItem : menuList) {
+            if (menuItem.getItemName().toLowerCase().contains(text.toLowerCase())) {
+                filteredList.add(menuItem);
+            }
+        }
+
+        menuAdaptor.updateList(filteredList);
     }
 
     private void fetchMenuItems() {

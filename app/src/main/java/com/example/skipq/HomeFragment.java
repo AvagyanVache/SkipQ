@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.SearchView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,11 +19,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.skipq.Adaptor.CategoryAdaptor;
 import com.example.skipq.Adaptor.RestaurantAdaptor;
 import com.example.skipq.Domain.CategoryDomain;
+import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.Domain.RestaurantDomain;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryClickListener {
 
@@ -31,6 +34,7 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
     private RestaurantAdaptor restaurantAdaptor;
     private FirebaseFirestore db;
     private String selectedCategory = "All";
+    private SearchView searchBar;
 
     private final ArrayList<CategoryDomain> categoryList = new ArrayList<>();
     private final ArrayList<RestaurantDomain> restaurantList = new ArrayList<>();
@@ -45,14 +49,45 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
+        searchBar = view.findViewById(R.id.searchBar);
+        searchBar.clearFocus();
+
         recyclerViewRestaurantList = view.findViewById(R.id.recyclerViewRestaurants);
         recyclerViewCategoryList = view.findViewById(R.id.recyclerViewCategories);
         profileIcon = view.findViewById(R.id.profileIcon);
 
         db = FirebaseFirestore.getInstance();
 
+
+        view.setOnTouchListener((v, event) -> {
+            if (searchBar.hasFocus()) {
+                searchBar.clearFocus();
+                searchBar.setIconified(true);
+            }
+            return false;
+        });
         setupCategoryList();
         fetchRestaurants(null);
+
+        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterList(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.isEmpty()) {
+                    fetchRestaurants(selectedCategory);
+                } else {
+                    filterList(newText);
+                }
+                return true;
+            }
+        });
+
+
 
         profileIcon.setOnClickListener(v -> {
             ProfileFragment profileFragment = new ProfileFragment();
@@ -61,11 +96,16 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
                     .replace(R.id.frame_layout, profileFragment)
                     .addToBackStack(null)
                     .commit();
+            stopSearchBar();
         });
 
         return view;
     }
 
+    private void stopSearchBar() {
+        searchBar.clearFocus();
+        searchBar.setIconified(true);
+    }
     private void setupCategoryList() {
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         recyclerViewCategoryList.setLayoutManager(layoutManager);
@@ -115,6 +155,7 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
     public void onCategoryClick(String category) {
         selectedCategory = category;
         fetchRestaurants(category);
+        stopSearchBar();
     }
 
     private void openMenuFragment(String restaurantId) {
@@ -129,4 +170,20 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
         transaction.addToBackStack(null);
         transaction.commit();
     }
+    private void filterList(String text) {
+        ArrayList<RestaurantDomain> filteredList = new ArrayList<>();
+
+        for (RestaurantDomain restaurant : restaurantList) {
+            if (restaurant.getName().toLowerCase().contains(text.toLowerCase())) {
+                filteredList.add(restaurant);
+            }
+        }
+
+        restaurantAdaptor.updateList(filteredList);
+    }
+
+
+
+
+
 }

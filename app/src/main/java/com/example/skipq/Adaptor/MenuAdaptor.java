@@ -29,6 +29,12 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
         void onAddToCart(MenuDomain menuItem);
         void onItemAdded(MenuDomain item);
     }
+    public void updateList(ArrayList<MenuDomain> newList) {
+        this.menuList.clear();
+        this.menuList.addAll(newList);
+        notifyDataSetChanged();
+    }
+
 
     public MenuAdaptor(Context context, ArrayList<MenuDomain> menuList, OnAddToCartListener onAddToCartListener) {
         this.context = context;

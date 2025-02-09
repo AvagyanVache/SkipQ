@@ -59,27 +59,18 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/special_offer" />
 
-    <EditText
+    <SearchView
         android:id="@+id/searchBar"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_margin="16dp"
-        android:layout_marginTop="7dp"
         android:background="@drawable/white_bg"
         android:hint="Search here"
         android:padding="12dp"
         android:textColorHint="#808080"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView5" />
-    <ImageView
-        android:id="@+id/imageView7"
-        android:layout_width="31dp"
-        android:layout_height="30dp"
-        app:layout_constraintBottom_toBottomOf="@+id/searchBar"
-        app:layout_constraintEnd_toEndOf="@+id/searchBar"
-        app:layout_constraintTop_toTopOf="@+id/searchBar"
-        app:srcCompat="@drawable/search" />
+        android:iconifiedByDefault="false"
+        app:layout_constraintTop_toBottomOf="@id/imageView5"
+        tools:layout_editor_absoluteX="16dp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycleViewMenu"
