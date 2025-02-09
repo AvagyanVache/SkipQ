@@ -1,9 +1,11 @@
 package com.example.skipq;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,12 +30,15 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
     private RecyclerView recyclerViewRestaurantList;
     private RestaurantAdaptor restaurantAdaptor;
     private FirebaseFirestore db;
+    private String selectedCategory = "All";
 
-    private final ArrayList<CategoryDomain> categoryName = new ArrayList<>();
+    private final ArrayList<CategoryDomain> categoryList = new ArrayList<>();
     private final ArrayList<RestaurantDomain> restaurantList = new ArrayList<>();
 
     private final int[] categoryImg = {R.drawable.white, R.drawable.fastfood, R.drawable.restaurant, R.drawable.coffee};
-    private final int[] restaurantImg = {R.drawable.coffeehouse_logo, R.drawable.icelava_logo, R.drawable.jellyfish_logo,R.drawable.kfc_logo,R.drawable.kamancha_logo,   R.drawable.mcd_logo};
+   // private final int[] restaurantImg = {R.drawable.coffeehouse_logo, R.drawable.icelava_logo, R.drawable.jellyfish_logo, R.drawable.kfc_logo, R.drawable.kamancha_logo, R.drawable.mcd_logo};
+
+    private ImageView profileIcon;
 
     @Nullable
     @Override
@@ -42,76 +47,81 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
 
         recyclerViewRestaurantList = view.findViewById(R.id.recyclerViewRestaurants);
         recyclerViewCategoryList = view.findViewById(R.id.recyclerViewCategories);
+        profileIcon = view.findViewById(R.id.profileIcon);
 
         db = FirebaseFirestore.getInstance();
 
-        setupCategoryName();
-        fetchRestaurants();
+        setupCategoryList();
+        fetchRestaurants(null);
+
+        profileIcon.setOnClickListener(v -> {
+            ProfileFragment profileFragment = new ProfileFragment();
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frame_layout, profileFragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
 
         return view;
     }
 
-    private void setupCategoryName() {
+    private void setupCategoryList() {
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         recyclerViewCategoryList.setLayoutManager(layoutManager);
 
-        String[] categoryNames = getResources().getStringArray(R.array.categories_array);
+        String[] categoryNames = {"All", "FastFood", "Restaurants", "CoffeeShops"};
         for (int i = 0; i < categoryNames.length; i++) {
-            categoryName.add(new CategoryDomain(categoryNames[i], categoryImg[i]));
+            categoryList.add(new CategoryDomain(categoryNames[i], categoryImg[i]));
         }
 
-        CategoryAdaptor categoryAdaptor = new CategoryAdaptor(requireContext(), categoryName, this);
+        CategoryAdaptor categoryAdaptor = new CategoryAdaptor(requireContext(), categoryList, this);
         recyclerViewCategoryList.setAdapter(categoryAdaptor);
     }
 
-    private void fetchRestaurants() {
+    private void fetchRestaurants(@Nullable String category) {
         db.collection("FoodPlaces")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     restaurantList.clear();
-                    int restaurantIndex = 0;
+
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         String name = document.getId();
-                        String imageUrl = document.getString("ImageUrl");
+                        String imageUrl = document.getString("imageUrl");
+                        String restaurantCategory = document.getString("category");
 
-                        int localImage = restaurantImg[restaurantIndex % restaurantImg.length];
+                        Log.d("Firestore", "Fetched Restaurant: " + name + " Image URL: " + imageUrl);
 
-                        if (imageUrl != null && !imageUrl.isEmpty()) {
-                            restaurantList.add(new RestaurantDomain(name, localImage, imageUrl));
-                        } else {
-                            restaurantList.add(new RestaurantDomain(name, localImage, ""));
+                        if (category == null || category.equals("All") || category.equals(restaurantCategory)) {
+                            restaurantList.add(new RestaurantDomain(name, imageUrl));
                         }
-
-                        restaurantIndex++;
                     }
 
-                    restaurantAdaptor = new RestaurantAdaptor(requireContext(), restaurantList, restaurant -> openMenuFragment(restaurant.getName()));
-                    recyclerViewRestaurantList.setAdapter(restaurantAdaptor);
-                    recyclerViewRestaurantList.setLayoutManager(new GridLayoutManager(getContext(), 2));
+                    if (restaurantAdaptor == null) {
+                        restaurantAdaptor = new RestaurantAdaptor(requireContext(), restaurantList, restaurant -> openMenuFragment(restaurant.getName()));
+                        recyclerViewRestaurantList.setAdapter(restaurantAdaptor);
+                        recyclerViewRestaurantList.setLayoutManager(new GridLayoutManager(getContext(), 2));
+                    } else {
+                        restaurantAdaptor.notifyDataSetChanged();
+                    }
                 })
                 .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error fetching restaurants", e);
                 });
     }
 
+
+    @Override
+    public void onCategoryClick(String category) {
+        selectedCategory = category;
+        fetchRestaurants(category);
+    }
 
     private void openMenuFragment(String restaurantId) {
         Bundle bundle = new Bundle();
         bundle.putString("restaurantId", restaurantId);
 
         MenuFragment menuFragment = new MenuFragment();
-        menuFragment.setArguments(bundle);
-
-        FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-        transaction.replace(R.id.frame_layout, menuFragment);
-        transaction.addToBackStack(null);
-        transaction.commit();
-    }
-
-    @Override
-    public void onCategoryClick(String category) {
-        MenuFragment menuFragment = new MenuFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString("category", category);
         menuFragment.setArguments(bundle);
 
         FragmentTransaction transaction = getParentFragmentManager().beginTransaction();

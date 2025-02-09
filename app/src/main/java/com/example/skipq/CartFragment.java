@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -23,6 +24,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
  private CartAdaptor cartAdaptor;
  private TextView totalPriceTextView;
  private ArrayList<MenuDomain> cartList;
+ public ImageView profileIcon;
 
  @Nullable
  @Override
@@ -31,9 +33,19 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
 
   recyclerView = view.findViewById(R.id.cartRecycleView);
   totalPriceTextView = view.findViewById(R.id.totalPrice);
+  profileIcon = view.findViewById(R.id.profileIcon);
+  profileIcon.setOnClickListener(v -> {
+   ProfileFragment profileFragment = new ProfileFragment();
+   requireActivity().getSupportFragmentManager()
+           .beginTransaction()
+           .replace(R.id.frame_layout, profileFragment)
+           .addToBackStack(null)
+           .commit();
+  });
 
   cartList = new ArrayList<>(CartManager.getInstance().getCartList());
   cartAdaptor = new CartAdaptor(requireContext(), cartList, this);
+
 
   recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
   recyclerView.setAdapter(cartAdaptor);

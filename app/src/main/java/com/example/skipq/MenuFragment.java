@@ -5,6 +5,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -27,7 +29,9 @@ public class MenuFragment extends Fragment {
     private ArrayList<MenuDomain> menuList = new ArrayList<>();
     private FirebaseFirestore db;
     private String restaurantId;
+    public ImageView profileIcon;
 
+    public TextView backButton;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -35,6 +39,24 @@ public class MenuFragment extends Fragment {
         recyclerViewMenu = view.findViewById(R.id.recycleViewMenu);
         recyclerViewMenu.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        backButton = view.findViewById(R.id.backButton);
+        backButton.setOnClickListener(v -> {
+            HomeFragment homeFragment = new HomeFragment();
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frame_layout, homeFragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
+        profileIcon = view.findViewById(R.id.profileIcon);
+        profileIcon.setOnClickListener(v -> {
+            ProfileFragment profileFragment = new ProfileFragment();
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frame_layout, profileFragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
         db = FirebaseFirestore.getInstance();
 
         if (getArguments() != null) {

@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.skipq.Domain.RestaurantDomain;
 import com.example.skipq.R;
 
@@ -44,10 +45,12 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
         RestaurantDomain restaurant = restaurantDomains.get(position);
 
         holder.restaurantName.setText(restaurant.getName());
-        holder.restaurantImage.setImageResource(restaurant.getImage());
 
 
         holder.itemView.setOnClickListener(v -> listener.onItemClick(restaurant));
+        Glide.with(context)
+                .load(restaurant.getImageUrl())
+                .into(holder.restaurantImage);
     }
 
     @Override

@@ -2,11 +2,11 @@ package com.example.skipq.Domain;
 public class RestaurantDomain {
     private String name;
     private String imageUrl;
-    private int image;
 
-    public RestaurantDomain(String name, int image, String imageUrl) {
+
+    public RestaurantDomain(String name,  String imageUrl) {
         this.name = name;
-        this.image = image;
+
         this.imageUrl = imageUrl;
     }
 
@@ -18,13 +18,7 @@ public class RestaurantDomain {
         this.name = name;
     }
 
-    public int getImage() {
-        return image;
-    }
 
-    public void setImage(int image) {
-        this.image = image;
-    }
 
     public String getImageUrl() {
         return imageUrl;
