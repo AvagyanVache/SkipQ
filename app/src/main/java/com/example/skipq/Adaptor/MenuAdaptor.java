@@ -62,7 +62,6 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
                 .into(holder.menuItemPhoto);
 
         holder.itemCount.setText(String.valueOf(menuItem.getItemCount()));
-
         holder.addToCart.setOnClickListener(v -> {
             if (menuItem.getItemCount() > 0) {
                 onAddToCartListener.onAddToCart(menuItem);

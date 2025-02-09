@@ -28,7 +28,6 @@ public class CartManager {
 
         for (MenuDomain menuItem : cartList) {
             if (menuItem.getItemName().equals(item.getItemName())) {
-                menuItem.setItemCount(menuItem.getItemCount() + item.getItemCount()); // Correct count handling
                 itemExists = true;
                 break;
             }
@@ -38,6 +37,7 @@ public class CartManager {
             cartList.add(item);
         }
     }
+
 
     public void updateItem(MenuDomain item) {
         for (MenuDomain menuItem : cartList) {

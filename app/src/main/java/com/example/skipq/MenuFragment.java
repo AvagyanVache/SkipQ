@@ -112,16 +112,16 @@ public class MenuFragment extends Fragment {
             @Override
             public void onAddToCart(MenuDomain menuItem) {
                 boolean itemExists = false;
+
                 for (MenuDomain cartItem : CartManager.getInstance().getCartList()) {
                     if (cartItem.getItemName().equals(menuItem.getItemName())) {
                         itemExists = true;
-                        cartItem.setItemCount(cartItem.getItemCount() + 1);
+                        cartItem.setItemCount(cartItem.getItemCount() + menuItem.getItemCount());
                         break;
                     }
                 }
 
                 if (!itemExists) {
-                    menuItem.setItemCount(1);
                     CartManager.getInstance().addToCart(menuItem);
                 }
 
@@ -130,8 +130,19 @@ public class MenuFragment extends Fragment {
                 if (getActivity() instanceof MainActivity) {
                     ((MainActivity) getActivity()).updateCart();
                 }
-            }
 
+                if (getActivity() instanceof MainActivity) {
+                    MainActivity activity = (MainActivity) getActivity();
+                    if (activity.getSupportFragmentManager().findFragmentByTag(CartFragment.class.getName()) != null) {
+                        CartFragment cartFragment = (CartFragment) activity.getSupportFragmentManager().findFragmentByTag(CartFragment.class.getName());
+                        if (cartFragment != null) {
+                            cartFragment.refreshCart();
+                        }
+                    }
+                }
+
+                menuAdaptor.notifyDataSetChanged();
+            }
 
 
         };
