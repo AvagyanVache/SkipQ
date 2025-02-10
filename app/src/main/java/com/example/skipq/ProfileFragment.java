@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.fragment.app.Fragment;
@@ -23,11 +24,13 @@ public class ProfileFragment extends Fragment {
     private TextView userNameSurname;
     private TextView userEmail;
     private Button btnLogout;
+    private ImageView changePassword;
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        changePassword = view.findViewById(R.id.changePassword);
         userNameSurname = view.findViewById(R.id.UserNameSurname);
         userEmail = view.findViewById(R.id.UserEmail);
         btnLogout = view.findViewById(R.id.btnLogout);
@@ -50,6 +53,12 @@ public class ProfileFragment extends Fragment {
             userNameSurname.setText(name);
             userEmail.setText(firebaseUser.getEmail());
         }
+
+
+        changePassword.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), ChangePasswordActivity.class);
+            startActivity(intent);
+        });
 
         btnLogout.setOnClickListener(v -> {
             FirebaseAuth.getInstance().signOut();

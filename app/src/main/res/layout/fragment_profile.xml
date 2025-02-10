@@ -107,7 +107,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
-        android:id="@+id/imageView128"
+        android:id="@+id/changePassword"
         android:layout_width="35dp"
         android:layout_height="39dp"
         android:layout_marginTop="500dp"
@@ -158,13 +158,13 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
-        android:id="@+id/imageView15"
+        android:id="@+id/selectPayment"
         android:layout_width="35dp"
         android:layout_height="39dp"
-        android:layout_marginTop="332dp"
+        android:layout_marginTop="328dp"
         android:src="@drawable/right_arrow"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.928"
+        app:layout_constraintHorizontal_bias="0.922"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@color/white" />
@@ -348,10 +348,22 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
-        android:id="@+id/imageView18"
+        android:id="@+id/changeLanguage"
         android:layout_width="35dp"
         android:layout_height="39dp"
         android:layout_marginTop="428dp"
+        android:src="@drawable/right_arrow"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.922"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/white" />
+
+    <ImageView
+        android:id="@+id/phoneNumber"
+        android:layout_width="35dp"
+        android:layout_height="39dp"
+        android:layout_marginTop="256dp"
         android:src="@drawable/right_arrow"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.922"
