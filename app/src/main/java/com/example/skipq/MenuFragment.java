@@ -200,6 +200,11 @@ public class MenuFragment extends Fragment {
                                         menuItem.setItemPrice(itemDoc.getString("Item Price"));
                                         menuItem.setItemImg(itemDoc.getString("Item Img"));
 
+                                        if (itemDoc.contains("Prep Time")) {
+                                            menuItem.setPrepTime(itemDoc.getLong("Prep Time").intValue());
+                                        } else {
+                                            menuItem.setPrepTime(0);
+                                        }
                                         menuList.add(menuItem);
                                     }
                                     menuAdaptor.notifyDataSetChanged();

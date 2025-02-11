@@ -83,13 +83,15 @@
 
     <TextView
         android:id="@+id/PrepTime"
-        android:layout_width="32dp"
-        android:layout_height="14dp"
+        android:layout_width="31dp"
+        android:layout_height="16dp"
+        android:gravity="center_horizontal"
         android:text="PrepTime"
         app:layout_constraintBottom_toBottomOf="@+id/imageView"
         app:layout_constraintStart_toEndOf="@+id/imageView8"
         app:layout_constraintTop_toTopOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.828" />
+        app:layout_constraintVertical_bias="0.905" />
+
     <TextView
         android:id="@+id/AddToCart"
         android:layout_width="wrap_content"
@@ -116,6 +118,7 @@
         app:layout_constraintStart_toStartOf="@+id/imageView"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.525">
+
 
         <ImageView
             android:id="@+id/ItemPlus"

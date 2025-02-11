@@ -11,7 +11,7 @@ import com.bumptech.glide.Glide;
 
 public class ItemDetailActivity extends AppCompatActivity {
 
-    private TextView itemName, itemDescription, itemPrice;
+    private TextView itemName, itemDescription, itemPrice, prepTime;
     private ImageView itemImage;
 
     @Override
@@ -19,6 +19,7 @@ public class ItemDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_detail);
 
+        prepTime = findViewById(R.id.PrepTime);
         itemName = findViewById(R.id.itemName);
         itemDescription = findViewById(R.id.itemDescription);
         itemPrice = findViewById(R.id.itemPrice);
@@ -29,10 +30,17 @@ public class ItemDetailActivity extends AppCompatActivity {
         String description = intent.getStringExtra("itemDescription");
         String price = intent.getStringExtra("itemPrice");
         String imageUrl = intent.getStringExtra("itemImg");
+        String prepTimeValue = intent.getStringExtra("Prep Time");
 
         itemName.setText(name);
         itemDescription.setText(description);
         itemPrice.setText(price);
+
+        if (prepTimeValue != null) {
+            prepTime.setText("Preparation time: " + prepTimeValue + " min");
+        } else {
+            prepTime.setText("Preparation time: N/A");
+        }
 
         Glide.with(this)
                 .load(imageUrl)

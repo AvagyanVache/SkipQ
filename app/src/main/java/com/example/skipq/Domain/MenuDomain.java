@@ -7,6 +7,7 @@ public class MenuDomain {
     private String itemPrice;
     private String itemImg;
     private int itemCount = 0;
+    private int prepTime;
 
     public String getItemName() {
         return itemName;
@@ -46,5 +47,12 @@ public class MenuDomain {
 
     public void setItemCount(int itemCount) {
         this.itemCount = itemCount;
+    }
+    public int getPrepTime() {
+        return prepTime;
+    }
+
+    public void setPrepTime(int prepTime) {
+        this.prepTime = prepTime;
     }
 }

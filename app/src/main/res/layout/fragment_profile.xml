@@ -22,7 +22,7 @@
 
 
     <ImageView
-        android:id="@+id/imageView11"
+        android:id="@+id/profilePicture"
         android:layout_width="82dp"
         android:layout_height="81dp"
         android:layout_marginTop="60dp"
@@ -118,6 +118,18 @@
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@color/white" />
 
+    <ImageView
+        android:id="@+id/changeLanguage"
+        android:layout_width="35dp"
+        android:layout_height="39dp"
+        android:layout_marginTop="424dp"
+        android:src="@drawable/right_arrow"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.922"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/white" />
+
     <TextView
         android:id="@+id/textView10"
         android:layout_width="251dp"
@@ -181,7 +193,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.107"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView11" />
+        app:layout_constraintTop_toBottomOf="@+id/profilePicture" />
 
     <TextView
         android:id="@+id/textView1101"
@@ -295,7 +307,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.103"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView11" />
+        app:layout_constraintTop_toBottomOf="@+id/profilePicture" />
 
     <TextView
         android:id="@+id/textView12011"
@@ -310,6 +322,9 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/imageView12"
         app:layout_constraintTop_toTopOf="parent" />
+
+
+
 
     <TextView
         android:id="@+id/UserEmail"
@@ -346,18 +361,6 @@
         app:layout_constraintHorizontal_bias="0.524"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/changeLanguage"
-        android:layout_width="35dp"
-        android:layout_height="39dp"
-        android:layout_marginTop="428dp"
-        android:src="@drawable/right_arrow"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.922"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/white" />
 
     <ImageView
         android:id="@+id/phoneNumber"

@@ -60,7 +60,7 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
         Glide.with(context)
                 .load(menuItem.getItemImg())
                 .into(holder.menuItemPhoto);
-
+        holder.prepTime.setText(MessageFormat.format("{0} min", menuItem.getPrepTime()));
         holder.itemCount.setText(String.valueOf(menuItem.getItemCount()));
         holder.addToCart.setOnClickListener(v -> {
             if (menuItem.getItemCount() > 0) {
@@ -97,12 +97,14 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
         ImageView menuItemPhoto;
         TextView menuItemDescription;
         TextView menuItemPrice;
-        TextView itemCount;
+        TextView itemCount, prepTime;
         ImageView plusButton, minusButton;
         View addToCart;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+
+            prepTime = itemView.findViewById(R.id.PrepTime);
             menuItemTitle = itemView.findViewById(R.id.MenuItemTitle);
             menuItemPhoto = itemView.findViewById(R.id.MenuItemPhoto);
             menuItemDescription = itemView.findViewById(R.id.MenuItemDescription);

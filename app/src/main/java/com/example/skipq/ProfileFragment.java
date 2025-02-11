@@ -3,6 +3,7 @@ package com.example.skipq;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,11 +14,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 
-
+import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 public class ProfileFragment extends Fragment {
 
@@ -25,11 +24,13 @@ public class ProfileFragment extends Fragment {
     private TextView userEmail;
     private Button btnLogout;
     private ImageView changePassword;
+    private ImageView profilePicture;
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        profilePicture = view.findViewById(R.id.profilePicture);
         changePassword = view.findViewById(R.id.changePassword);
         userNameSurname = view.findViewById(R.id.UserNameSurname);
         userEmail = view.findViewById(R.id.UserEmail);
@@ -39,12 +40,6 @@ public class ProfileFragment extends Fragment {
 
         if (firebaseUser != null) {
             String name = firebaseUser.getDisplayName();
-            if (name == null || name.isEmpty()) {
-                GoogleSignInAccount googleSignInAccount = GoogleSignIn.getLastSignedInAccount(getContext());
-                if (googleSignInAccount != null) {
-                    name = googleSignInAccount.getDisplayName();
-                }
-            }
 
             if (name == null || name.isEmpty()) {
                 name = "Name Surname";
@@ -52,24 +47,38 @@ public class ProfileFragment extends Fragment {
 
             userNameSurname.setText(name);
             userEmail.setText(firebaseUser.getEmail());
+
+            Uri photoUrl = firebaseUser.getPhotoUrl();
+            if (photoUrl != null) {
+                if (isAdded()) {
+                    Glide.with(this)
+                            .load(photoUrl)
+                            .into(profilePicture);
+                }
+            } else {
+                profilePicture.setImageResource(R.drawable.profile_picture);
+            }
         }
 
-
         changePassword.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), ChangePasswordActivity.class);
-            startActivity(intent);
+            if (isAdded()) {
+                Intent intent = new Intent(getActivity(), ChangePasswordActivity.class);
+                startActivity(intent);
+            }
         });
 
         btnLogout.setOnClickListener(v -> {
-            FirebaseAuth.getInstance().signOut();
-            SharedPreferences preferences = getContext().getSharedPreferences("loginPrefs", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = preferences.edit();
-            editor.clear();
-            editor.apply();
-            Intent intent = new Intent(getActivity(), MainActivity.class);
-            startActivity(intent);
-            getActivity().finish();
-            Toast.makeText(getContext(), "Logged Out", Toast.LENGTH_SHORT).show();
+            if (isAdded()) {
+                FirebaseAuth.getInstance().signOut();
+                SharedPreferences preferences = getContext().getSharedPreferences("loginPrefs", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.clear();
+                editor.apply();
+                Intent intent = new Intent(getActivity(), MainActivity.class);
+                startActivity(intent);
+                getActivity().finish();
+                Toast.makeText(getContext(), "Logged Out", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 

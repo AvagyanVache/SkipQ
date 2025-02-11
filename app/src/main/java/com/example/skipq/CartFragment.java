@@ -1,6 +1,7 @@
 package com.example.skipq;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,14 +27,16 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
  private ArrayList<MenuDomain> cartList;
  public ImageView profileIcon;
 
- @Nullable
  @Override
  public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
   View view = inflater.inflate(R.layout.fragment_cart, container, false);
 
+  CartManager.getInstance().setListener(this);
+
   recyclerView = view.findViewById(R.id.cartRecycleView);
   totalPriceTextView = view.findViewById(R.id.totalPrice);
   profileIcon = view.findViewById(R.id.profileIcon);
+
   profileIcon.setOnClickListener(v -> {
    ProfileFragment profileFragment = new ProfileFragment();
    requireActivity().getSupportFragmentManager()
@@ -46,18 +49,39 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   cartList = new ArrayList<>(CartManager.getInstance().getCartList());
   cartAdaptor = new CartAdaptor(requireContext(), cartList, this);
 
-
   recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
   recyclerView.setAdapter(cartAdaptor);
 
-  updateTotalPrice(CartManager.getInstance().getTotalPrice());
+  double initialTotalPrice = CartManager.getInstance().getTotalPrice();
+  int initialPrepTime = CartManager.getInstance().getTotalPrepTime();
+
+  updateTotalPrice(initialTotalPrice);
+  updateTimeTillReady(initialPrepTime);
+
+  recyclerView.post(() -> {
+   updateTotalPrice(CartManager.getInstance().getTotalPrice());
+   updateTimeTillReady(CartManager.getInstance().getTotalPrepTime());
+  });
 
   return view;
  }
 
  @Override
- public void onCartUpdated(double total) {
+ public void onCartUpdated(double total, int totalPrepTime) {
+
   updateTotalPrice(total);
+  updateTimeTillReady(totalPrepTime);
+ }
+
+
+ private void updateTimeTillReady(int totalPrepTime) {
+  if (getView() != null) {
+
+   TextView timeTillReadyTextView = getView().findViewById(R.id.TimeTillReady);
+   timeTillReadyTextView.setText(totalPrepTime + " min");
+   Log.d("CartFragment", "Updated Prep Time: " + totalPrepTime);
+
+  }
  }
 
  private void updateTotalPrice(double total) {
@@ -69,5 +93,6 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   cartList.addAll(CartManager.getInstance().getCartList());
   cartAdaptor.notifyDataSetChanged();
   updateTotalPrice(CartManager.getInstance().getTotalPrice());
+  updateTimeTillReady(CartManager.getInstance().getTotalPrepTime());
  }
 }

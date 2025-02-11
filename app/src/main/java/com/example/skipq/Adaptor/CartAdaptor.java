@@ -16,6 +16,7 @@ import com.example.skipq.CartManager;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.R;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 
 public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
@@ -44,6 +45,8 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
         holder.cartItemName.setText(cartItem.getItemName());
         holder.cartItemCount.setText(String.valueOf(cartItem.getItemCount()));
         holder.cartItemPrice.setText(String.format("%.2f֏", Double.parseDouble(cartItem.getItemPrice())));
+
+        holder.cartItemPrepTime.setText(MessageFormat.format("{0} min", cartItem.getPrepTime()));
 
         Glide.with(context)
                 .load(cartItem.getItemImg())
@@ -89,18 +92,28 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
 
     private void updateTotal() {
         double total = 0;
+        int totalPrepTime = 0;
+
         for (MenuDomain item : cartList) {
             total += Double.parseDouble(item.getItemPrice()) * item.getItemCount();
+            totalPrepTime += item.getPrepTime() * item.getItemCount();
         }
-        listener.onCartUpdated(total);
+
+        listener.onCartUpdated(total, totalPrepTime);
+
+
+    int averagePrepTime = (cartList.size() > 0) ? totalPrepTime / cartList.size() : 0;
+        listener.onCartUpdated(total,averagePrepTime);
+
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView cartItemName, cartItemCount, cartItemPrice;
+        TextView cartItemName, cartItemCount, cartItemPrice, cartItemPrepTime;
         ImageView cartItemImage, addButton, minusButton;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            cartItemPrepTime = itemView.findViewById(R.id.PrepTime);
             cartItemName = itemView.findViewById(R.id.CartItemTitle);
             cartItemCount = itemView.findViewById(R.id.CartItemCount);
             cartItemPrice = itemView.findViewById(R.id.CartItemPrice);
@@ -111,6 +124,7 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
     }
 
     public interface OnCartUpdatedListener {
-        void onCartUpdated(double total);
+        void onCartUpdated(double total, int averagePrepTime);
+
     }
 }
