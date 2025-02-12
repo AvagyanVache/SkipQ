@@ -42,6 +42,7 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         MenuDomain cartItem = cartList.get(position);
 
+        holder.cartItemDescription.setText(cartItem.getItemDescription());
         holder.cartItemName.setText(cartItem.getItemName());
         holder.cartItemCount.setText(String.valueOf(cartItem.getItemCount()));
         holder.cartItemPrice.setText(String.format("%.2f֏", Double.parseDouble(cartItem.getItemPrice())));
@@ -108,11 +109,12 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView cartItemName, cartItemCount, cartItemPrice, cartItemPrepTime;
+        TextView cartItemName, cartItemCount, cartItemPrice, cartItemPrepTime,cartItemDescription;
         ImageView cartItemImage, addButton, minusButton;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            cartItemDescription= itemView.findViewById(R.id.CartItemDescription);
             cartItemPrepTime = itemView.findViewById(R.id.PrepTime);
             cartItemName = itemView.findViewById(R.id.CartItemTitle);
             cartItemCount = itemView.findViewById(R.id.CartItemCount);
