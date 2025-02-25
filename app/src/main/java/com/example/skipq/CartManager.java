@@ -72,6 +72,10 @@ public class CartManager {
 
     }
 
+    public void clearCart() {
+        cartList.clear();
+    }
+
     public double getTotalPrice() {
         double total = 0;
         for (MenuDomain item : cartList) {

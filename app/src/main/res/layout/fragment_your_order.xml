@@ -9,6 +9,38 @@
 
     >
 
+    <TextView
+        android:id="@+id/backButton"
+        android:layout_width="60dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="4dp"
+
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="505dp"
+        android:background="@drawable/back_background"
+        android:text="      Back"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.091" />
+
+    <ImageView
+        android:id="@+id/imageView3"
+        android:layout_width="23dp"
+        android:layout_height="16dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginLeft="5dp"
+        app:layout_constraintBottom_toBottomOf="@+id/backButton"
+        app:layout_constraintEnd_toEndOf="@+id/backButton"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/backButton"
+        app:layout_constraintTop_toTopOf="@+id/backButton"
+        app:layout_constraintVertical_bias="1.0"
+        app:srcCompat="@drawable/back_arrow"
+        app:tint="@color/white" />
+
     <ImageView
         android:id="@+id/profileIcon"
         android:layout_width="40dp"
@@ -18,7 +50,81 @@
         android:background="@drawable/profile_picture"
         android:padding="4dp" />
 
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Your order will be \n ready in"
+        android:textSize="35dp"
+        android:textColor="@color/white"
+        android:layout_marginTop="110dp"
+        android:textStyle="bold" />
 
+    <ImageView
+        android:id="@+id/imageView4"
+        android:layout_width="56dp"
+        android:layout_height="51dp"
+        android:src="@drawable/timer"
+        app:tint="@color/white"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="210dp"
+        android:layout_marginRight="70dp"
+        />
+
+    <TextView
+        android:id="@+id/OrderCountdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="220dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:text="0"
+        android:textColor="@color/white"
+        android:textSize="30dp"
+        android:textStyle="bold" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/your_order_recyclerview"
+        android:layout_width="match_parent"
+        android:layout_height="239dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="270dp" />
+
+    <TextView
+        android:id="@+id/CancelOrder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cancel"
+        android:background="@drawable/back_background"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:textSize="20dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="550dp"/>
+
+    <TextView
+        android:id="@+id/textView12"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="*If you cancel the order after it has been accepted, \n the money will not be returned to you"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:textSize="10sp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="590dp"/>
+
+    <TextView
+        android:id="@+id/orderTotal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="260dp"
+        android:layout_marginTop="230dp"
+        android:text="Order Price"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:textStyle="bold" />
 
 
 </FrameLayout>

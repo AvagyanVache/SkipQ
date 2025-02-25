@@ -36,6 +36,7 @@ public class MenuFragment extends Fragment {
     private SearchView searchBar;
 
     public TextView backButton;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -54,7 +55,6 @@ public class MenuFragment extends Fragment {
             }
             return false;
         });
-
 
 
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -171,19 +171,32 @@ public class MenuFragment extends Fragment {
     }
 
     private void fetchMenuItems() {
-        if (restaurantId == null) {
-            Log.e("MenuFragment", "Restaurant ID is null");
+        if (restaurantId == null || restaurantId.isEmpty()) {
+            Log.e("MenuFragment", "Restaurant ID is null or empty");
             Toast.makeText(getContext(), "Error loading menu", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        menuList.clear();
+
+        Log.d("MenuFragment", "Fetching menu for restaurant: " + restaurantId);
 
         db.collection("FoodPlaces")
                 .document(restaurantId)
                 .collection("Menu")
                 .get()
                 .addOnSuccessListener(menuSnapshots -> {
+                    if (menuSnapshots.isEmpty()) {
+                        Log.e("MenuFragment", "No menus found for restaurant: " + restaurantId);
+                        Toast.makeText(getContext(), "No menus available", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    Log.d("MenuFragment", "Found " + menuSnapshots.size() + " menus");
+
                     for (QueryDocumentSnapshot menuDoc : menuSnapshots) {
                         String menuId = menuDoc.getId();
+                        Log.d("MenuFragment", "Fetching items for menu: " + menuId);
 
                         db.collection("FoodPlaces")
                                 .document(restaurantId)
@@ -192,29 +205,43 @@ public class MenuFragment extends Fragment {
                                 .collection("Items")
                                 .get()
                                 .addOnSuccessListener(itemSnapshots -> {
-                                    menuList.clear();
+                                    if (itemSnapshots.isEmpty()) {
+                                        Log.e("MenuFragment", "No items found for menu: " + menuId);
+                                        return;
+                                    }
+
+                                    Log.d("MenuFragment", "Found " + itemSnapshots.size() + " items for menu: " + menuId);
+
                                     for (QueryDocumentSnapshot itemDoc : itemSnapshots) {
                                         MenuDomain menuItem = new MenuDomain();
                                         menuItem.setItemName(itemDoc.getString("Item Name"));
                                         menuItem.setItemDescription(itemDoc.getString("Item Description"));
                                         menuItem.setItemPrice(itemDoc.getString("Item Price"));
                                         menuItem.setItemImg(itemDoc.getString("Item Img"));
+                                        menuItem.setRestaurantId(restaurantId);
 
                                         if (itemDoc.contains("Prep Time")) {
                                             menuItem.setPrepTime(itemDoc.getLong("Prep Time").intValue());
                                         } else {
                                             menuItem.setPrepTime(0);
                                         }
+
                                         menuList.add(menuItem);
                                     }
+
                                     menuAdaptor.notifyDataSetChanged();
                                 })
-                                .addOnFailureListener(e -> Log.e("Firestore", "Error fetching menu items", e));
+                                .addOnFailureListener(e -> {
+                                    Log.e("Firestore", "Error fetching menu items", e);
+                                    Toast.makeText(getContext(), "Failed to load items", Toast.LENGTH_SHORT).show();
+                                });
                     }
                 })
                 .addOnFailureListener(e -> {
                     Log.e("Firestore", "Error fetching menu", e);
                     Toast.makeText(getContext(), "Failed to load menu", Toast.LENGTH_SHORT).show();
                 });
+
     }
+
 }

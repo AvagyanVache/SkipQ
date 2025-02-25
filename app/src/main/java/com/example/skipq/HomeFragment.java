@@ -1,5 +1,6 @@
 package com.example.skipq;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -90,14 +91,10 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
 
 
         profileIcon.setOnClickListener(v -> {
-            ProfileFragment profileFragment = new ProfileFragment();
-            requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.frame_layout, profileFragment)
-                    .addToBackStack(null)
-                    .commit();
-            stopSearchBar();
+            Intent intent = new Intent(getActivity(), HomeActivity.class);intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP); startActivity(intent);
         });
+
 
         return view;
     }

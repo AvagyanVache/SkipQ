@@ -131,7 +131,8 @@
                         android:text="0 minutes"
                         android:textColor="@color/white"
                         android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:layout_marginLeft="20dp"/>
                 </LinearLayout>
 
                 <LinearLayout
