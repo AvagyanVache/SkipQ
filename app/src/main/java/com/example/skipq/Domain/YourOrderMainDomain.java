@@ -5,6 +5,8 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import com.google.firebase.Timestamp;
+
 import java.util.ArrayList;
 
 public class YourOrderMainDomain implements Parcelable {
@@ -13,24 +15,18 @@ public class YourOrderMainDomain implements Parcelable {
     private double totalPrice;
     private ArrayList<MenuDomain> items;
     private int totalPrepTime;
-
-
-
-    private long startTime;
+    private Timestamp startTime;
 
     public YourOrderMainDomain() {}
 
-    public YourOrderMainDomain(String orderId, RestaurantDomain restaurant, double totalPrice, int totalPrepTime, ArrayList<MenuDomain> items, long startTime) {
+    public YourOrderMainDomain(String orderId, RestaurantDomain restaurant, double totalPrice, int totalPrepTime, ArrayList<MenuDomain> items, Timestamp startTime) {
         this.orderId = orderId;
         this.restaurant = restaurant;
         this.totalPrice = totalPrice;
         this.totalPrepTime = totalPrepTime;
         this.items = items;
         this.startTime = startTime;
-
     }
-
-
 
     protected YourOrderMainDomain(Parcel in) {
         orderId = in.readString();
@@ -38,7 +34,7 @@ public class YourOrderMainDomain implements Parcelable {
         totalPrice = in.readDouble();
         totalPrepTime = in.readInt();
         items = in.createTypedArrayList(MenuDomain.CREATOR);
-        startTime = in.readLong();
+        startTime = in.readParcelable(Timestamp.class.getClassLoader());
     }
 
     public static final Creator<YourOrderMainDomain> CREATOR = new Creator<YourOrderMainDomain>() {
@@ -52,13 +48,15 @@ public class YourOrderMainDomain implements Parcelable {
             return new YourOrderMainDomain[size];
         }
     };
-    public long getStartTime() {
+
+    public Timestamp getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(long startTime) {
+    public void setStartTime(Timestamp startTime) {
         this.startTime = startTime;
     }
+
     public String getOrderId() {
         return orderId;
     }
@@ -66,16 +64,23 @@ public class YourOrderMainDomain implements Parcelable {
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
+
     public RestaurantDomain getRestaurant() {
         return restaurant;
     }
-    public int getTotalPrepTime() {
-        return totalPrepTime;
-    }
+
     public void setRestaurant(RestaurantDomain restaurant) {
         this.restaurant = restaurant;
     }
-    public void setTotalPrepTime(int totalPrepTime) { this.totalPrepTime = totalPrepTime; }
+
+    public int getTotalPrepTime() {
+        return totalPrepTime;
+    }
+
+    public void setTotalPrepTime(int totalPrepTime) {
+        this.totalPrepTime = totalPrepTime;
+    }
+
     public double getTotalPrice() {
         return totalPrice;
     }
@@ -104,6 +109,6 @@ public class YourOrderMainDomain implements Parcelable {
         parcel.writeDouble(totalPrice);
         parcel.writeInt(totalPrepTime);
         parcel.writeTypedList(items);
-        parcel.writeLong(startTime);
+        parcel.writeParcelable(startTime, i);
     }
 }

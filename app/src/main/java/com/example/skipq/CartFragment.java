@@ -93,6 +93,11 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   editor.apply();
 
   saveOrderToFirestore(cartList, restaurantId, CartManager.getInstance().getTotalPrice(), prepTime);
+
+  requireActivity().getSupportFragmentManager().beginTransaction()
+          .replace(R.id.frame_layout, new YourOrderMainFragment())
+          .addToBackStack(null)
+          .commit();
  }
 
  private void saveOrderToFirestore(ArrayList<MenuDomain> cartList, String restaurantId, double totalPrice, int prepTime) {

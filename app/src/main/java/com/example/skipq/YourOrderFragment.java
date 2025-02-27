@@ -1,5 +1,6 @@
 package com.example.skipq;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -10,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,6 +19,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -26,6 +29,7 @@ import com.example.skipq.Domain.YourOrderMainDomain;
 import com.google.common.reflect.TypeToken;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -89,6 +93,7 @@ public class YourOrderFragment extends Fragment {
         CancelButton = view.findViewById(R.id.CancelOrder);
         backButton = view.findViewById(R.id.backButton);
 
+
         loadOrderData();
         confirmOrder();
         fetchLatestOrder();
@@ -113,10 +118,7 @@ public class YourOrderFragment extends Fragment {
         });
 
         backButton.setOnClickListener(v -> {
-            requireActivity().getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.frame_layout, new YourOrderMainFragment())
-                    .addToBackStack(null)
-                    .commit();
+            requireActivity().getSupportFragmentManager().popBackStack();
         });
 
         CancelButton.setOnClickListener(v -> cancelOrder());
@@ -295,8 +297,27 @@ public class YourOrderFragment extends Fragment {
     }
 
 
-
+/*
     private void cancelOrder() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_cancel_order, null);
+        builder.setView(dialogView);
+
+        AlertDialog alertDialog = builder.create();
+
+        TextView backButton = dialogView.findViewById(R.id.cancelOrderDialog);
+        TextView cancelButton = dialogView.findViewById(R.id.backButtonDialog);
+
+        backButton.setOnClickListener(v -> alertDialog.dismiss());
+
+        cancelButton.setOnClickListener(v -> {
+            alertDialog.dismiss();
+            clearOrderFromFirestore();
+        });
+
+        alertDialog.show();
         isOrderCanceled = true;
 
         if (countDownTimer != null) {
@@ -345,10 +366,98 @@ public class YourOrderFragment extends Fragment {
                 });
     }
 
+ */
+private void cancelOrder() {
+    AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+    LayoutInflater inflater = requireActivity().getLayoutInflater();
+    View dialogView = inflater.inflate(R.layout.dialog_cancel_order, null);
+    builder.setView(dialogView);
+
+    AlertDialog alertDialog = builder.create();
+
+    TextView backButton = dialogView.findViewById(R.id.cancelOrderDialog);
+    TextView cancelButton = dialogView.findViewById(R.id.backButtonDialog);
+
+    backButton.setOnClickListener(v -> {
+        alertDialog.dismiss();
+        if (timeRemaining > 0) {
+            startCountdown(timeRemaining / 1000);
+        }
+    });
+
+    cancelButton.setOnClickListener(v -> {
+        alertDialog.dismiss();
+        deleteOrderFromFirestore();
+    });
+
+    alertDialog.show();
+    isOrderCanceled = true;
+
+    if (countDownTimer != null) {
+        countDownTimer.cancel();
+        countDownTimer = null;
+    }
+}
+
+    private void deleteOrderFromFirestore() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Toast.makeText(requireContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String orderId = getArguments().getString("orderId");
+        if (orderId == null) {
+            Log.e("YourOrderFragment", "Order ID is null");
+            Toast.makeText(requireContext(), "Order ID not found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("orders").document(orderId)
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Firestore", "Order successfully deleted");
+
+                    if (cartItems != null) {
+                        cartItems.clear();
+                    }
+                    if (yourOrderAdapter != null) {
+                        yourOrderAdapter.notifyDataSetChanged();
+                    }
+
+                    totalPrice = 0;
+                    timeRemaining = 0;
+                    if (countDownTimer != null) {
+                        countDownTimer.cancel();
+                    }
+
+                    totalPriceTextView.setText("0֏");
+                    orderCountdownTextView.setText("Order Canceled");
+
+                    SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("cart_data", Context.MODE_PRIVATE);
+                    sharedPreferences.edit().clear().apply();
+
+                    Toast.makeText(requireContext(), "Order Canceled", Toast.LENGTH_SHORT).show();
+
+                    FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
+                    transaction.replace(R.id.frame_layout, new YourOrderMainFragment());
+                    transaction.addToBackStack(null);
+                    transaction.commit();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(requireContext(), "Failed to cancel order", Toast.LENGTH_SHORT).show();
+                    Log.e("FirestoreError", "Failed to delete order: " + e.getMessage());
+                });
+    }
+
+
+
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if (countDownTimer != null) {
+        if (countDownTimer != null && isOrderCanceled) {
             countDownTimer.cancel();
             countDownTimer = null;
         }

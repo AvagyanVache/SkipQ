@@ -4,6 +4,9 @@ import android.util.Log;
 
 import com.example.skipq.Adaptor.CartAdaptor;
 import com.example.skipq.Domain.MenuDomain;
+import com.example.skipq.Domain.RestaurantDomain;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.util.ArrayList;
 
 public class CartManager {
@@ -31,21 +34,72 @@ public class CartManager {
     }
 
     public void addToCart(MenuDomain item) {
-        boolean itemExists = false;
+        if (item.getRestaurant() == null) {
+            Log.e("CartManager", "Item has no restaurant: " + item.getItemName());
+            String restaurantId = item.getRestaurantId();
 
+            if (restaurantId != null && !restaurantId.isEmpty()) {
+                Log.d("CartManager", "Fetching restaurant for ID: " + restaurantId);
+                fetchRestaurantById(restaurantId, new RestaurantCallback() {
+                    @Override
+                    public void onRestaurantFetched(RestaurantDomain restaurant) {
+                        item.setRestaurant(restaurant);
+                        Log.d("CartManager", "Restaurant fetched: " + restaurant.getName());
+
+                        addItemToCart(item);
+                    }
+                });
+            } else {
+                Log.e("CartManager", "Item has no restaurant ID: " + item.getItemName());
+                item.setRestaurant(new RestaurantDomain("Unknown Restaurant", "https://example.com/default_image.png"));
+
+                addItemToCart(item);
+            }
+        } else {
+            Log.d("CartManager", "Item has restaurant: " + item.getRestaurant().getName());
+            addItemToCart(item);
+        }
+    }
+
+    private void addItemToCart(MenuDomain item) {
+        boolean itemExists = false;
         for (MenuDomain menuItem : cartList) {
             if (menuItem.getItemName().equals(item.getItemName())) {
                 itemExists = true;
                 break;
             }
         }
-
         if (!itemExists) {
             cartList.add(item);
             notifyCartUpdated();
         }
     }
 
+
+    public void fetchRestaurantById(String restaurantId, final RestaurantCallback callback) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("FoodPlaces")
+                .document(restaurantId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String name = documentSnapshot.getString("name");
+                        String imageUrl = documentSnapshot.getString("imageUrl");
+                        RestaurantDomain restaurant = new RestaurantDomain(name, imageUrl);
+                        callback.onRestaurantFetched(restaurant);
+                    } else {
+                        callback.onRestaurantFetched(new RestaurantDomain("Unknown Restaurant", ""));
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("CartManager", "Failed to fetch restaurant: " + e.getMessage());
+                    callback.onRestaurantFetched(new RestaurantDomain("Unknown Restaurant", ""));
+                });
+    }
+
+    public interface RestaurantCallback {
+        void onRestaurantFetched(RestaurantDomain restaurant);
+    }
 
     public void updateItem(MenuDomain item) {
         for (MenuDomain menuItem : cartList) {
