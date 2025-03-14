@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.skipq.Adaptor.CartAdaptor;
 import com.example.skipq.Domain.MenuDomain;
+import com.example.skipq.Domain.YourOrderMainDomain;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
@@ -91,16 +93,16 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   editor.putFloat("totalPrice", (float) CartManager.getInstance().getTotalPrice());
   editor.putInt("prepTime", prepTime);
   editor.apply();
+  YourOrderMainDomain order = new YourOrderMainDomain();
+  saveOrderToFirestore(cartList, restaurantId, CartManager.getInstance().getTotalPrice(), prepTime, order);
 
-  saveOrderToFirestore(cartList, restaurantId, CartManager.getInstance().getTotalPrice(), prepTime);
-
-  requireActivity().getSupportFragmentManager().beginTransaction()
-          .replace(R.id.frame_layout, new YourOrderMainFragment())
-          .addToBackStack(null)
-          .commit();
+  Intent intent = new Intent(getActivity(), HomeActivity.class);
+  intent.putExtra("FRAGMENT_TO_LOAD", "YOUR ORDER");
+  intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+  startActivity(intent);
  }
 
- private void saveOrderToFirestore(ArrayList<MenuDomain> cartList, String restaurantId, double totalPrice, int prepTime) {
+ private void saveOrderToFirestore(ArrayList<MenuDomain> cartList, String restaurantId, double totalPrice, int prepTime, YourOrderMainDomain order) {
   FirebaseFirestore db = FirebaseFirestore.getInstance();
   FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
@@ -111,9 +113,10 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
 
   String userId = currentUser.getUid();
   String orderId = db.collection("orders").document().getId();
+  order.setOrderId(orderId);
 
   long currentTime = System.currentTimeMillis() / 1000;
-  long endTime = currentTime + (prepTime * 60);
+ // long endTime = currentTime + (prepTime * 60);
 
   Map<String, Object> orderData = new HashMap<>();
   orderData.put("orderId", orderId);
@@ -121,8 +124,8 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   orderData.put("restaurantId", restaurantId);
   orderData.put("totalPrice", totalPrice);
   orderData.put("totalPrepTime", prepTime);
-  orderData.put("startTime", FieldValue.serverTimestamp());
-  orderData.put("endTime", endTime);
+  orderData.put("startTime", Timestamp.now());
+ // orderData.put("endTime", Timestamp.now());
   orderData.put("status", "pending");
 
   List<Map<String, Object>> itemsList = new ArrayList<>();

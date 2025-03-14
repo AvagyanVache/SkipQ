@@ -40,13 +40,13 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 mAuth = FirebaseAuth.getInstance();
 
 
-                back.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Intent intent = new Intent(com.example.skipq.ChangePasswordActivity.this, ProfileFragment.class );
-                        startActivity(intent);
-                    }
-                });
+        back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
+
                 btnReset.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

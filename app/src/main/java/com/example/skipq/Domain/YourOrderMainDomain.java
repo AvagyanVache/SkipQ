@@ -6,35 +6,48 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.Exclude;
 
 import java.util.ArrayList;
 
 public class YourOrderMainDomain implements Parcelable {
     private String orderId;
-    private RestaurantDomain restaurant;
+    private String restaurantId;
     private double totalPrice;
-    private ArrayList<MenuDomain> items;
     private int totalPrepTime;
     private Timestamp startTime;
 
+    private String userId;
+    private String status;
+    private ArrayList<MenuDomain> items;
+
+    @Exclude
+    private RestaurantDomain restaurant;
+  //  private Timestamp endTime;
+
     public YourOrderMainDomain() {}
 
-    public YourOrderMainDomain(String orderId, RestaurantDomain restaurant, double totalPrice, int totalPrepTime, ArrayList<MenuDomain> items, Timestamp startTime) {
+    public YourOrderMainDomain(String orderId, String restaurantId, double totalPrice, int totalPrepTime,
+                               Timestamp startTime, String userId, String status, ArrayList<MenuDomain> items) {
         this.orderId = orderId;
-        this.restaurant = restaurant;
+        this.restaurantId = restaurantId;
         this.totalPrice = totalPrice;
         this.totalPrepTime = totalPrepTime;
-        this.items = items;
         this.startTime = startTime;
+        this.userId = userId;
+        this.status = status;
+        this.items = items;
     }
 
     protected YourOrderMainDomain(Parcel in) {
         orderId = in.readString();
-        restaurant = in.readParcelable(RestaurantDomain.class.getClassLoader());
+        restaurantId = in.readString();
         totalPrice = in.readDouble();
         totalPrepTime = in.readInt();
-        items = in.createTypedArrayList(MenuDomain.CREATOR);
         startTime = in.readParcelable(Timestamp.class.getClassLoader());
+        userId = in.readString();
+        status = in.readString();
+        items = in.createTypedArrayList(MenuDomain.CREATOR);
     }
 
     public static final Creator<YourOrderMainDomain> CREATOR = new Creator<YourOrderMainDomain>() {
@@ -49,14 +62,6 @@ public class YourOrderMainDomain implements Parcelable {
         }
     };
 
-    public Timestamp getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Timestamp startTime) {
-        this.startTime = startTime;
-    }
-
     public String getOrderId() {
         return orderId;
     }
@@ -65,20 +70,12 @@ public class YourOrderMainDomain implements Parcelable {
         this.orderId = orderId;
     }
 
-    public RestaurantDomain getRestaurant() {
-        return restaurant;
+    public String getRestaurantId() {
+        return restaurantId;
     }
 
-    public void setRestaurant(RestaurantDomain restaurant) {
-        this.restaurant = restaurant;
-    }
-
-    public int getTotalPrepTime() {
-        return totalPrepTime;
-    }
-
-    public void setTotalPrepTime(int totalPrepTime) {
-        this.totalPrepTime = totalPrepTime;
+    public void setRestaurantId(String restaurantId) {
+        this.restaurantId = restaurantId;
     }
 
     public double getTotalPrice() {
@@ -87,6 +84,54 @@ public class YourOrderMainDomain implements Parcelable {
 
     public void setTotalPrice(double totalPrice) {
         this.totalPrice = totalPrice;
+    }
+  /*  public Timestamp getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Timestamp endTime) {
+        this.endTime = endTime;
+    }
+
+
+   */
+    public int getTotalPrepTime() {
+        return totalPrepTime;
+    }
+
+    public void setTotalPrepTime(int totalPrepTime) {
+        this.totalPrepTime = totalPrepTime;
+    }
+
+    public Timestamp getStartTime() {
+        return startTime;
+    }
+
+
+    public void setStartTime(Object startTime) {
+        if (startTime instanceof Timestamp) {
+            this.startTime = (Timestamp) startTime;
+        } else if (startTime instanceof Long) {
+            this.startTime = new Timestamp((Long) startTime, 0);
+        }
+    }
+
+
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public ArrayList<MenuDomain> getItems() {
@@ -97,6 +142,14 @@ public class YourOrderMainDomain implements Parcelable {
         this.items = items;
     }
 
+    public RestaurantDomain getRestaurant() {
+        return restaurant;
+    }
+
+    public void setRestaurant(RestaurantDomain restaurant) {
+        this.restaurant = restaurant;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -105,10 +158,12 @@ public class YourOrderMainDomain implements Parcelable {
     @Override
     public void writeToParcel(@NonNull Parcel parcel, int i) {
         parcel.writeString(orderId);
-        parcel.writeParcelable(restaurant, i);
+        parcel.writeString(restaurantId);
         parcel.writeDouble(totalPrice);
         parcel.writeInt(totalPrepTime);
-        parcel.writeTypedList(items);
         parcel.writeParcelable(startTime, i);
+        parcel.writeString(userId);
+        parcel.writeString(status);
+        parcel.writeTypedList(items);
     }
 }

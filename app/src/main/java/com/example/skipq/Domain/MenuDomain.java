@@ -63,12 +63,14 @@ public class MenuDomain implements Parcelable {
     }
 
     public String getItemPrice() {
-        return itemPrice;
+        return itemPrice != null && !itemPrice.trim().isEmpty() ? itemPrice : "0.0";
     }
 
+
     public void setItemPrice(String itemPrice) {
-        this.itemPrice = itemPrice;
+        this.itemPrice = (itemPrice != null && !itemPrice.trim().isEmpty()) ? itemPrice : "0.0";
     }
+
 
     public String getItemImg() {
         return itemImg;

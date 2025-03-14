@@ -47,7 +47,7 @@ public class HomeActivity extends AppCompatActivity {
             fragment = new CartFragment();
         } else if ("YOUR ORDER".equals(fragmentToLoad)) {
             selectedId = R.id.navigationbar_yourorder;
-            fragment = new YourOrderFragment();
+            fragment = new YourOrderMainFragment();
 
             double totalPrice = intent.getDoubleExtra("totalPrice", 0);
             int prepTime = intent.getIntExtra("prepTime", 0);

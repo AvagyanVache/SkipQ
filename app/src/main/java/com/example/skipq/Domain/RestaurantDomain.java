@@ -7,6 +7,8 @@ public class RestaurantDomain implements Parcelable {
     private String name;
     private String imageUrl;
 
+    public RestaurantDomain() {}
+
     public RestaurantDomain(String name, String imageUrl) {
         this.name = name;
         this.imageUrl = imageUrl;

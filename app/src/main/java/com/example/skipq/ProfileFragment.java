@@ -22,6 +22,7 @@ public class ProfileFragment extends Fragment {
 
     private TextView userNameSurname;
     private TextView userEmail;
+    private TextView userPhoneNumber;
     private Button btnLogout;
     private ImageView changePassword;
     private ImageView profilePicture;
@@ -33,6 +34,7 @@ public class ProfileFragment extends Fragment {
         profilePicture = view.findViewById(R.id.profilePicture);
         changePassword = view.findViewById(R.id.changePassword);
         userNameSurname = view.findViewById(R.id.UserNameSurname);
+        userPhoneNumber = view.findViewById(R.id.userPhoneNumber);
         userEmail = view.findViewById(R.id.UserEmail);
         btnLogout = view.findViewById(R.id.btnLogout);
 
@@ -47,6 +49,15 @@ public class ProfileFragment extends Fragment {
 
             userNameSurname.setText(name);
             userEmail.setText(firebaseUser.getEmail());
+
+           /* String phoneNumber = firebaseUser.getPhoneNumber();
+            if (phoneNumber != null && !phoneNumber.isEmpty()) {
+                userPhoneNumber.setText(phoneNumber); // Set phone number to TextView
+            } else {
+                userPhoneNumber.setText("Phone Number: Not set");
+            }
+
+            */
 
             Uri photoUrl = firebaseUser.getPhotoUrl();
             if (photoUrl != null) {

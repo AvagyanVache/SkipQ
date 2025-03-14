@@ -45,13 +45,15 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class YourOrderFragment extends Fragment {
-    private static final String ARG_ORDER = "order"; // Key for passing the order object
+    private static final String ARG_ORDER = "order";
 
     private RecyclerView recyclerView;
     private YourOrderAdaptor yourOrderAdapter;
     private TextView totalPriceTextView, orderCountdownTextView;
     private CountDownTimer countDownTimer;
     private int prepTimeMinutes;
+    private ListenerRegistration ordersListener;
+
     private ArrayList<MenuDomain> cartItems;
     private double totalPrice;
     private FirebaseFirestore db;
@@ -63,13 +65,14 @@ public class YourOrderFragment extends Fragment {
     private long timeRemaining = 0;
     private ListenerRegistration orderListener;
 
-    public static YourOrderFragment newInstance(String restaurantName, double totalPrice, int totalPrepTime, ArrayList<MenuDomain> items, YourOrderMainDomain order) {
+    public static YourOrderFragment newInstance(String restaurantName,String orderId, double totalPrice, int totalPrepTime, ArrayList<MenuDomain> items, YourOrderMainDomain order, String status) {
         YourOrderFragment fragment = new YourOrderFragment();
         Bundle args = new Bundle();
         args.putString("restaurantName", restaurantName);
         args.putDouble("totalPrice", totalPrice);
         args.putInt("totalPrepTime", totalPrepTime);
-        args.putParcelable("items", (Parcelable) items);
+        args.putParcelableArrayList("items", items);
+        args.putString("status", status);
         args.putParcelable("order", order);
         fragment.setArguments(args);
         return fragment;
@@ -80,6 +83,7 @@ public class YourOrderFragment extends Fragment {
         super.onCreate(savedInstanceState);
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
+        setRetainInstance(true);
     }
 
     @Override
@@ -94,21 +98,26 @@ public class YourOrderFragment extends Fragment {
         backButton = view.findViewById(R.id.backButton);
 
 
-        loadOrderData();
-        confirmOrder();
-        fetchLatestOrder();
+
+        String status = getArguments().getString("status");
 
         Bundle args = getArguments();
         if (args != null) {
-            String orderId = args.getString("orderId");
-            if (orderId != null) {
-                fetchOrderFromFirestore(orderId);
+            ArrayList<MenuDomain> items = args.getParcelableArrayList("items");
+            if (items != null) {
+                cartItems = items;
+                yourOrderAdapter = new YourOrderAdaptor(requireContext(), cartItems);
+                recyclerView.setAdapter(yourOrderAdapter);
             } else {
-                Log.e("YourOrderFragment", "Order ID is null");
+                Log.e("YourOrderFragment", "Items list is null");
             }
         } else {
             Log.e("YourOrderFragment", "Arguments are null");
         }
+
+        loadOrderData();
+        confirmOrder();
+        fetchLatestOrder();
 
         profileIcon.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), HomeActivity.class);
@@ -172,11 +181,16 @@ public class YourOrderFragment extends Fragment {
 
                     if (documentSnapshot != null && documentSnapshot.exists()) {
                         String status = documentSnapshot.getString("status");
-                        long endTime = documentSnapshot.getLong("endTime");
+                     // Timestamp endTime = documentSnapshot.getTimestamp("endTime");
+                      /*  if (endTime != null) {
+                            long endTimeSeconds = endTime.getSeconds();
+                        }
 
+
+                       */
                         if (status != null && status.equals("pending")) {
                             long currentTime = System.currentTimeMillis() / 1000;
-                            long timeRemaining = endTime - currentTime;
+                       //     long timeRemaining = endTime.getSeconds() - currentTime;
 
                             if (timeRemaining > 0) {
                                 startCountdown(timeRemaining);
@@ -204,17 +218,18 @@ public class YourOrderFragment extends Fragment {
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!queryDocumentSnapshots.isEmpty()) {
                         DocumentSnapshot latestOrder = queryDocumentSnapshots.getDocuments().get(0);
-                        Long endTime = latestOrder.getLong("endTime");
+                //        Long endTime = latestOrder.getLong("endTime");
 
-                        if (endTime == null) {
+                       /* if (endTime == null) {
                             Log.e("FirestoreDebug", "endTime is null in Firestore");
                             return;
                         }
 
-                        long currentTime = System.currentTimeMillis() / 1000;
-                        long timeRemaining = endTime - currentTime;
+                        */
 
-                        Log.d("FirestoreDebug", "Latest order fetched: " + latestOrder.getId() + ", endTime: " + endTime + ", remaining: " + timeRemaining);
+                        long currentTime = System.currentTimeMillis() / 1000;
+                      //  long timeRemaining = endTime - currentTime;
+
 
                         if (timeRemaining > 0) {
                             startCountdown(timeRemaining);
@@ -250,12 +265,13 @@ public class YourOrderFragment extends Fragment {
 
             @Override
             public void onFinish() {
-                if (!isOrderCanceled) {
-                    orderCountdownTextView.setText("Ready! Go pick up your order now!");
-                }
+                orderCountdownTextView.setText("00:00");
+                TextView countdownLabel = requireView().findViewById(R.id.countdownLabel);
+                countdownLabel.setText("Ready! Go pick up your order now!");
             }
         }.start();
     }
+
 
     private void confirmOrder() {
         YourOrderMainDomain order = getArguments().getParcelable("order");
@@ -263,6 +279,7 @@ public class YourOrderFragment extends Fragment {
             Log.e("YourOrderFragment", "Order data is null, cannot confirm order.");
             return;
         }
+
         Log.d("FirestoreDebug", "confirmOrder() called");
         String userId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "guest";
         long currentTime = System.currentTimeMillis() / 1000;
@@ -271,9 +288,10 @@ public class YourOrderFragment extends Fragment {
         Map<String, Object> orderData = new HashMap<>();
         orderData.put("orderId", order.getOrderId());
         orderData.put("userId", userId);
+        orderData.put("restaurantId", order.getRestaurantId());
         orderData.put("totalPrice", order.getTotalPrice());
         orderData.put("totalPrepTime", order.getTotalPrepTime());
-        orderData.put("startTime", FieldValue.serverTimestamp());
+        orderData.put("startTime", Timestamp.now());
         orderData.put("endTime", endTime);
 
         List<Map<String, Object>> itemsList = new ArrayList<>();
@@ -281,7 +299,14 @@ public class YourOrderFragment extends Fragment {
             Map<String, Object> itemData = new HashMap<>();
             itemData.put("name", item.getItemName());
             itemData.put("price", Double.parseDouble(item.getItemPrice()));
-            itemData.put("prepTime", item.getPrepTime());
+
+            String priceString = item.getItemPrice();
+            if (priceString != null && !priceString.trim().isEmpty()) {
+                itemData.put("price", Double.parseDouble(priceString.trim()));
+            } else {
+                itemData.put("price", 0.0);
+            }
+            itemData.put("price", Double.parseDouble(priceString.trim()));
             itemsList.add(itemData);
         }
         orderData.put("items", itemsList);
@@ -457,6 +482,7 @@ private void cancelOrder() {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
         if (countDownTimer != null && isOrderCanceled) {
             countDownTimer.cancel();
             countDownTimer = null;
