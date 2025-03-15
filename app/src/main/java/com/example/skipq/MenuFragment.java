@@ -1,5 +1,6 @@
 package com.example.skipq;
 
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -9,9 +10,13 @@ import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.Manifest;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,12 +24,19 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.skipq.Adaptor.MenuAdaptor;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.Domain.RestaurantDomain;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 
-public class MenuFragment extends Fragment {
+public class MenuFragment extends Fragment implements OnMapReadyCallback {
 
     private RecyclerView recyclerViewMenu;
     private MenuAdaptor menuAdaptor;
@@ -36,6 +48,10 @@ public class MenuFragment extends Fragment {
     private SearchView searchBar;
 
     public TextView backButton;
+    private FusedLocationProviderClient fusedLocationClient;
+    private Marker currentLocationMarker;
+    private GoogleMap gMap;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
     @Nullable
     @Override
@@ -47,6 +63,15 @@ public class MenuFragment extends Fragment {
 
         searchBar = view.findViewById(R.id.searchBar);
         searchBar.clearFocus();
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+        if (mapFragment == null) {
+            mapFragment = new SupportMapFragment();
+            getChildFragmentManager().beginTransaction().replace(R.id.map, mapFragment).commit();
+        }
+        mapFragment.getMapAsync(this);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
+
 
         view.setOnTouchListener((v, event) -> {
             if (searchBar.hasFocus()) {
@@ -244,4 +269,58 @@ public class MenuFragment extends Fragment {
 
     }
 
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        gMap = googleMap;
+
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            enableUserLocation();
+        } else {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+        }
+
+        LatLng defaultLocation = new LatLng(40.1776, 44.5125);
+        gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 15));
+    }
+
+    private void enableUserLocation() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            gMap.setMyLocationEnabled(true);
+            updateLocation();
+        }
+    }
+
+    private void updateLocation() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(requireActivity(), location -> {
+                        if (location != null) {
+                            LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+
+                            if (currentLocationMarker != null) {
+                                currentLocationMarker.setPosition(currentLatLng);
+                            } else {
+                                currentLocationMarker = gMap.addMarker(new MarkerOptions().position(currentLatLng).title("Current Location"));
+                            }
+
+                            gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15));
+                        }
+                    });
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                enableUserLocation();
+            } else {
+                Toast.makeText(requireContext(), "Location permission is required to show your current location.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 }
+
+
