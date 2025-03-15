@@ -2,6 +2,7 @@ package com.example.skipq;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,6 +13,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SignupActivity extends AppCompatActivity {
 
@@ -20,6 +25,8 @@ public class SignupActivity extends AppCompatActivity {
     Button signupButton;
     TextView back;
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +41,8 @@ public class SignupActivity extends AppCompatActivity {
         signupButton = findViewById(R.id.SignUpButton);
 
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -80,6 +89,7 @@ public class SignupActivity extends AppCompatActivity {
                                     .addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
                                             Toast.makeText(SignupActivity.this, "Verification email sent!", Toast.LENGTH_SHORT).show();
+                                            saveUserToFirestore(user, email, password);
                                             Intent intent = new Intent(SignupActivity.this, MainActivity.class);
                                             startActivity(intent);
                                             finish();
@@ -92,5 +102,26 @@ public class SignupActivity extends AppCompatActivity {
                         Toast.makeText(SignupActivity.this, "Sign-up failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
+
+        }
+    private void saveUserToFirestore(FirebaseUser user, String email, String password) {
+        Map<String, Object> userInfo = new HashMap<>();
+        userInfo.put("email", email);
+        userInfo.put("password", password);
+        Log.d("Firestore", "Saving user data: " + userInfo);
+
+        db.collection("users").document(user.getUid())
+                .set(userInfo)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Firestore", "User data saved successfully!");
+                    Toast.makeText(SignupActivity.this, "User email and password saved to Firestore", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error saving data: " + e.getMessage());
+                    Toast.makeText(SignupActivity.this, "Failed to save user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 }
+
+
+
