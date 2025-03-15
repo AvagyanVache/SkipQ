@@ -39,6 +39,11 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
                 mAuth = FirebaseAuth.getInstance();
 
+        if (mAuth.getCurrentUser() != null) {
+            strEmail = mAuth.getCurrentUser().getEmail(); // Automatically get the email
+            edtEmail.setText(strEmail); // Optionally, you can display the email in the EditText (but it's not necessary)
+            edtEmail.setEnabled(false); // Disable email editing to prevent changes
+        }
 
         back.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -50,7 +55,6 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 btnReset.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        strEmail = edtEmail.getText().toString().trim();
                         if (!TextUtils.isEmpty(strEmail)) {
                             ResetPassword();
                         } else {
