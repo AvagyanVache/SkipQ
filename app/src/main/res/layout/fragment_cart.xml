@@ -61,7 +61,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
                 android:paddingLeft="20dp" />
-            <!--
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/textInputLayoutPhone"
                 android:layout_width="match_parent"
@@ -78,7 +78,6 @@
                     android:inputType="phone"/>
 
             </com.google.android.material.textfield.TextInputLayout>
--->
             <LinearLayout
                 android:id="@+id/linearLayout"
                 android:layout_width="280dp"

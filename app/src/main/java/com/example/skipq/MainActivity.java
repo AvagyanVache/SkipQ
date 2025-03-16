@@ -14,6 +14,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.DocumentSnapshot;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,12 +29,15 @@ public class MainActivity extends AppCompatActivity {
     private CheckBox CheckBox;
     private TextView signupRedirectText;
     private TextView forgotPassword;
+    private FirebaseFirestore db;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        db = FirebaseFirestore.getInstance();
         if (FirebaseApp.getApps(this).isEmpty()) {
             FirebaseApp.initializeApp(this);
         }
@@ -42,31 +50,30 @@ public class MainActivity extends AppCompatActivity {
         CheckBox = findViewById(R.id.checkbox);
         forgotPassword = findViewById(R.id.forgot_password);
 
-        SharedPreferences preferences = getSharedPreferences("loginPrefs", MODE_PRIVATE);
-        String savedEmail = preferences.getString("email", "");
-        String savedPassword = preferences.getString("password", "");
-        boolean isChecked = preferences.getBoolean("rememberMe", false);
-        if (isChecked) {
-            Loginemail.setText(savedEmail);
-            Loginpassword.setText(savedPassword);
-            CheckBox.setChecked(true);
-            signInUser();
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            user.reload().addOnCompleteListener(task -> {
+                if (task.isSuccessful() && user.isEmailVerified()) {
+                    Toast.makeText(MainActivity.this, "Welcome back!", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+            });
         }
 
-        CheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                SharedPreferences.Editor editor = preferences.edit();
-                if (isChecked) {
-                    editor.putString("email", Loginemail.getText().toString());
-                    editor.putString("password", Loginpassword.getText().toString());
-                    editor.putBoolean("rememberMe", true);
-                } else {
-                    editor.clear();
-                }
-                editor.apply();
+
+
+        CheckBox.setOnCheckedChangeListener((compoundButton, isChecked) -> {
+            if (mAuth.getCurrentUser() != null) {
+                DocumentReference userRef = db.collection("users").document(mAuth.getCurrentUser().getUid());
+                userRef.update("rememberMe", isChecked)
+                        .addOnFailureListener(e ->
+                                Toast.makeText(MainActivity.this, "Failed to update preference", Toast.LENGTH_SHORT).show()
+                        );
             }
         });
+
 
         forgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -128,18 +135,21 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(MainActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
 
                             if (CheckBox.isChecked()) {
-                                SharedPreferences preferences = getSharedPreferences("loginPrefs", MODE_PRIVATE);
-                                SharedPreferences.Editor editor = preferences.edit();
-                                editor.putString("email", email);
-                                editor.putString("password", password);
-                                editor.putBoolean("rememberMe", true);
-                                editor.apply();
+                                DocumentReference userRef = db.collection("users").document(user.getUid());
+                                userRef.update("rememberMe", true,
+                                                "email", email)
+                                        .addOnFailureListener(e ->
+                                                Toast.makeText(MainActivity.this, "Failed to save preference", Toast.LENGTH_SHORT).show()
+                                        );
                             }
 
                             Intent intent = new Intent(MainActivity.this, HomeActivity.class);
                             startActivity(intent);
                             finish();
                         } else {
+                            DocumentReference userRef = db.collection("users").document(user.getUid());
+                            userRef.update("rememberMe", false,
+                                    "email", null);
                             Toast.makeText(MainActivity.this, "Please verify your email address.", Toast.LENGTH_LONG).show();
                         }
                     } else {

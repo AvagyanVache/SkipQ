@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class ProfileFragment extends Fragment {
 
@@ -39,6 +41,24 @@ public class ProfileFragment extends Fragment {
         btnLogout = view.findViewById(R.id.btnLogout);
 
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (currentUser != null) {
+            db.collection("users").document(currentUser.getUid())
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            String phoneNumber = documentSnapshot.getString("phoneNumber");
+                            if (phoneNumber != null && !phoneNumber.isEmpty()) {
+                                userPhoneNumber.setText(phoneNumber);
+                            } else {
+                                userPhoneNumber.setText("Phone Number: Not set");
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> Log.e("ProfileFragment", "Failed to fetch phone number", e));
+        }
 
         if (firebaseUser != null) {
             String name = firebaseUser.getDisplayName();

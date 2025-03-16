@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.skipq.Adaptor.CartAdaptor;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.Domain.YourOrderMainDomain;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -57,6 +58,21 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
 
   checkOutButton.setOnClickListener(v -> {
    proceedToOrder();
+  });
+  TextInputEditText phoneNumberInput = view.findViewById(R.id.userPhoneNumber);
+  FirebaseFirestore db = FirebaseFirestore.getInstance();
+  FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+  phoneNumberInput.setOnFocusChangeListener((v, hasFocus) -> {
+   if (!hasFocus && currentUser != null) { // Save when the user leaves the input field
+    String phoneNumber = phoneNumberInput.getText().toString().trim();
+    if (!phoneNumber.isEmpty()) {
+     db.collection("users").document(currentUser.getUid())
+             .update("phoneNumber", phoneNumber)
+             .addOnSuccessListener(aVoid -> Log.d("CartFragment", "Phone number updated"))
+             .addOnFailureListener(e -> Log.e("CartFragment", "Failed to update phone number", e));
+    }
+   }
   });
 
   cartList = new ArrayList<>(CartManager.getInstance().getCartList());
