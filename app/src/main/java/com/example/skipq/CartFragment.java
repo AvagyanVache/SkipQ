@@ -28,6 +28,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,8 +132,13 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   String orderId = db.collection("orders").document().getId();
   order.setOrderId(orderId);
 
-  long currentTime = System.currentTimeMillis() / 1000;
- // long endTime = currentTime + (prepTime * 60);
+  long currentTimeMillis = System.currentTimeMillis();
+  long prepTimeMillis = prepTime * 60 * 1000;
+  long endTimeMillis = currentTimeMillis + prepTimeMillis;
+
+  Timestamp startTime = new Timestamp(new Date(currentTimeMillis));
+  Timestamp endTime = new Timestamp(new Date(endTimeMillis));
+
 
   Map<String, Object> orderData = new HashMap<>();
   orderData.put("orderId", orderId);
@@ -141,7 +147,8 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   orderData.put("totalPrice", totalPrice);
   orderData.put("totalPrepTime", prepTime);
   orderData.put("startTime", Timestamp.now());
- // orderData.put("endTime", Timestamp.now());
+
+  orderData.put("endTime", endTime);
   orderData.put("status", "pending");
 
   List<Map<String, Object>> itemsList = new ArrayList<>();

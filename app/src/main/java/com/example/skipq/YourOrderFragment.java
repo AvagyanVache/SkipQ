@@ -170,8 +170,6 @@ public class YourOrderFragment extends Fragment {
 
 
     private void fetchOrderFromFirestore(String orderId) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
         db.collection("orders").document(orderId)
                 .addSnapshotListener((documentSnapshot, error) -> {
                     if (error != null) {
@@ -181,16 +179,12 @@ public class YourOrderFragment extends Fragment {
 
                     if (documentSnapshot != null && documentSnapshot.exists()) {
                         String status = documentSnapshot.getString("status");
-                     // Timestamp endTime = documentSnapshot.getTimestamp("endTime");
-                      /*  if (endTime != null) {
-                            long endTimeSeconds = endTime.getSeconds();
-                        }
+                        Timestamp endTime = documentSnapshot.getTimestamp("endTime");
 
-
-                       */
-                        if (status != null && status.equals("pending")) {
-                            long currentTime = System.currentTimeMillis() / 1000;
-                       //     long timeRemaining = endTime.getSeconds() - currentTime;
+                        if (endTime != null) {
+                            long endTimeMillis = endTime.toDate().getTime();
+                            long currentTimeMillis = System.currentTimeMillis();
+                            long timeRemaining = endTimeMillis - currentTimeMillis;
 
                             if (timeRemaining > 0) {
                                 startCountdown(timeRemaining);
@@ -198,15 +192,12 @@ public class YourOrderFragment extends Fragment {
                                 orderCountdownTextView.setText("Ready! Go pick up your order now!");
                             }
                         }
-
-                        if (status != null) {
-                            orderCountdownTextView.setText("Status: " + status);
-                        }
                     } else {
                         Log.e("FirestoreError", "Order document does not exist");
                     }
                 });
     }
+
 
 
     private void fetchLatestOrder() {
@@ -218,18 +209,15 @@ public class YourOrderFragment extends Fragment {
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!queryDocumentSnapshots.isEmpty()) {
                         DocumentSnapshot latestOrder = queryDocumentSnapshots.getDocuments().get(0);
-                //        Long endTime = latestOrder.getLong("endTime");
 
-                       /* if (endTime == null) {
+                        Timestamp endTime = latestOrder.getTimestamp("endTime");
+                        if (endTime == null) {
                             Log.e("FirestoreDebug", "endTime is null in Firestore");
                             return;
                         }
 
-                        */
-
-                        long currentTime = System.currentTimeMillis() / 1000;
-                      //  long timeRemaining = endTime - currentTime;
-
+                        long currentTime = System.currentTimeMillis();
+                        long timeRemaining = endTime.toDate().getTime() - currentTime;
 
                         if (timeRemaining > 0) {
                             startCountdown(timeRemaining);
@@ -248,7 +236,7 @@ public class YourOrderFragment extends Fragment {
             countDownTimer.cancel();
         }
 
-        countDownTimer = new CountDownTimer(remainingTimeInSeconds * 1000, 1000) {
+        countDownTimer = new CountDownTimer(remainingTimeInSeconds, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 if (isOrderCanceled) {
@@ -282,8 +270,12 @@ public class YourOrderFragment extends Fragment {
 
         Log.d("FirestoreDebug", "confirmOrder() called");
         String userId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "guest";
-        long currentTime = System.currentTimeMillis() / 1000;
-        long endTime = currentTime + (order.getTotalPrepTime() * 60);
+        long currentTimeMillis = System.currentTimeMillis(); // Current time in milliseconds
+        long totalPrepTimeMillis = order.getTotalPrepTime() * 60 * 1000;
+        long endTimeMillis = currentTimeMillis + totalPrepTimeMillis; // Add totalPrepTime to current time
+
+        Timestamp startTime = new Timestamp(currentTimeMillis / 1000, (int) ((currentTimeMillis % 1000) * 1_000_000)); // Current time as startTime
+        Timestamp endTime = new Timestamp(endTimeMillis / 1000, (int) ((endTimeMillis % 1000) * 1_000_000));
 
         Map<String, Object> orderData = new HashMap<>();
         orderData.put("orderId", order.getOrderId());
@@ -292,6 +284,7 @@ public class YourOrderFragment extends Fragment {
         orderData.put("totalPrice", order.getTotalPrice());
         orderData.put("totalPrepTime", order.getTotalPrepTime());
         orderData.put("startTime", Timestamp.now());
+
         orderData.put("endTime", endTime);
 
         List<Map<String, Object>> itemsList = new ArrayList<>();
@@ -315,6 +308,7 @@ public class YourOrderFragment extends Fragment {
                 .set(orderData)
                 .addOnSuccessListener(aVoid -> {
                     Log.d("FirestoreDebug", "Order stored successfully with correct timestamp.");
+                    startCountdown(totalPrepTimeMillis);
                 })
                 .addOnFailureListener(e -> {
                     Log.e("FirestoreError", "Failed to store order: " + e.getMessage());
@@ -322,9 +316,77 @@ public class YourOrderFragment extends Fragment {
     }
 
 
-/*
-    private void cancelOrder() {
+    /*
+        private void cancelOrder() {
 
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            LayoutInflater inflater = requireActivity().getLayoutInflater();
+            View dialogView = inflater.inflate(R.layout.dialog_cancel_order, null);
+            builder.setView(dialogView);
+
+            AlertDialog alertDialog = builder.create();
+
+            TextView backButton = dialogView.findViewById(R.id.cancelOrderDialog);
+            TextView cancelButton = dialogView.findViewById(R.id.backButtonDialog);
+
+            backButton.setOnClickListener(v -> alertDialog.dismiss());
+
+            cancelButton.setOnClickListener(v -> {
+                alertDialog.dismiss();
+                clearOrderFromFirestore();
+            });
+
+            alertDialog.show();
+            isOrderCanceled = true;
+
+            if (countDownTimer != null) {
+                countDownTimer.cancel();
+                countDownTimer = null;
+            }
+
+            Bundle args = getArguments();
+            if (args == null) {
+                Log.e("YourOrderFragment", "Arguments are null");
+                return;
+            }
+
+            String orderId = args.getString("orderId");
+            if (orderId == null) {
+                Log.e("YourOrderFragment", "Order ID is null");
+                return;
+            }
+
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("orders").document(orderId)
+                    .delete()
+                    .addOnSuccessListener(aVoid -> {
+                        if (cartItems != null) {
+                            cartItems.clear();
+                        }
+
+                        if (yourOrderAdapter != null) {
+                            yourOrderAdapter.notifyDataSetChanged();
+                        }
+
+                        totalPrice = 0.0;
+                        totalPriceTextView.setText("0֏");
+
+                        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("cart_data", Context.MODE_PRIVATE);
+                        sharedPreferences.edit()
+                                .clear()
+                                .apply();
+
+                        Toast.makeText(requireContext(), "Order Canceled", Toast.LENGTH_SHORT).show();
+                        orderCountdownTextView.setText("Order Canceled");
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(requireContext(), "Failed to cancel order", Toast.LENGTH_SHORT).show();
+                        Log.e("FirestoreError", "Failed to delete order: " + e.getMessage());
+                    });
+        }
+
+     */
+    private void cancelOrder() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         LayoutInflater inflater = requireActivity().getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_cancel_order, null);
@@ -335,11 +397,16 @@ public class YourOrderFragment extends Fragment {
         TextView backButton = dialogView.findViewById(R.id.cancelOrderDialog);
         TextView cancelButton = dialogView.findViewById(R.id.backButtonDialog);
 
-        backButton.setOnClickListener(v -> alertDialog.dismiss());
+        backButton.setOnClickListener(v -> {
+            alertDialog.dismiss();
+            if (timeRemaining > 0) {
+                startCountdown(timeRemaining / 1000);
+            }
+        });
 
         cancelButton.setOnClickListener(v -> {
             alertDialog.dismiss();
-            clearOrderFromFirestore();
+            deleteOrderFromFirestore();
         });
 
         alertDialog.show();
@@ -349,80 +416,7 @@ public class YourOrderFragment extends Fragment {
             countDownTimer.cancel();
             countDownTimer = null;
         }
-
-        Bundle args = getArguments();
-        if (args == null) {
-            Log.e("YourOrderFragment", "Arguments are null");
-            return;
-        }
-
-        String orderId = args.getString("orderId");
-        if (orderId == null) {
-            Log.e("YourOrderFragment", "Order ID is null");
-            return;
-        }
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("orders").document(orderId)
-                .delete()
-                .addOnSuccessListener(aVoid -> {
-                    if (cartItems != null) {
-                        cartItems.clear();
-                    }
-
-                    if (yourOrderAdapter != null) {
-                        yourOrderAdapter.notifyDataSetChanged();
-                    }
-
-                    totalPrice = 0.0;
-                    totalPriceTextView.setText("0֏");
-
-                    SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("cart_data", Context.MODE_PRIVATE);
-                    sharedPreferences.edit()
-                            .clear()
-                            .apply();
-
-                    Toast.makeText(requireContext(), "Order Canceled", Toast.LENGTH_SHORT).show();
-                    orderCountdownTextView.setText("Order Canceled");
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(requireContext(), "Failed to cancel order", Toast.LENGTH_SHORT).show();
-                    Log.e("FirestoreError", "Failed to delete order: " + e.getMessage());
-                });
     }
-
- */
-private void cancelOrder() {
-    AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-    LayoutInflater inflater = requireActivity().getLayoutInflater();
-    View dialogView = inflater.inflate(R.layout.dialog_cancel_order, null);
-    builder.setView(dialogView);
-
-    AlertDialog alertDialog = builder.create();
-
-    TextView backButton = dialogView.findViewById(R.id.cancelOrderDialog);
-    TextView cancelButton = dialogView.findViewById(R.id.backButtonDialog);
-
-    backButton.setOnClickListener(v -> {
-        alertDialog.dismiss();
-        if (timeRemaining > 0) {
-            startCountdown(timeRemaining / 1000);
-        }
-    });
-
-    cancelButton.setOnClickListener(v -> {
-        alertDialog.dismiss();
-        deleteOrderFromFirestore();
-    });
-
-    alertDialog.show();
-    isOrderCanceled = true;
-
-    if (countDownTimer != null) {
-        countDownTimer.cancel();
-        countDownTimer = null;
-    }
-}
 
     private void deleteOrderFromFirestore() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
