@@ -110,7 +110,10 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   editor.putFloat("totalPrice", (float) CartManager.getInstance().getTotalPrice());
   editor.putInt("prepTime", prepTime);
   editor.apply();
+
   YourOrderMainDomain order = new YourOrderMainDomain();
+  order.setTotalPrepTime(prepTime);
+  order.setItems(cartList);
   saveOrderToFirestore(cartList, restaurantId, CartManager.getInstance().getTotalPrice(), prepTime, order);
 
   Intent intent = new Intent(getActivity(), HomeActivity.class);
@@ -132,12 +135,10 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   String orderId = db.collection("orders").document().getId();
   order.setOrderId(orderId);
 
-  long currentTimeMillis = System.currentTimeMillis();
-  long prepTimeMillis = prepTime * 60 * 1000;
-  long endTimeMillis = currentTimeMillis + prepTimeMillis;
+  Timestamp startTime = Timestamp.now();
+  long endTimeSeconds = startTime.getSeconds() + (prepTime * 60);
+    Timestamp endTime = new Timestamp(endTimeSeconds, 0);
 
-  Timestamp startTime = new Timestamp(new Date(currentTimeMillis));
-  Timestamp endTime = new Timestamp(new Date(endTimeMillis));
 
 
   Map<String, Object> orderData = new HashMap<>();
@@ -146,8 +147,8 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   orderData.put("restaurantId", restaurantId);
   orderData.put("totalPrice", totalPrice);
   orderData.put("totalPrepTime", prepTime);
-  orderData.put("startTime", Timestamp.now());
-
+  orderData.put("startTime", startTime);
+  orderData.put("items", order.getItems());
   orderData.put("endTime", endTime);
   orderData.put("status", "pending");
 
@@ -161,7 +162,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   }
   orderData.put("items", itemsList);
 
-  db.collection("orders").document(orderId)
+  db.collection("orders").document(order.getOrderId())
           .set(orderData)
           .addOnSuccessListener(aVoid -> {
            Log.d("FirestoreDebug", "Order stored successfully with ID: " + orderId);

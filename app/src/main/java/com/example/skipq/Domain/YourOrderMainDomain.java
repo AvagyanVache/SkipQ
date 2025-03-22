@@ -23,7 +23,7 @@ public class YourOrderMainDomain implements Parcelable {
 
     @Exclude
     private RestaurantDomain restaurant;
-  //  private Timestamp endTime;
+    private Timestamp endTime;
 
     public YourOrderMainDomain() {}
 
@@ -85,7 +85,7 @@ public class YourOrderMainDomain implements Parcelable {
     public void setTotalPrice(double totalPrice) {
         this.totalPrice = totalPrice;
     }
-  /*  public Timestamp getEndTime() {
+    public Timestamp getEndTime() {
         return endTime;
     }
 
@@ -94,7 +94,7 @@ public class YourOrderMainDomain implements Parcelable {
     }
 
 
-   */
+
     public int getTotalPrepTime() {
         return totalPrepTime;
     }
