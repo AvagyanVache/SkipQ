@@ -65,15 +65,17 @@ public class YourOrderFragment extends Fragment {
     private long timeRemaining = 0;
     private ListenerRegistration orderListener;
 
-    public static YourOrderFragment newInstance(String restaurantName,String orderId, double totalPrice, int totalPrepTime, ArrayList<MenuDomain> items, YourOrderMainDomain order, String status) {
+    public static YourOrderFragment newInstance(String restaurantName, String orderId, double totalPrice, int totalPrepTime, ArrayList<MenuDomain> items, YourOrderMainDomain order, String status, boolean isNewOrder) {
         YourOrderFragment fragment = new YourOrderFragment();
         Bundle args = new Bundle();
         args.putString("restaurantName", restaurantName);
+        args.putString("orderId", orderId);
         args.putDouble("totalPrice", totalPrice);
         args.putInt("totalPrepTime", totalPrepTime);
-        args.putParcelableArrayList("items", items);
+        args.putParcelableArrayList("items", items); // Ensure items is ArrayList for Parcelable
         args.putString("status", status);
         args.putParcelable("order", order);
+        args.putBoolean("isNewOrder", isNewOrder);
         fragment.setArguments(args);
         return fragment;
     }
@@ -98,27 +100,46 @@ public class YourOrderFragment extends Fragment {
         backButton = view.findViewById(R.id.backButton);
 
 
-
-        String status = getArguments().getString("status");
-
         Bundle args = getArguments();
         if (args != null) {
-            ArrayList<MenuDomain> items = args.getParcelableArrayList("items");
-            if (items != null) {
-                cartItems = items;
+            YourOrderMainDomain order = args.getParcelable("order");
+            if (order != null) {
+                cartItems = order.getItems();
                 yourOrderAdapter = new YourOrderAdaptor(requireContext(), cartItems);
                 recyclerView.setAdapter(yourOrderAdapter);
+                totalPriceTextView.setText(String.format("%.2f֏", order.getTotalPrice()));
+
+                Timestamp endTime = order.getEndTime();
+                if (endTime != null) {
+                    long endTimeMillis = endTime.toDate().getTime();
+                    long currentTimeMillis = System.currentTimeMillis();
+                    timeRemaining = endTimeMillis - currentTimeMillis;
+                    if (timeRemaining > 0) {
+                        if (countDownTimer == null) {
+                            startCountdown(timeRemaining);
+                        }
+                        CancelButton.setVisibility(View.VISIBLE);
+                    } else {
+                        orderCountdownTextView.setText("00:00");
+                        CancelButton.setVisibility(View.GONE);
+                    }
+                } else {
+                    orderCountdownTextView.setText("Order status unavailable");
+                    CancelButton.setVisibility(View.GONE);
+                }
+
+                boolean isNewOrder = args.getBoolean("isNewOrder", false);
+                if (isNewOrder) {
+                    confirmOrder(order);
+                }
             } else {
-                Log.e("YourOrderFragment", "Items list is null");
+                Log.e("YourOrderFragment", "Order is null");
             }
         } else {
             Log.e("YourOrderFragment", "Arguments are null");
         }
-
         loadOrderData();
-        confirmOrder();
         fetchLatestOrder();
-
         profileIcon.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), HomeActivity.class);
             intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
@@ -189,16 +210,20 @@ public class YourOrderFragment extends Fragment {
                             if (timeRemaining > 0) {
                                 startCountdown(timeRemaining);
                             } else {
-                                orderCountdownTextView.setText("Ready! Go pick up your order now!");
+                                orderCountdownTextView.setText("00:00");
                             }
+                        }
+
+                        if ("canceled".equals(status)) {
+                            isOrderCanceled = true;
+                            orderCountdownTextView.setText("Order Canceled");
+                            CancelButton.setVisibility(View.GONE);
                         }
                     } else {
                         Log.e("FirestoreError", "Order document does not exist");
                     }
                 });
     }
-
-
 
     private void fetchLatestOrder() {
         db.collection("orders")
@@ -211,6 +236,8 @@ public class YourOrderFragment extends Fragment {
                         DocumentSnapshot latestOrder = queryDocumentSnapshots.getDocuments().get(0);
 
                         Timestamp endTime = latestOrder.getTimestamp("endTime");
+                        String status = latestOrder.getString("status");
+
                         if (endTime == null) {
                             Log.e("FirestoreDebug", "endTime is null in Firestore");
                             return;
@@ -219,10 +246,13 @@ public class YourOrderFragment extends Fragment {
                         long currentTime = System.currentTimeMillis();
                         long timeRemaining = endTime.toDate().getTime() - currentTime;
 
-                        if (timeRemaining > 0) {
+                        if (timeRemaining > 0 && !"canceled".equals(status)) {
                             startCountdown(timeRemaining);
+                        } else if ("canceled".equals(status)) {
+                            orderCountdownTextView.setText("Order Canceled");
+                            CancelButton.setVisibility(View.GONE);
                         } else {
-                            orderCountdownTextView.setText("Ready! Go pick up your order now!");
+                            orderCountdownTextView.setText("00:00");
                         }
                     } else {
                         Log.e("FirestoreDebug", "No orders found for user.");
@@ -231,20 +261,19 @@ public class YourOrderFragment extends Fragment {
                 .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to fetch latest order: " + e.getMessage()));
     }
 
-    private void startCountdown(long remainingTimeInSeconds) {
+
+    private void startCountdown(long remainingTimeInMillis) {
         if (countDownTimer != null) {
             countDownTimer.cancel();
         }
 
-        countDownTimer = new CountDownTimer(remainingTimeInSeconds, 1000) {
+        countDownTimer = new CountDownTimer(remainingTimeInMillis, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                if (isOrderCanceled) {
+                if (isOrderCanceled || !isAdded()) {
                     cancel();
-                    orderCountdownTextView.setText("");
                     return;
                 }
-
                 timeRemaining = millisUntilFinished;
                 orderCountdownTextView.setText(String.format("%02d:%02d",
                         TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished),
@@ -253,16 +282,21 @@ public class YourOrderFragment extends Fragment {
 
             @Override
             public void onFinish() {
+                if (!isAdded() || getView() == null) {
+                    return; // Avoid accessing views if fragment is detached
+                }
                 orderCountdownTextView.setText("00:00");
-                TextView countdownLabel = requireView().findViewById(R.id.countdownLabel);
-                countdownLabel.setText("Ready! Go pick up your order now!");
+                TextView countdownLabel = getView().findViewById(R.id.countdownLabel);
+                if (countdownLabel != null) {
+                    countdownLabel.setText("Ready! Go pick up your order now!");
+                }
+                CancelButton.setVisibility(View.GONE);
             }
         }.start();
     }
 
 
-    private void confirmOrder() {
-        YourOrderMainDomain order = getArguments().getParcelable("order");
+    private void confirmOrder(YourOrderMainDomain order) {
         if (order == null) {
             Log.e("YourOrderFragment", "Order data is null, cannot confirm order.");
             return;
@@ -270,11 +304,11 @@ public class YourOrderFragment extends Fragment {
 
         Log.d("FirestoreDebug", "confirmOrder() called");
         String userId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "guest";
-        long currentTimeMillis = System.currentTimeMillis(); // Current time in milliseconds
+        long currentTimeMillis = System.currentTimeMillis();
         long totalPrepTimeMillis = order.getTotalPrepTime() * 60 * 1000;
-        long endTimeMillis = currentTimeMillis + totalPrepTimeMillis; // Add totalPrepTime to current time
+        long endTimeMillis = currentTimeMillis + totalPrepTimeMillis;
 
-        Timestamp startTime = new Timestamp(currentTimeMillis / 1000, (int) ((currentTimeMillis % 1000) * 1_000_000)); // Current time as startTime
+        Timestamp startTime = new Timestamp(currentTimeMillis / 1000, (int) ((currentTimeMillis % 1000) * 1_000_000));
         Timestamp endTime = new Timestamp(endTimeMillis / 1000, (int) ((endTimeMillis % 1000) * 1_000_000));
 
         Map<String, Object> orderData = new HashMap<>();
@@ -283,8 +317,7 @@ public class YourOrderFragment extends Fragment {
         orderData.put("restaurantId", order.getRestaurantId());
         orderData.put("totalPrice", order.getTotalPrice());
         orderData.put("totalPrepTime", order.getTotalPrepTime());
-        orderData.put("startTime", Timestamp.now());
-
+        orderData.put("startTime", startTime);
         orderData.put("endTime", endTime);
 
         List<Map<String, Object>> itemsList = new ArrayList<>();
@@ -292,14 +325,8 @@ public class YourOrderFragment extends Fragment {
             Map<String, Object> itemData = new HashMap<>();
             itemData.put("name", item.getItemName());
             itemData.put("price", Double.parseDouble(item.getItemPrice()));
-
-            String priceString = item.getItemPrice();
-            if (priceString != null && !priceString.trim().isEmpty()) {
-                itemData.put("price", Double.parseDouble(priceString.trim()));
-            } else {
-                itemData.put("price", 0.0);
-            }
-            itemData.put("price", Double.parseDouble(priceString.trim()));
+            itemData.put("prepTime", item.getPrepTime());
+            itemData.put("photo", item.getItemImg());
             itemsList.add(itemData);
         }
         orderData.put("items", itemsList);
@@ -314,7 +341,6 @@ public class YourOrderFragment extends Fragment {
                     Log.e("FirestoreError", "Failed to store order: " + e.getMessage());
                 });
     }
-
 
     /*
         private void cancelOrder() {

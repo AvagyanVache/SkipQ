@@ -184,9 +184,6 @@ public class YourOrderMainFragment extends Fragment {
     }
 
 
-
-
-
     private void startOrderCountdownWatcher() {
         Handler handler = new Handler();
         Runnable runnable = new Runnable() {
@@ -215,6 +212,7 @@ public class YourOrderMainFragment extends Fragment {
         };
         handler.post(runnable);
     }
+
     private void updateOrderStatus(String orderId, String newStatus) {
         Map<String, Object> updates = new HashMap<>();
         updates.put("status", newStatus);
@@ -226,9 +224,6 @@ public class YourOrderMainFragment extends Fragment {
                 })
                 .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to update order status: " + e.getMessage()));
     }
-
-
-
 
 
     private void updateTabSelection(boolean isCurrentOrdersSelected) {
@@ -268,8 +263,6 @@ public class YourOrderMainFragment extends Fragment {
     }
 
 
-
-
     private void saveOrderToFirestore(YourOrderMainDomain order) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -294,8 +287,6 @@ public class YourOrderMainFragment extends Fragment {
         loadOrdersFromFirestore(true);
 
     }
-
-
 
 
     public interface OnRestaurantFetchedListener {
@@ -323,7 +314,8 @@ public class YourOrderMainFragment extends Fragment {
                 order.getTotalPrepTime(),
                 order.getItems(),
                 order,
-                order.getStatus()
+                order.getStatus(),
+                false
         );
 
         requireActivity().getSupportFragmentManager().beginTransaction()
@@ -331,4 +323,4 @@ public class YourOrderMainFragment extends Fragment {
                 .addToBackStack(null)
                 .commit();
     }
-}  
+}
