@@ -305,7 +305,6 @@ public class YourOrderMainFragment extends Fragment {
         }
     }
 
-
     private void openYourOrderFragment(YourOrderMainDomain order) {
         YourOrderFragment fragment = YourOrderFragment.newInstance(
                 order.getRestaurant().getName(),
@@ -317,7 +316,7 @@ public class YourOrderMainFragment extends Fragment {
                 order.getStatus(),
                 false
         );
-
+        Log.d("YourOrderMainFragment", "Passing order to fragment: " + new Gson().toJson(order));
         requireActivity().getSupportFragmentManager().beginTransaction()
                 .replace(R.id.frame_layout, fragment)
                 .addToBackStack(null)

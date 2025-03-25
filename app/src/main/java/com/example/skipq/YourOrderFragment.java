@@ -102,9 +102,13 @@ public class YourOrderFragment extends Fragment {
 
         Bundle args = getArguments();
         if (args != null) {
+            String orderId = args.getString("orderId");
             YourOrderMainDomain order = args.getParcelable("order");
+            String status = args.getString("status");
+
             if (order != null) {
                 cartItems = order.getItems();
+                Log.d("YourOrderFragment", "Initial cartItems: " + new Gson().toJson(cartItems));
                 yourOrderAdapter = new YourOrderAdaptor(requireContext(), cartItems);
                 recyclerView.setAdapter(yourOrderAdapter);
                 totalPriceTextView.setText(String.format("%.2f֏", order.getTotalPrice()));
@@ -114,7 +118,10 @@ public class YourOrderFragment extends Fragment {
                     long endTimeMillis = endTime.toDate().getTime();
                     long currentTimeMillis = System.currentTimeMillis();
                     timeRemaining = endTimeMillis - currentTimeMillis;
-                    if (timeRemaining > 0) {
+                    if ("done".equals(status)) {
+                        orderCountdownTextView.setText("00:00");
+                        CancelButton.setVisibility(View.GONE);
+                    } else if ("pending".equals(status) && timeRemaining > 0) {
                         if (countDownTimer == null) {
                             startCountdown(timeRemaining);
                         }
@@ -135,11 +142,16 @@ public class YourOrderFragment extends Fragment {
             } else {
                 Log.e("YourOrderFragment", "Order is null");
             }
+
+            // Fetch updated data from Firestore if orderId is provided
+            if (orderId != null) {
+                fetchOrderDetails(orderId);
+            } else {
+                Log.e("YourOrderFragment", "Order ID is null");
+            }
         } else {
             Log.e("YourOrderFragment", "Arguments are null");
         }
-        loadOrderData();
-        fetchLatestOrder();
         profileIcon.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), HomeActivity.class);
             intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
@@ -156,112 +168,110 @@ public class YourOrderFragment extends Fragment {
         return view;
     }
 
-    private void loadOrderData() {
-        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("cart_data", Context.MODE_PRIVATE);
-        Gson gson = new Gson();
-        String cartItemsJson = sharedPreferences.getString("cartItems", null);
-        String restaurantId = sharedPreferences.getString("restaurantId", null);
-        totalPrice = sharedPreferences.getFloat("totalPrice", 0);
-        prepTimeMinutes = sharedPreferences.getInt("prepTime", 0);
-
-        if (cartItemsJson == null || restaurantId == null) {
-            Log.e("YourOrderFragment", "Order data is null");
-            return;
-        }
-
-        Type listType = new TypeToken<ArrayList<MenuDomain>>() {}.getType();
-        cartItems = gson.fromJson(cartItemsJson, listType);
-
-        if (cartItems == null || cartItems.isEmpty()) {
-            Log.e("YourOrderFragment", "Cart items are empty");
-            return;
-        }
-
-        if (cartItems != null && !cartItems.isEmpty()) {
-            yourOrderAdapter = new YourOrderAdaptor(requireContext(), cartItems);
-            recyclerView.setAdapter(yourOrderAdapter);
-        } else {
-            Log.e("YourOrderFragment", "Cart is empty, cannot attach adapter");
-        }
-
-        totalPriceTextView.setText(String.format("%.2f֏", totalPrice));
-
-        fetchOrderFromFirestore(restaurantId);
-    }
 
 
-    private void fetchOrderFromFirestore(String orderId) {
+    private void fetchOrderDetails(String orderId) {
         db.collection("orders").document(orderId)
-                .addSnapshotListener((documentSnapshot, error) -> {
-                    if (error != null) {
-                        Log.e("FirestoreError", "Failed to fetch order: " + error.getMessage());
-                        return;
-                    }
-
-                    if (documentSnapshot != null && documentSnapshot.exists()) {
-                        String status = documentSnapshot.getString("status");
-                        Timestamp endTime = documentSnapshot.getTimestamp("endTime");
-
-                        if (endTime != null) {
-                            long endTimeMillis = endTime.toDate().getTime();
-                            long currentTimeMillis = System.currentTimeMillis();
-                            long timeRemaining = endTimeMillis - currentTimeMillis;
-
-                            if (timeRemaining > 0) {
-                                startCountdown(timeRemaining);
-                            } else {
-                                orderCountdownTextView.setText("00:00");
-                            }
-                        }
-
-                        if ("canceled".equals(status)) {
-                            isOrderCanceled = true;
-                            orderCountdownTextView.setText("Order Canceled");
-                            CancelButton.setVisibility(View.GONE);
-                        }
-                    } else {
-                        Log.e("FirestoreError", "Order document does not exist");
-                    }
-                });
-    }
-
-    private void fetchLatestOrder() {
-        db.collection("orders")
-                .whereEqualTo("userId", FirebaseAuth.getInstance().getCurrentUser().getUid())
-                .orderBy("startTime", Query.Direction.DESCENDING)
-                .limit(1)
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        DocumentSnapshot latestOrder = queryDocumentSnapshots.getDocuments().get(0);
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String restaurantId = documentSnapshot.getString("restaurantId");
+                        List<Map<String, Object>> orderItems = (List<Map<String, Object>>) documentSnapshot.get("items");
+                        Timestamp endTime = documentSnapshot.getTimestamp("endTime");
+                        String status = documentSnapshot.getString("status");
+                        Double totalPrice = documentSnapshot.getDouble("totalPrice");
 
-                        Timestamp endTime = latestOrder.getTimestamp("endTime");
-                        String status = latestOrder.getString("status");
+                        if (restaurantId != null && orderItems != null) {
+                            fetchMenuItemsForOrder(restaurantId, orderItems);
+                            totalPriceTextView.setText(String.format("%.2f֏", totalPrice));
 
-                        if (endTime == null) {
-                            Log.e("FirestoreDebug", "endTime is null in Firestore");
-                            return;
-                        }
+                            if (endTime != null) {
+                                long endTimeMillis = endTime.toDate().getTime();
+                                long currentTimeMillis = System.currentTimeMillis();
+                                timeRemaining = endTimeMillis - currentTimeMillis;
 
-                        long currentTime = System.currentTimeMillis();
-                        long timeRemaining = endTime.toDate().getTime() - currentTime;
-
-                        if (timeRemaining > 0 && !"canceled".equals(status)) {
-                            startCountdown(timeRemaining);
-                        } else if ("canceled".equals(status)) {
-                            orderCountdownTextView.setText("Order Canceled");
-                            CancelButton.setVisibility(View.GONE);
+                                if ("done".equals(status)) {
+                                    orderCountdownTextView.setText("00:00");
+                                    CancelButton.setVisibility(View.GONE);
+                                } else if ("pending".equals(status) && timeRemaining > 0) {
+                                    startCountdown(timeRemaining);
+                                    CancelButton.setVisibility(View.VISIBLE);
+                                } else {
+                                    orderCountdownTextView.setText("00:00");
+                                    CancelButton.setVisibility(View.GONE);
+                                }
+                            }
                         } else {
-                            orderCountdownTextView.setText("00:00");
+                            Log.e("FirestoreDebug", "RestaurantId or items missing in order document");
                         }
                     } else {
-                        Log.e("FirestoreDebug", "No orders found for user.");
+                        Log.e("FirestoreDebug", "Order document does not exist");
                     }
                 })
-                .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to fetch latest order: " + e.getMessage()));
+                .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to fetch order: " + e.getMessage()));
     }
 
+    private void fetchMenuItemsForOrder(String restaurantId, List<Map<String, Object>> orderItems) {
+        db.collection("FoodPlaces")
+                .document(restaurantId)
+                .collection("Menu")
+                .document(restaurantId + " Menu")
+                .collection("Items")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    ArrayList<MenuDomain> menuList = new ArrayList<>();
 
+                    for (Map<String, Object> orderItem : orderItems) {
+                        String orderItemName = (String) orderItem.get("name");
+                        boolean itemFound = false;
+
+                        for (DocumentSnapshot document : queryDocumentSnapshots) {
+                            String menuItemName = document.getString("Item Name");
+                            if (menuItemName != null && menuItemName.trim().equalsIgnoreCase(orderItemName.trim())) {
+                                String itemDescription = document.getString("Item Description");
+                                String itemImg = document.getString("Item Img");
+                                String itemPrice = document.getString("Item Price");
+                                int prepTime = document.contains("Prep Time") ?
+                                        document.getLong("Prep Time").intValue() : 0;
+
+                                menuList.add(new MenuDomain(menuItemName, itemDescription, itemImg, itemPrice, prepTime));
+                                itemFound = true;
+                                break;
+                            }
+                        }
+                        if (!itemFound) {
+                            Log.w("FirestoreDebug", "No menu item found for order item: " + orderItemName);
+                            // Fallback to original order item data if available
+                            if (cartItems != null) {
+                                for (MenuDomain originalItem : cartItems) {
+                                    if (originalItem.getItemName().trim().equalsIgnoreCase(orderItemName.trim())) {
+                                        menuList.add(originalItem);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (!menuList.isEmpty()) {
+                        cartItems = menuList;
+                        Log.d("FirestoreDebug", "Updated cartItems size: " + cartItems.size());
+                        yourOrderAdapter = new YourOrderAdaptor(requireContext(), cartItems);
+                        recyclerView.setAdapter(yourOrderAdapter);
+                        yourOrderAdapter.notifyDataSetChanged();
+                    } else {
+                        Log.e("FirestoreDebug", "No matching menu items found. Using original data.");
+                        if (cartItems == null || cartItems.isEmpty()) {
+                            cartItems = new ArrayList<>();
+                        }
+                        yourOrderAdapter.notifyDataSetChanged();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirestoreError", "Failed to fetch menu items: " + e.getMessage());
+                    yourOrderAdapter.notifyDataSetChanged(); // Refresh with existing data
+                });
+    }
     private void startCountdown(long remainingTimeInMillis) {
         if (countDownTimer != null) {
             countDownTimer.cancel();
@@ -342,76 +352,7 @@ public class YourOrderFragment extends Fragment {
                 });
     }
 
-    /*
-        private void cancelOrder() {
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-            LayoutInflater inflater = requireActivity().getLayoutInflater();
-            View dialogView = inflater.inflate(R.layout.dialog_cancel_order, null);
-            builder.setView(dialogView);
-
-            AlertDialog alertDialog = builder.create();
-
-            TextView backButton = dialogView.findViewById(R.id.cancelOrderDialog);
-            TextView cancelButton = dialogView.findViewById(R.id.backButtonDialog);
-
-            backButton.setOnClickListener(v -> alertDialog.dismiss());
-
-            cancelButton.setOnClickListener(v -> {
-                alertDialog.dismiss();
-                clearOrderFromFirestore();
-            });
-
-            alertDialog.show();
-            isOrderCanceled = true;
-
-            if (countDownTimer != null) {
-                countDownTimer.cancel();
-                countDownTimer = null;
-            }
-
-            Bundle args = getArguments();
-            if (args == null) {
-                Log.e("YourOrderFragment", "Arguments are null");
-                return;
-            }
-
-            String orderId = args.getString("orderId");
-            if (orderId == null) {
-                Log.e("YourOrderFragment", "Order ID is null");
-                return;
-            }
-
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("orders").document(orderId)
-                    .delete()
-                    .addOnSuccessListener(aVoid -> {
-                        if (cartItems != null) {
-                            cartItems.clear();
-                        }
-
-                        if (yourOrderAdapter != null) {
-                            yourOrderAdapter.notifyDataSetChanged();
-                        }
-
-                        totalPrice = 0.0;
-                        totalPriceTextView.setText("0֏");
-
-                        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("cart_data", Context.MODE_PRIVATE);
-                        sharedPreferences.edit()
-                                .clear()
-                                .apply();
-
-                        Toast.makeText(requireContext(), "Order Canceled", Toast.LENGTH_SHORT).show();
-                        orderCountdownTextView.setText("Order Canceled");
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(requireContext(), "Failed to cancel order", Toast.LENGTH_SHORT).show();
-                        Log.e("FirestoreError", "Failed to delete order: " + e.getMessage());
-                    });
-        }
-
-     */
     private void cancelOrder() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         LayoutInflater inflater = requireActivity().getLayoutInflater();

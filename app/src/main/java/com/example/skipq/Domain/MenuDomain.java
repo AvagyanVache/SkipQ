@@ -26,6 +26,14 @@ public class MenuDomain implements Parcelable {
         prepTime = in.readInt();
         restaurant = in.readParcelable(RestaurantDomain.class.getClassLoader());
     }
+    public MenuDomain(String itemName, String itemDescription, String itemImg, String itemPrice, int prepTime) {
+        this.itemName = itemName;
+        this.itemDescription = itemDescription;
+        this.itemImg = itemImg;
+        this.itemPrice = itemPrice;
+        this.prepTime = prepTime;
+    }
+
 
     public static final Creator<MenuDomain> CREATOR = new Creator<MenuDomain>() {
         @Override
