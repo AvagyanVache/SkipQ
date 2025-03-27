@@ -42,42 +42,37 @@ public class ProfileFragment extends Fragment {
 
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        if (currentUser != null) {
-            db.collection("users").document(currentUser.getUid())
+        if (firebaseUser != null) {
+            db.collection("users").document(firebaseUser.getUid())
                     .get()
                     .addOnSuccessListener(documentSnapshot -> {
                         if (documentSnapshot.exists()) {
+                            String name = documentSnapshot.getString("name");
+                            if (name != null && !name.isEmpty()) {
+                                userNameSurname.setText(name);
+                            } else {
+                                userNameSurname.setText("Name: Not set");
+                            }
+
                             String phoneNumber = documentSnapshot.getString("phoneNumber");
                             if (phoneNumber != null && !phoneNumber.isEmpty()) {
                                 userPhoneNumber.setText(phoneNumber);
                             } else {
                                 userPhoneNumber.setText("Phone Number: Not set");
                             }
+                        } else {
+                            userNameSurname.setText("Name: Not set");
+                            userPhoneNumber.setText("Phone Number: Not set");
                         }
                     })
-                    .addOnFailureListener(e -> Log.e("ProfileFragment", "Failed to fetch phone number", e));
-        }
+                    .addOnFailureListener(e -> {
+                        Log.e("ProfileFragment", "Failed to fetch user data", e);
+                        userNameSurname.setText("Name: Error");
+                        userPhoneNumber.setText("Phone Number: Error");
+                    });
 
-        if (firebaseUser != null) {
-            String name = firebaseUser.getDisplayName();
-
-            if (name == null || name.isEmpty()) {
-                name = "Name Surname";
-            }
-
-            userNameSurname.setText(name);
             userEmail.setText(firebaseUser.getEmail());
-
-           /* String phoneNumber = firebaseUser.getPhoneNumber();
-            if (phoneNumber != null && !phoneNumber.isEmpty()) {
-                userPhoneNumber.setText(phoneNumber); // Set phone number to TextView
-            } else {
-                userPhoneNumber.setText("Phone Number: Not set");
-            }
-
-            */
 
             Uri photoUrl = firebaseUser.getPhotoUrl();
             if (photoUrl != null) {

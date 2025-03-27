@@ -11,6 +11,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -61,8 +63,27 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    proceedToOrder();
   });
   TextInputEditText phoneNumberInput = view.findViewById(R.id.userPhoneNumber);
+  TextInputEditText nameInput = view.findViewById(R.id.userNameSurname);
   FirebaseFirestore db = FirebaseFirestore.getInstance();
   FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+  if (currentUser != null) {
+   db.collection("users").document(currentUser.getUid())
+           .get()
+           .addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+             String savedPhoneNumber = documentSnapshot.getString("phoneNumber");
+             String savedName = documentSnapshot.getString("name");
+
+             if (savedPhoneNumber != null && !savedPhoneNumber.isEmpty()) {
+              phoneNumberInput.setText(savedPhoneNumber);
+             }
+             if (savedName != null && !savedName.isEmpty()) {
+              nameInput.setText(savedName);
+             }
+            }
+           })
+           .addOnFailureListener(e -> Log.e("CartFragment", "Failed to fetch user data", e));
+  }
 
   phoneNumberInput.setOnFocusChangeListener((v, hasFocus) -> {
    if (!hasFocus && currentUser != null) { // Save when the user leaves the input field
@@ -75,6 +96,17 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
     }
    }
   });
+  nameInput.setOnFocusChangeListener((v, hasFocus) -> {
+   if (!hasFocus && currentUser != null) {
+    String name = nameInput.getText().toString().trim();
+    if (!name.isEmpty()) {
+     db.collection("users").document(currentUser.getUid())
+             .update("name", name)
+             .addOnSuccessListener(aVoid -> Log.d("CartFragment", "Name updated"))
+             .addOnFailureListener(e -> Log.e("CartFragment", "Failed to update name", e));
+    }
+   }
+  });
 
   cartList = new ArrayList<>(CartManager.getInstance().getCartList());
   cartAdaptor = new CartAdaptor(requireContext(), cartList, this);
@@ -84,7 +116,47 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   updateTimeTillReady(CartManager.getInstance().getTotalPrepTime());
   return view;
  }
+ private boolean validatePhoneNumber() {
+  TextInputEditText phoneNumberInput = getView().findViewById(R.id.userPhoneNumber);
+  String phoneNumber = phoneNumberInput.getText().toString().trim();
+  if (phoneNumber.isEmpty()) {
+   phoneNumberInput.setError("Phone number can't be empty");
+   return false;
+  } else {
+   phoneNumberInput.setError(null);
+   return true;
+  }
+ }
+
+ private boolean validateName() {
+  TextInputEditText nameInput = getView().findViewById(R.id.userNameSurname);
+  String name = nameInput.getText().toString().trim();
+  if (name.isEmpty()) {
+   nameInput.setError("Name can't be empty");
+   return false;
+  } else {
+   nameInput.setError(null);
+   return true;
+  }
+ }
+
  private void proceedToOrder() {
+
+  if (!validateName() || !validatePhoneNumber()) {
+   Toast.makeText(getContext(), "Please fill in all required fields", Toast.LENGTH_SHORT).show();
+   return;
+  }
+  TextInputEditText phoneNumberInput = getView().findViewById(R.id.userPhoneNumber);
+  TextInputEditText nameInput = getView().findViewById(R.id.userNameSurname);
+
+  String phoneNumber = phoneNumberInput.getText().toString().trim();
+  String name = nameInput.getText().toString().trim();
+
+  if (phoneNumber.isEmpty() || name.isEmpty()) {
+   Toast.makeText(getContext(), "Name and phone number cannot be empty", Toast.LENGTH_LONG).show();
+   return;
+  }
+
   if (cartList.isEmpty()) {
    Log.e("CartFragment", "Cart is empty, cannot place order.");
    return;
