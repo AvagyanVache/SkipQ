@@ -51,7 +51,8 @@ dependencies {
     implementation ("com.google.android.gms:play-services-location:21.0.1")
     implementation ("com.google.android.gms:play-services-maps:18.2.0")
     implementation ("com.google.firebase:firebase-firestore:24.0.1")
-
+    implementation ("com.hbb20:ccp:2.7.2")
+    implementation ("com.googlecode.libphonenumber:libphonenumber:8.12.57")
 
 
 

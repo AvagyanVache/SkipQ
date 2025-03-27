@@ -70,18 +70,38 @@
                 android:id="@+id/textInputLayoutPhone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="15dp">
+                android:padding="15dp"
+                android:layout_marginTop="15dp">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/userPhoneNumber"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Enter your Phone Number"
-                    android:background="@drawable/white_bg"
-                    android:textColorHint="@color/secondary_color"
-                    android:inputType="phone"/>
+                    android:orientation="horizontal">
 
-            </com.google.android.material.textfield.TextInputLayout><com.google.android.material.textfield.TextInputLayout
+                    <com.hbb20.CountryCodePicker
+                        android:id="@+id/countryCodePicker"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:ccp_defaultPhoneCode="374"
+                        app:ccp_showPhoneCode="true"
+                        app:ccp_showNameCode="true"
+                        android:layout_gravity="center_vertical"
+                        app:ccp_contentColor="@color/secondary_color"
+                        android:background="@drawable/white_bg" />
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/phoneNumberInput"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:hint="Phone Number"
+                        android:inputType="phone"
+                        android:background="@drawable/white_bg"
+                        android:textColorHint="@color/secondary_color" />
+
+                </LinearLayout>
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/textInputName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -62,10 +62,12 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   checkOutButton.setOnClickListener(v -> {
    proceedToOrder();
   });
-  TextInputEditText phoneNumberInput = view.findViewById(R.id.userPhoneNumber);
+  com.hbb20.CountryCodePicker countryCodePicker = view.findViewById(R.id.countryCodePicker);
+  TextInputEditText phoneNumberInput = view.findViewById(R.id.phoneNumberInput);
   TextInputEditText nameInput = view.findViewById(R.id.userNameSurname);
   FirebaseFirestore db = FirebaseFirestore.getInstance();
   FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
   if (currentUser != null) {
    db.collection("users").document(currentUser.getUid())
            .get()
@@ -75,7 +77,14 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
              String savedName = documentSnapshot.getString("name");
 
              if (savedPhoneNumber != null && !savedPhoneNumber.isEmpty()) {
-              phoneNumberInput.setText(savedPhoneNumber);
+              // Extract national number by removing country code
+              String countryCode = countryCodePicker.getSelectedCountryCodeWithPlus();
+              if (savedPhoneNumber.startsWith(countryCode)) {
+               String nationalNumber = savedPhoneNumber.substring(countryCode.length());
+               phoneNumberInput.setText(nationalNumber);
+              } else {
+               phoneNumberInput.setText(savedPhoneNumber); // Fallback if country code mismatch
+              }
              }
              if (savedName != null && !savedName.isEmpty()) {
               nameInput.setText(savedName);
@@ -85,12 +94,14 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
            .addOnFailureListener(e -> Log.e("CartFragment", "Failed to fetch user data", e));
   }
 
+  // Save phone number when focus is lost
   phoneNumberInput.setOnFocusChangeListener((v, hasFocus) -> {
-   if (!hasFocus && currentUser != null) { // Save when the user leaves the input field
-    String phoneNumber = phoneNumberInput.getText().toString().trim();
-    if (!phoneNumber.isEmpty()) {
+   if (!hasFocus && currentUser != null) {
+    String nationalNumber = phoneNumberInput.getText().toString().trim();
+    if (!nationalNumber.isEmpty() && validatePhoneNumber()) {
+     String fullNumber = countryCodePicker.getSelectedCountryCodeWithPlus() + nationalNumber;
      db.collection("users").document(currentUser.getUid())
-             .update("phoneNumber", phoneNumber)
+             .update("phoneNumber", fullNumber)
              .addOnSuccessListener(aVoid -> Log.d("CartFragment", "Phone number updated"))
              .addOnFailureListener(e -> Log.e("CartFragment", "Failed to update phone number", e));
     }
@@ -117,15 +128,45 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   return view;
  }
  private boolean validatePhoneNumber() {
-  TextInputEditText phoneNumberInput = getView().findViewById(R.id.userPhoneNumber);
+  com.hbb20.CountryCodePicker countryCodePicker = getView().findViewById(R.id.countryCodePicker);
+  TextInputEditText phoneNumberInput = getView().findViewById(R.id.phoneNumberInput);
+  com.google.android.material.textfield.TextInputLayout phoneLayout = getView().findViewById(R.id.textInputLayoutPhone);
   String phoneNumber = phoneNumberInput.getText().toString().trim();
+  String countryCode = countryCodePicker.getSelectedCountryCode();
+
   if (phoneNumber.isEmpty()) {
-   phoneNumberInput.setError("Phone number can't be empty");
+   phoneLayout.setError("Phone number can't be empty");
    return false;
-  } else {
-   phoneNumberInput.setError(null);
-   return true;
   }
+
+  switch (countryCode) {
+   case "374":
+    if (phoneNumber.length() != 8) {
+     phoneLayout.setError("Armenian numbers must be 8 digits");
+     return false;
+    }
+    break;
+   case "7":
+    if (phoneNumber.length() != 10) {
+     phoneLayout.setError("Russian numbers must be 10 digits");
+     return false;
+    }
+    break;
+   case "1":
+    if (phoneNumber.length() != 10) {
+     phoneLayout.setError("US/Canada numbers must be 10 digits");
+     return false;
+    }
+    break;
+   default:
+    if (phoneNumber.length() < 6 || phoneNumber.length() > 15) {
+     phoneLayout.setError("Invalid phone number length");
+     return false;
+    }
+  }
+
+  phoneLayout.setError(null);
+  return true;
  }
 
  private boolean validateName() {
@@ -146,13 +187,14 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    Toast.makeText(getContext(), "Please fill in all required fields", Toast.LENGTH_SHORT).show();
    return;
   }
-  TextInputEditText phoneNumberInput = getView().findViewById(R.id.userPhoneNumber);
+  com.hbb20.CountryCodePicker countryCodePicker = getView().findViewById(R.id.countryCodePicker);
+  TextInputEditText phoneNumberInput = getView().findViewById(R.id.phoneNumberInput);
   TextInputEditText nameInput = getView().findViewById(R.id.userNameSurname);
 
-  String phoneNumber = phoneNumberInput.getText().toString().trim();
+  String fullPhoneNumber = countryCodePicker.getSelectedCountryCodeWithPlus() + phoneNumberInput.getText().toString().trim();
   String name = nameInput.getText().toString().trim();
 
-  if (phoneNumber.isEmpty() || name.isEmpty()) {
+  if (fullPhoneNumber.isEmpty() || name.isEmpty()) {
    Toast.makeText(getContext(), "Name and phone number cannot be empty", Toast.LENGTH_LONG).show();
    return;
   }
