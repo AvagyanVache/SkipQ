@@ -34,6 +34,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
 
 public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedListener {
  private RecyclerView recyclerView;
@@ -131,6 +134,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   com.hbb20.CountryCodePicker countryCodePicker = getView().findViewById(R.id.countryCodePicker);
   TextInputEditText phoneNumberInput = getView().findViewById(R.id.phoneNumberInput);
   com.google.android.material.textfield.TextInputLayout phoneLayout = getView().findViewById(R.id.textInputLayoutPhone);
+
   String phoneNumber = phoneNumberInput.getText().toString().trim();
   String countryCode = countryCodePicker.getSelectedCountryCode();
 
@@ -139,36 +143,29 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    return false;
   }
 
-  switch (countryCode) {
-   case "374":
-    if (phoneNumber.length() != 8) {
-     phoneLayout.setError("Armenian numbers must be 8 digits");
-     return false;
-    }
-    break;
-   case "7":
-    if (phoneNumber.length() != 10) {
-     phoneLayout.setError("Russian numbers must be 10 digits");
-     return false;
-    }
-    break;
-   case "1":
-    if (phoneNumber.length() != 10) {
-     phoneLayout.setError("US/Canada numbers must be 10 digits");
-     return false;
-    }
-    break;
-   default:
-    if (phoneNumber.length() < 6 || phoneNumber.length() > 15) {
-     phoneLayout.setError("Invalid phone number length");
-     return false;
-    }
+  PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+  try {
+   String fullPhoneNumber = "+" + countryCode + phoneNumber;
+   Phonenumber.PhoneNumber parsedNumber = phoneUtil.parse(fullPhoneNumber, null);
+
+   String regionCode = phoneUtil.getRegionCodeForCountryCode(Integer.parseInt(countryCode));
+   boolean isValid = phoneUtil.isValidNumberForRegion(parsedNumber, regionCode);
+
+   if (!isValid) {
+    phoneLayout.setError("Invalid phone number for " + countryCodePicker.getSelectedCountryName());
+    return false;
+   }
+
+   phoneLayout.setError(null);
+   return true;
+  } catch (NumberParseException e) {
+   phoneLayout.setError("Invalid phone number format");
+   return false;
+  } catch (NumberFormatException e) {
+   phoneLayout.setError("Invalid country code");
+   return false;
   }
-
-  phoneLayout.setError(null);
-  return true;
  }
-
  private boolean validateName() {
   TextInputEditText nameInput = getView().findViewById(R.id.userNameSurname);
   String name = nameInput.getText().toString().trim();
