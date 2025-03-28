@@ -3,12 +3,16 @@ package com.example.skipq;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.example.skipq.Adaptor.YourOrderMainAdaptor;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.Domain.RestaurantDomain;
@@ -31,6 +36,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -50,7 +56,10 @@ public class YourOrderMainFragment extends Fragment {
     private ArrayList<YourOrderMainDomain> groupedOrders;
     private FirebaseFirestore firestore;
     private String userId;
+    private ImageView profileIcon;
     private String filterStatus;
+    private FirebaseFirestore db;
+    private ListenerRegistration profileListener;
 
 
     @Nullable
@@ -63,7 +72,18 @@ public class YourOrderMainFragment extends Fragment {
         goShoppingText = view.findViewById(R.id.GoShopping);
         currentOrdersText = view.findViewById(R.id.CurrentOrders);
         orderHistoryText = view.findViewById(R.id.OrderHistory);
+        profileIcon = view.findViewById(R.id.profileIcon);
 
+        db = FirebaseFirestore.getInstance();
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            setupProfileListener(currentUser);
+        }
+
+        profileIcon.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), HomeActivity.class);intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP); startActivity(intent);
+        });
 
         firestore = FirebaseFirestore.getInstance();
         groupedOrders = new ArrayList<>();
@@ -302,6 +322,34 @@ public class YourOrderMainFragment extends Fragment {
             emptyOrderText.setVisibility(View.GONE);
             goShoppingText.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
+        }
+    }
+    private void setupProfileListener(FirebaseUser firebaseUser) {
+        profileListener = db.collection("users").document(firebaseUser.getUid())
+                .addSnapshotListener((documentSnapshot, e) -> {
+                    if (e != null) {
+                        Log.e("CartFragment", "Listen failed", e);
+                        return;
+                    }
+                    if (documentSnapshot != null && documentSnapshot.exists() && isAdded()) {
+                        String base64Image = documentSnapshot.getString("profileImage");
+                        loadProfileImage(base64Image, profileIcon);
+                    }
+                });
+    }
+    private void loadProfileImage(String base64Image, ImageView imageView) {
+        if (base64Image != null && !base64Image.isEmpty() && isAdded()) {
+            byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+            Glide.with(this)
+                    .load(decodedByte)
+                    .transform(new CircleCrop())
+                    .into(imageView);
+        } else {
+            Glide.with(this)
+                    .load(R.drawable.profile_picture)
+                    .transform(new CircleCrop())
+                    .into(imageView);
         }
     }
 

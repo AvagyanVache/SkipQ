@@ -3,7 +3,10 @@ package com.example.skipq;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +21,9 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.example.skipq.Adaptor.CartAdaptor;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.Domain.YourOrderMainDomain;
@@ -27,6 +33,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -52,6 +59,8 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
  private View textInputLayoutPhone;
  private View textInputName;
  private View linearLayout;
+ private FirebaseFirestore db;
+ private ListenerRegistration profileListener;
 
  @Override
  public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -69,6 +78,10 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   emptyCartImg = view.findViewById(R.id.emptyCartImg);
 
   cartList = new ArrayList<>(CartManager.getInstance().getCartList());
+  db = FirebaseFirestore.getInstance();
+
+  FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
 
   profileIcon.setOnClickListener(v -> {
    Intent intent = new Intent(getActivity(), HomeActivity.class);intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
@@ -83,8 +96,10 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   TextInputEditText phoneNumberInput = view.findViewById(R.id.phoneNumberInput);
   TextInputEditText nameInput = view.findViewById(R.id.userNameSurname);
   updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg);  FirebaseFirestore db = FirebaseFirestore.getInstance();
-  FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-
+  if (currentUser != null) {
+   setupProfileListener(currentUser);
+   loadUserData(currentUser, phoneNumberInput, nameInput, countryCodePicker);
+  }
 
   if (currentUser != null) {
    db.collection("users").document(currentUser.getUid())
@@ -144,7 +159,59 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   updateTimeTillReady(CartManager.getInstance().getTotalPrepTime());
   return view;
  }
+ private void setupProfileListener(FirebaseUser firebaseUser) {
+  profileListener = db.collection("users").document(firebaseUser.getUid())
+          .addSnapshotListener((documentSnapshot, e) -> {
+           if (e != null) {
+            Log.e("CartFragment", "Listen failed", e);
+            return;
+           }
+           if (documentSnapshot != null && documentSnapshot.exists() && isAdded()) {
+            String base64Image = documentSnapshot.getString("profileImage");
+            loadProfileImage(base64Image, profileIcon);
+           }
+          });
+ }
+ private void loadProfileImage(String base64Image, ImageView imageView) {
+  if (base64Image != null && !base64Image.isEmpty() && isAdded()) {
+   byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+   Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+   Glide.with(this)
+           .load(decodedByte)
+           .transform(new CircleCrop())
+           .into(imageView);
+  } else {
+   Glide.with(this)
+           .load(R.drawable.profile_picture)
+           .transform(new CircleCrop())
+           .into(imageView);
+  }
+ }
+ private void loadUserData(FirebaseUser currentUser, TextInputEditText phoneNumberInput,
+                           TextInputEditText nameInput, com.hbb20.CountryCodePicker countryCodePicker) {
+  db.collection("users").document(currentUser.getUid())
+          .get()
+          .addOnSuccessListener(documentSnapshot -> {
+           if (documentSnapshot.exists()) {
+            String savedPhoneNumber = documentSnapshot.getString("phoneNumber");
+            String savedName = documentSnapshot.getString("name");
 
+            if (savedPhoneNumber != null && !savedPhoneNumber.isEmpty()) {
+             String countryCode = countryCodePicker.getSelectedCountryCodeWithPlus();
+             if (savedPhoneNumber.startsWith(countryCode)) {
+              String nationalNumber = savedPhoneNumber.substring(countryCode.length());
+              phoneNumberInput.setText(nationalNumber);
+             } else {
+              phoneNumberInput.setText(savedPhoneNumber);
+             }
+            }
+            if (savedName != null && !savedName.isEmpty()) {
+             nameInput.setText(savedName);
+            }
+           }
+          })
+          .addOnFailureListener(e -> Log.e("CartFragment", "Failed to fetch user data", e));
+ }
  private boolean validatePhoneNumber() {
   com.hbb20.CountryCodePicker countryCodePicker = getView().findViewById(R.id.countryCodePicker);
   TextInputEditText phoneNumberInput = getView().findViewById(R.id.phoneNumberInput);

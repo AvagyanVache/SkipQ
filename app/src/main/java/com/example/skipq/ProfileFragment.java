@@ -22,9 +22,11 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -40,8 +42,7 @@ public class ProfileFragment extends Fragment {
     private ImageView changePassword;
     private ImageView profilePicture;
     private FirebaseFirestore db;
-    private FirebaseStorage storage;
-    private StorageReference storageReference;
+    private ListenerRegistration profileListener;
 
     private final ActivityResultLauncher<String> imagePickerLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -73,7 +74,7 @@ public class ProfileFragment extends Fragment {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         if (firebaseUser != null) {
-            loadUserData(firebaseUser);
+            setupProfileListener(firebaseUser);
         }
 
         if (firebaseUser != null) {
@@ -140,11 +141,14 @@ public class ProfileFragment extends Fragment {
             }
         });
     }
-    private void loadUserData(FirebaseUser firebaseUser) {
-        db.collection("users").document(firebaseUser.getUid())
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
+    private void setupProfileListener(FirebaseUser firebaseUser) {
+        profileListener = db.collection("users").document(firebaseUser.getUid())
+                .addSnapshotListener((documentSnapshot, e) -> {
+                    if (e != null) {
+                        Log.e("ProfileFragment", "Listen failed", e);
+                        return;
+                    }
+                    if (documentSnapshot != null && documentSnapshot.exists() && isAdded()) {
                         String name = documentSnapshot.getString("name");
                         userNameSurname.setText(name != null && !name.isEmpty() ? name : "Name: Not set");
 
@@ -153,52 +157,50 @@ public class ProfileFragment extends Fragment {
                                 phoneNumber : "Phone Number: Not set");
 
                         String base64Image = documentSnapshot.getString("profileImage");
-                        if (base64Image != null && !base64Image.isEmpty() && isAdded()) {
-                            byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
-                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                            profilePicture.setImageBitmap(decodedByte);
-                        } else {
-                            profilePicture.setImageResource(R.drawable.profile_picture);
-                        }
+                        loadProfileImage(base64Image, profilePicture);
+
+                        userEmail.setText(firebaseUser.getEmail());
                     }
-                    userEmail.setText(firebaseUser.getEmail());
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("ProfileFragment", "Failed to fetch user data", e);
-                    userNameSurname.setText("Name: Error");
-                    userPhoneNumber.setText("Phone Number: Error");
                 });
     }
-
+    private void loadProfileImage(String base64Image, ImageView imageView) {
+        if (base64Image != null && !base64Image.isEmpty() && isAdded()) {
+            byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
+            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+            Glide.with(this)
+                    .load(decodedByte)
+                    .transform(new CircleCrop())
+                    .into(imageView);
+        } else {
+            Glide.with(this)
+                    .load(R.drawable.profile_picture)
+                    .transform(new CircleCrop())
+                    .into(imageView);
+        }
+    }
     private void uploadImageToFirestore(Uri imageUri) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null && isAdded()) {
             try {
-                // Get image from URI
                 InputStream inputStream = getContext().getContentResolver().openInputStream(imageUri);
                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
-                // Compress image to reduce size (Firestore has 1MB limit per document)
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 50, baos); // 50% quality
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 50, baos);
                 byte[] imageBytes = baos.toByteArray();
 
-                // Check size (Firestore limit is 1MB = 1,048,576 bytes)
-                if (imageBytes.length > 900000) { // Buffer to stay under limit
+                if (imageBytes.length > 900000) {
                     Toast.makeText(getContext(), "Image too large, please select a smaller image",
                             Toast.LENGTH_SHORT).show();
                     inputStream.close();
                     return;
                 }
 
-                // Convert to Base64
                 String base64Image = Base64.encodeToString(imageBytes, Base64.DEFAULT);
 
-                // Save to Firestore
                 db.collection("users").document(user.getUid())
                         .update("profileImage", base64Image)
                         .addOnSuccessListener(aVoid -> {
-                            profilePicture.setImageBitmap(bitmap);
                             Toast.makeText(getContext(), "Profile picture updated", Toast.LENGTH_SHORT).show();
                         })
                         .addOnFailureListener(e -> {
