@@ -42,6 +42,9 @@ public class HomeActivity extends AppCompatActivity {
         if ("PROFILE".equals(fragmentToLoad)) {
             selectedId = R.id.navigationbar_profilepicture;
             fragment = new ProfileFragment();
+        } else if  ("HOME".equals(fragmentToLoad)) {
+            selectedId = R.id.navigationbar_home;
+            fragment = new HomeFragment();
         } else if ("CART".equals(fragmentToLoad)) {
             selectedId = R.id.navigationbar_cart;
             fragment = new CartFragment();
