@@ -53,7 +53,7 @@ dependencies {
     implementation ("com.google.firebase:firebase-firestore:24.0.1")
     implementation ("com.hbb20:ccp:2.7.2")
     implementation ("com.googlecode.libphonenumber:libphonenumber:8.12.57")
-
+    implementation ("com.google.firebase:firebase-storage:20.3.0")
 
 
 
