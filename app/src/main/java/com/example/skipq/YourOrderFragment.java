@@ -59,7 +59,6 @@ public class YourOrderFragment extends Fragment {
     private double totalPrice;
     private FirebaseFirestore db;
     private FirebaseAuth auth;
-    private ImageView profileIcon;
     private TextView CancelButton;
     private boolean isOrderCanceled = false;
     private TextView backButton;
@@ -96,7 +95,6 @@ public class YourOrderFragment extends Fragment {
         totalPriceTextView = view.findViewById(R.id.orderTotal);
         orderCountdownTextView = view.findViewById(R.id.OrderCountdown);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        profileIcon = view.findViewById(R.id.profileIcon);
         CancelButton = view.findViewById(R.id.CancelOrder);
         backButton = view.findViewById(R.id.backButton);
 
@@ -153,12 +151,7 @@ public class YourOrderFragment extends Fragment {
         } else {
             Log.e("YourOrderFragment", "Arguments are null");
         }
-        profileIcon.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), HomeActivity.class);
-            intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
-        });
+
 
         backButton.setOnClickListener(v -> {
             requireActivity().getSupportFragmentManager().popBackStack();

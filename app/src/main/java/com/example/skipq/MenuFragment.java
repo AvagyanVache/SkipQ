@@ -43,7 +43,6 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
     private ArrayList<MenuDomain> menuList = new ArrayList<>();
     private FirebaseFirestore db;
     private String restaurantId;
-    public ImageView profileIcon;
 
     private SearchView searchBar;
 
@@ -112,16 +111,7 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
                     .commit();
             stopSearchBar();
         });
-        profileIcon = view.findViewById(R.id.profileIcon);
-        profileIcon.setOnClickListener(v -> {
-            ProfileFragment profileFragment = new ProfileFragment();
-            requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.frame_layout, profileFragment)
-                    .addToBackStack(null)
-                    .commit();
-            stopSearchBar();
-        });
+
         db = FirebaseFirestore.getInstance();
 
         if (getArguments() != null) {

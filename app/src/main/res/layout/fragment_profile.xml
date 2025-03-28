@@ -6,19 +6,29 @@
     android:layout_height="match_parent"
     android:background="#FF7F50">
 
-    <TextView
-        android:layout_width="142dp"
-        android:layout_height="44dp"
-        android:layout_gravity="center"
-        android:layout_marginTop="16dp"
-        android:text="Your Profile"
-        android:textColor="@color/white"
-        android:textSize="24sp"
-        android:textStyle="bold"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="142dp"
+            android:layout_height="44dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:text="Your Profile"
+
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </LinearLayout>
 
 
     <ImageView
@@ -227,13 +237,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="104dp"
+        android:layout_marginBottom="32dp"
         android:backgroundTint="#ff443a"
         android:text="Log Out"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintHorizontal_bias="0.533"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
+        app:layout_constraintVertical_bias="0.111" />
 
     <TextView
         android:id="@+id/textView7"
@@ -385,6 +397,69 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/imageView12"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="421dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView19011">
+
+        <ImageView
+            android:id="@+id/imageView102"
+            android:layout_width="55dp"
+            android:layout_height="39dp"
+            android:layout_marginStart="30dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="20dp"
+            android:src="@drawable/delete"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.12"
+            app:layout_constraintStart_toStartOf="parent"
+            app:tint="@color/white"
+            tools:layout_editor_absoluteY="564dp" />
+
+        <TextView
+            android:id="@+id/textView12090"
+            android:layout_width="122dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginEnd="110dp"
+            android:text="Delete account"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/imageView12"
+            tools:layout_editor_absoluteY="572dp" />
+
+        <ImageView
+            android:id="@+id/deleteAccount"
+            android:layout_width="35dp"
+            android:layout_height="39dp"
+            android:layout_marginTop="10dp"
+            android:src="@drawable/right_arrow"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.933"
+            app:layout_constraintStart_toStartOf="parent"
+            app:tint="@color/white"
+            tools:layout_editor_absoluteY="564dp" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/imageView190111"
+        android:layout_width="350dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="616dp"
+        android:background="@drawable/white_bg"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.524"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
