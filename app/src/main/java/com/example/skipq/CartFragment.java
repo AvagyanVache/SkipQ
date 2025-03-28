@@ -47,6 +47,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
  private ImageView profileIcon;
  private Button checkOutButton;
 
+ private ImageView emptyCartImg;
  private TextView cartEmpty;
  private View textInputLayoutPhone;
  private View textInputName;
@@ -65,6 +66,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   textInputLayoutPhone = view.findViewById(R.id.textInputLayoutPhone);
   textInputName = view.findViewById(R.id.textInputName);
   linearLayout = view.findViewById(R.id.linearLayout);
+  emptyCartImg = view.findViewById(R.id.emptyCartImg);
 
   cartList = new ArrayList<>(CartManager.getInstance().getCartList());
 
@@ -80,8 +82,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   com.hbb20.CountryCodePicker countryCodePicker = view.findViewById(R.id.countryCodePicker);
   TextInputEditText phoneNumberInput = view.findViewById(R.id.phoneNumberInput);
   TextInputEditText nameInput = view.findViewById(R.id.userNameSurname);
-  updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton);
-  FirebaseFirestore db = FirebaseFirestore.getInstance();
+  updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg);  FirebaseFirestore db = FirebaseFirestore.getInstance();
   FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
 
@@ -307,9 +308,10 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
  }
  private void updateCartVisibility(TextView cartEmpty, View recyclerView,
                                    View textInputLayoutPhone, View textInputName,
-                                   View linearLayout, Button checkOutButton) {
+                                   View linearLayout, Button checkOutButton, ImageView emptyCartImg) {
   if (cartList.isEmpty()) {
    cartEmpty.setVisibility(View.VISIBLE);
+   emptyCartImg.setVisibility(View.VISIBLE); // Show the image
    recyclerView.setVisibility(View.GONE);
    textInputLayoutPhone.setVisibility(View.GONE);
    textInputName.setVisibility(View.GONE);
@@ -317,6 +319,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    checkOutButton.setVisibility(View.GONE);
   } else {
    cartEmpty.setVisibility(View.GONE);
+   emptyCartImg.setVisibility(View.GONE); // Hide the image
    recyclerView.setVisibility(View.VISIBLE);
    textInputLayoutPhone.setVisibility(View.VISIBLE);
    textInputName.setVisibility(View.VISIBLE);
@@ -329,7 +332,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   updateTotalPrice(total);
   updateTimeTillReady(totalPrepTime);
   if (cartEmpty != null && textInputLayoutPhone != null && textInputName != null && linearLayout != null) {
-   updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton);
+   updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg);
   }
  }
  private void updateTimeTillReady(int totalPrepTime) {
@@ -355,8 +358,8 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   View textInputLayoutPhone = getView().findViewById(R.id.textInputLayoutPhone);
   View textInputName = getView().findViewById(R.id.textInputName);
   View linearLayout = getView().findViewById(R.id.linearLayout);
+  ImageView emptyCartImg = getView().findViewById(R.id.emptyCartImg);
 
-  updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone,
-          textInputName, linearLayout, checkOutButton);
+  updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg);
  }
  }
