@@ -6,37 +6,45 @@
     android:layout_height="match_parent"
     android:background="@color/primary_color">
 
-    <TextView
-        android:id="@+id/backButton"
-        android:layout_width="60dp"
-        android:layout_height="20dp"
-        android:layout_marginStart="4dp"
-
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="505dp"
-        android:background="@drawable/back_background"
-        android:text="      Back"
-        android:textColor="@color/white"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <LinearLayout
+        android:layout_width="147dp"
+        android:layout_height="34dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.091" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/backButton"
+            android:layout_width="60dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="4dp"
+
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="505dp"
+            android:background="@drawable/back_background"
+            android:text="      Back"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.091" />
 
 
-    <ImageView
-        android:id="@+id/imageView3"
-        android:layout_width="23dp"
-        android:layout_height="16dp"
-        app:layout_constraintBottom_toBottomOf="@+id/backButton"
-        app:layout_constraintEnd_toEndOf="@+id/backButton"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/backButton"
-        app:layout_constraintTop_toTopOf="@+id/backButton"
-        app:layout_constraintVertical_bias="1.0"
-        app:srcCompat="@drawable/back_arrow"
-        app:tint="@color/white" />
-
+        <ImageView
+            android:id="@+id/imageView3"
+            android:layout_width="23dp"
+            android:layout_height="16dp"
+            android:layout_marginLeft="-60dp"
+            android:layout_marginTop="13dp"
+            app:layout_constraintBottom_toBottomOf="@+id/backButton"
+            app:layout_constraintEnd_toEndOf="@+id/backButton"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/backButton"
+            app:layout_constraintTop_toTopOf="@+id/backButton"
+            app:layout_constraintVertical_bias="1.0"
+            app:srcCompat="@drawable/back_arrow"
+            app:tint="@color/white" />
+    </LinearLayout>v
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"

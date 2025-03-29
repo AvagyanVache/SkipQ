@@ -52,6 +52,7 @@
         android:layout_marginTop="110dp"
         android:textStyle="bold" />
 
+
     <ImageView
         android:id="@+id/imageView4"
         android:layout_width="56dp"
@@ -74,6 +75,16 @@
         android:text="0"
         android:textColor="@color/white"
         android:textSize="30dp"
+        android:textStyle="bold" />
+    <TextView
+        android:id="@+id/orderTotal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="260dp"
+        android:layout_marginTop="230dp"
+        android:text="Order Price"
+        android:textColor="@color/white"
+        android:textSize="20sp"
         android:textStyle="bold" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -106,16 +117,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="590dp"/>
 
-    <TextView
-        android:id="@+id/orderTotal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="260dp"
-        android:layout_marginTop="230dp"
-        android:text="Order Price"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+
 
 
 </FrameLayout>
