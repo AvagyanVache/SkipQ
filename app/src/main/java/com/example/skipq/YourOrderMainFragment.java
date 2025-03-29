@@ -160,10 +160,14 @@ public class YourOrderMainFragment extends Fragment {
                     groupedOrders.clear(); // Clear previous orders
 
                     if (snapshots != null && !snapshots.isEmpty()) {
+                        Map<String, YourOrderMainDomain> uniqueOrders = new HashMap<>();
                         int totalOrders = snapshots.size();
                         final int[] fetchedCount = {0}; // Track how many restaurant details are fetched
 
                         for (QueryDocumentSnapshot document : snapshots) {
+                            String orderId = document.getId();
+                            if (uniqueOrders.containsKey(orderId)) continue; // Skip duplicates
+
                             YourOrderMainDomain order = document.toObject(YourOrderMainDomain.class);
                             order.setStartTime(document.getTimestamp("startTime"));
                             order.setEndTime(document.getTimestamp("endTime"));
@@ -172,22 +176,26 @@ public class YourOrderMainFragment extends Fragment {
                             long endTimeSeconds = order.getEndTime() != null ? order.getEndTime().getSeconds() : 0;
                             String status = (currentTime < endTimeSeconds) ? "pending" : "done";
                             order.setStatus(status);
-
+                            if ((isCurrentOrders && "pending".equals(status)) || (!isCurrentOrders && "done".equals(status))) {
+                                uniqueOrders.put(orderId, order);
+                            }
                             if ((isCurrentOrders && "pending".equals(status)) || (!isCurrentOrders && "done".equals(status))) {
                                 String restaurantId = document.getString("restaurantId");
                                 if (restaurantId != null) {
                                     fetchRestaurantDetails(restaurantId, order, () -> {
-                                        groupedOrders.add(order); // Add only after restaurant is fetched
                                         fetchedCount[0]++;
                                         if (fetchedCount[0] == totalOrders) {
-                                            yourOrdersAdapter.notifyDataSetChanged(); // Notify only when all data is ready
+                                            groupedOrders.clear();
+                                            groupedOrders.addAll(uniqueOrders.values());
+                                            yourOrdersAdapter.notifyDataSetChanged();
                                             updateEmptyStateVisibility();
                                         }
                                     });
+
                                 } else {
                                     Log.e("FirestoreError", "RestaurantId is null for order: " + order.getOrderId());
                                     order.setRestaurant(new RestaurantDomain("Unknown", "")); // Fallback
-                                    groupedOrders.add(order);
+                                    groupedOrders.addAll(uniqueOrders.values());
                                     fetchedCount[0]++;
                                     if (fetchedCount[0] == totalOrders) {
                                         yourOrdersAdapter.notifyDataSetChanged();
