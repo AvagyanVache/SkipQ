@@ -382,89 +382,39 @@ public class YourOrderFragment extends Fragment {
     }
 
     private void cancelOrder() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        LayoutInflater inflater = requireActivity().getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_cancel_order, null);
-        builder.setView(dialogView);
-
-        AlertDialog alertDialog = builder.create();
-
-        TextView backButton = dialogView.findViewById(R.id.cancelOrderDialog);
-        TextView cancelButton = dialogView.findViewById(R.id.backButtonDialog);
-
-        backButton.setOnClickListener(v -> {
-            alertDialog.dismiss();
-            if (timeRemaining > 0) {
-                startCountdown(timeRemaining / 1000);
-            }
-        });
-
-        cancelButton.setOnClickListener(v -> {
-            alertDialog.dismiss();
-            deleteOrderFromFirestore();
-        });
-
-        alertDialog.show();
-        isOrderCanceled = true;
-
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
-            countDownTimer = null;
-        }
-    }
-
-    private void deleteOrderFromFirestore() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) {
-            Toast.makeText(requireContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+        if (getArguments() == null) {
+            Log.e("YourOrderFragment", "Arguments are null, cannot cancel order.");
             return;
         }
 
         String orderId = getArguments().getString("orderId");
-        if (orderId == null) {
-            Log.e("YourOrderFragment", "Order ID is null");
-            Toast.makeText(requireContext(), "Order ID not found", Toast.LENGTH_SHORT).show();
+        if (orderId == null || orderId.isEmpty()) {
+            Log.e("YourOrderFragment", "Order ID is null or empty, cannot cancel order.");
             return;
         }
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("orders").document(orderId)
-                .delete()
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("Firestore", "Order successfully deleted");
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Cancel Order")
+                .setMessage("Are you sure you want to cancel this order?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    db.collection("orders").document(orderId)
+                            .delete()
+                            .addOnSuccessListener(aVoid -> {
+                                Log.d("FirestoreDebug", "Order successfully deleted: " + orderId);
+                                Toast.makeText(getContext(), "Order canceled successfully", Toast.LENGTH_SHORT).show();
 
-                    if (cartItems != null) {
-                        cartItems.clear();
-                    }
-                    if (yourOrderAdapter != null) {
-                        yourOrderAdapter.notifyDataSetChanged();
-                    }
+                                if (cartItems != null) {
+                                    cartItems.clear();
+                                    yourOrderAdapter.notifyDataSetChanged();
+                                }
 
-                    totalPrice = 0;
-                    timeRemaining = 0;
-                    if (countDownTimer != null) {
-                        countDownTimer.cancel();
-                    }
-
-                    totalPriceTextView.setText("0֏");
-                    orderCountdownTextView.setText("Order Canceled");
-
-                    SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("cart_data", Context.MODE_PRIVATE);
-                    sharedPreferences.edit().clear().apply();
-
-                    Toast.makeText(requireContext(), "Order Canceled", Toast.LENGTH_SHORT).show();
-
-                    FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
-                    transaction.replace(R.id.frame_layout, new YourOrderMainFragment());
-                    transaction.addToBackStack(null);
-                    transaction.commit();
+                                requireActivity().getSupportFragmentManager().popBackStack();
+                            })
+                            .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to delete order: " + e.getMessage()));
                 })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(requireContext(), "Failed to cancel order", Toast.LENGTH_SHORT).show();
-                    Log.e("FirestoreError", "Failed to delete order: " + e.getMessage());
-                });
+                .setNegativeButton("No", null)
+                .show();
     }
-
 
 
 
