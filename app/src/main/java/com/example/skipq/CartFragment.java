@@ -330,7 +330,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
 
   Timestamp startTime = Timestamp.now();
   long endTimeSeconds = startTime.getSeconds() + (prepTime * 60);
-    Timestamp endTime = new Timestamp(endTimeSeconds, 0);
+  Timestamp endTime = new Timestamp(endTimeSeconds, 0);
 
 
 
@@ -429,4 +429,4 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
 
   updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg);
  }
- }
+}

@@ -51,6 +51,8 @@
             android:exported="false">
 
         </activity>
+<activity android:name=".DeleteAccountActivity"
+    android:exported="false"/>
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBOMCMmvp6t0hNfWRqrIkAIo3nrdc3n0I0"/>

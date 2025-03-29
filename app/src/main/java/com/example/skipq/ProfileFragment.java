@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Base64;
@@ -43,6 +44,7 @@ public class ProfileFragment extends Fragment {
     private ImageView profilePicture;
     private FirebaseFirestore db;
     private ListenerRegistration profileListener;
+    private ImageView deleteAccount;
 
     private final ActivityResultLauncher<String> imagePickerLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -60,6 +62,7 @@ public class ProfileFragment extends Fragment {
         userPhoneNumber = view.findViewById(R.id.userPhoneNumber);
         userEmail = view.findViewById(R.id.UserEmail);
         btnLogout = view.findViewById(R.id.btnLogout);
+        deleteAccount=view.findViewById(R.id.deleteAccount);
 
         db = FirebaseFirestore.getInstance();
 
@@ -67,6 +70,10 @@ public class ProfileFragment extends Fragment {
             if (isAdded()) {
                 imagePickerLauncher.launch("image/*");
             }
+        });
+        deleteAccount.setOnClickListener(v->{
+            Intent intent = new Intent(getActivity(), DeleteAccountActivity.class);
+            startActivity(intent);
         });
 
 

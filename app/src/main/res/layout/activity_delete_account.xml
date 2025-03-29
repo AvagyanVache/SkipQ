@@ -60,9 +60,9 @@
             <TextView
                 android:layout_width="401dp"
                 android:layout_height="wrap_content"
-                android:text="Want to Change Your Password?"
-                android:textColor="@color/black"
-                android:textSize="32sp"
+                android:text="Do you want to permanently delete you account?"
+                android:textColor="@color/secondary_color"
+                android:textSize="30sp"
                 android:textStyle="bold" />
 
 
@@ -70,22 +70,31 @@
                 android:id="@+id/textView4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="We'll send you a link to reset your password ." />
+                android:text="For your safety re-enter the password so we know it's you" />
 
-            <EditText
-                android:id="@+id/reset_password"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/textInputLayout2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Enter you Email"
-                android:inputType="textEmailAddress"
-                android:padding="15dp" />
+                app:passwordToggleEnabled="true"
+                android:padding="15dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/deleteAccountPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Enter your Password"
+                    android:textColorHint="@color/secondary_color"
+                    android:inputType="textPassword" />
+            </com.google.android.material.textfield.TextInputLayout>
+
 
 
             <Button
-                android:id="@+id/ResetPasswordButton"
+                android:id="@+id/deleteAccountButton"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:text="Reset Password"
+                android:text="Delete Account"
                 android:backgroundTint="@color/primary_color"
                 android:textColor="#FFFFFF"
                 android:layout_marginTop="16dp" />
