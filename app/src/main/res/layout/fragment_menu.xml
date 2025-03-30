@@ -9,6 +9,7 @@
     <LinearLayout
         android:layout_width="147dp"
         android:layout_height="34dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -17,18 +18,11 @@
             android:layout_width="60dp"
             android:layout_height="20dp"
             android:layout_marginStart="4dp"
-
             android:layout_marginTop="10dp"
-            android:layout_marginBottom="505dp"
             android:background="@drawable/back_background"
             android:text="      Back"
             android:textColor="@color/white"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.091" />
-
+            android:textStyle="bold" />
 
         <ImageView
             android:id="@+id/imageView3"
@@ -36,15 +30,10 @@
             android:layout_height="16dp"
             android:layout_marginLeft="-60dp"
             android:layout_marginTop="13dp"
-            app:layout_constraintBottom_toBottomOf="@+id/backButton"
-            app:layout_constraintEnd_toEndOf="@+id/backButton"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="@+id/backButton"
-            app:layout_constraintTop_toTopOf="@+id/backButton"
-            app:layout_constraintVertical_bias="1.0"
             app:srcCompat="@drawable/back_arrow"
             app:tint="@color/white" />
-    </LinearLayout>v
+    </LinearLayout>
+
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -58,10 +47,11 @@
 
     <SearchView
         android:id="@+id/searchBar"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="16dp"
-        android:layout_marginTop="32dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp"
         android:background="@drawable/white_bg"
         android:hint="Search here"
         android:iconifiedByDefault="false"
@@ -73,24 +63,25 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycleViewMenu"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingLeft="20dp"
-        app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
-        app:layout_constraintTop_toBottomOf="@+id/searchBar"
-        app:layout_constraintVertical_bias="0.207"
-        tools:layout_editor_absoluteX="4dp" />
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:clipToPadding="false"
+        android:paddingBottom="68dp"
+    app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/searchBar" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:layout_alignParentBottom="true"
+        android:layout_width="0dp"
+        android:layout_height="68dp"
+        android:background="@drawable/navigationbar_bg"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_navigation_menu"
-        android:background="@drawable/navigationbar_bg"
-        android:layout_marginBottom="10dp"/>
+        app:menu="@menu/bottom_navigation_menu" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

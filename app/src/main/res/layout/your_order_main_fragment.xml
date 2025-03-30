@@ -28,7 +28,7 @@
         android:textSize="40dp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.035"
+        app:layout_constraintHorizontal_bias="0.187"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -96,10 +96,10 @@
 
         <TextView
             android:id="@+id/CurrentOrders"
-            android:layout_width="wrap_content"
+            android:layout_width="166dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
+            android:gravity="center"
             android:clickable="true"
             android:focusable="true"
             android:text="Current Orders"
@@ -109,12 +109,12 @@
 
         <TextView
             android:id="@+id/OrderHistory"
-            android:layout_width="wrap_content"
+            android:layout_width="160dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
+            android:gravity="center"
             android:text="Order History"
             android:textColor="@color/white"
             android:textSize="20dp"
