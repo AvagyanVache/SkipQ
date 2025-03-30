@@ -47,7 +47,7 @@ public class YourOrderMainAdaptor extends RecyclerView.Adapter<YourOrderMainAdap
         YourOrderMainDomain order = orderList.get(position);
         holder.restaurantName.setText(order.getRestaurant().getName());
         holder.orderPrice.setText(String.format("%.2f֏", order.getTotalPrice()));
-        holder.totalprepTime.setText("Prep Time: " + order.getTotalPrepTime() + " min");
+        holder.totalprepTime.setText(order.getTotalPrepTime()+ " mins");
         Log.d("YourOrderMainAdaptor", "Image URL: " + order.getRestaurant().getImageUrl());
 
 
