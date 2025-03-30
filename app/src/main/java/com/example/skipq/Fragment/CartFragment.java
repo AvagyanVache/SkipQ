@@ -1,5 +1,6 @@
 package com.example.skipq.Fragment;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -262,11 +263,11 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
  }
 
  private void proceedToOrder() {
-
   if (!validateName() || !validatePhoneNumber()) {
    Toast.makeText(getContext(), "Please fill in all required fields", Toast.LENGTH_SHORT).show();
    return;
   }
+
   com.hbb20.CountryCodePicker countryCodePicker = getView().findViewById(R.id.countryCodePicker);
   TextInputEditText phoneNumberInput = getView().findViewById(R.id.phoneNumberInput);
   TextInputEditText nameInput = getView().findViewById(R.id.userNameSurname);
@@ -284,38 +285,79 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    return;
   }
 
+  // Group items by restaurant
+  Map<String, List<MenuDomain>> ordersByRestaurant = new HashMap<>();
   for (MenuDomain item : cartList) {
    if (item.getRestaurantId() == null || item.getRestaurantId().isEmpty()) {
     Log.e("CartFragment", "Item has no restaurant: " + item.getItemName());
     return;
    }
+   ordersByRestaurant.computeIfAbsent(item.getRestaurantId(), k -> new ArrayList<>()).add(item);
   }
 
-  SharedPreferences sharedPreferences = getActivity().getSharedPreferences("cart_data", Context.MODE_PRIVATE);
-  SharedPreferences.Editor editor = sharedPreferences.edit();
+  if (ordersByRestaurant.size() > 1) {
+   new AlertDialog.Builder(getContext())
+           .setTitle("Multiple Food Places")
+           .setMessage("You are trying to order items from different food places. This will create multiple orders. If you agree, click Continue.")
+           .setPositiveButton("Continue", (dialog, which) -> {
+            if (!isAdded() || getContext() == null) {
+             Log.w("CartFragment", "Fragment detached, skipping order processing");
+             return;
+            }
+            for (Map.Entry<String, List<MenuDomain>> entry : ordersByRestaurant.entrySet()) {
+             String restaurantId = entry.getKey();
+             List<MenuDomain> items = entry.getValue();
+             double totalPrice = items.stream().mapToDouble(item -> Double.parseDouble(item.getItemPrice()) * item.getItemCount()).sum();
+             int totalPrepTime = items.stream().mapToInt(MenuDomain::getPrepTime).sum();
 
-  Gson gson = new Gson();
-  String cartItemsJson = gson.toJson(cartList);
-  String restaurantId = cartList.get(0).getRestaurantId();
-  int prepTime = CartManager.getInstance().getTotalPrepTime();
+             YourOrderMainDomain order = new YourOrderMainDomain();
+             order.setTotalPrepTime(totalPrepTime);
+             order.setItems(new ArrayList<>(items));
+             saveOrderToFirestore(new ArrayList<>(items), restaurantId, totalPrice, totalPrepTime, order);
+            }
+            CartManager.getInstance().clearCart();
+            refreshCart();
+            Intent intent = new Intent(getContext(), HomeActivity.class);
+            intent.putExtra("FRAGMENT_TO_LOAD", "YOUR ORDER");
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+           })
+           .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+           .setCancelable(false)
+           .show();
+  } else {
+   // Single order case
+   if (!isAdded() || getContext() == null) {
+    Log.w("CartFragment", "Fragment detached, skipping single order processing");
+    return;
+   }
+   String restaurantId = cartList.get(0).getRestaurantId();
+   double totalPrice = CartManager.getInstance().getTotalPrice();
+   int totalPrepTime = CartManager.getInstance().getTotalPrepTime();
 
-  editor.putString("cartItems", cartItemsJson);
-  editor.putString("restaurantId", restaurantId);
-  editor.putFloat("totalPrice", (float) CartManager.getInstance().getTotalPrice());
-  editor.putInt("prepTime", prepTime);
-  editor.apply();
+   SharedPreferences sharedPreferences = getContext().getSharedPreferences("cart_data", Context.MODE_PRIVATE);
+   SharedPreferences.Editor editor = sharedPreferences.edit();
+   Gson gson = new Gson();
+   String cartItemsJson = gson.toJson(cartList);
+   editor.putString("cartItems", cartItemsJson);
+   editor.putString("restaurantId", restaurantId);
+   editor.putFloat("totalPrice", (float) totalPrice);
+   editor.putInt("prepTime", totalPrepTime);
+   editor.apply();
 
-  YourOrderMainDomain order = new YourOrderMainDomain();
-  order.setTotalPrepTime(prepTime);
-  order.setItems(cartList);
-  saveOrderToFirestore(cartList, restaurantId, CartManager.getInstance().getTotalPrice(), prepTime, order);
+   YourOrderMainDomain order = new YourOrderMainDomain();
+   order.setTotalPrepTime(totalPrepTime);
+   order.setItems(new ArrayList<>(cartList)); // Ensure a new list to avoid modifications
+   saveOrderToFirestore(new ArrayList<>(cartList), restaurantId, totalPrice, totalPrepTime, order);
 
-  Intent intent = new Intent(getActivity(), HomeActivity.class);
-  intent.putExtra("FRAGMENT_TO_LOAD", "YOUR ORDER");
-  intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-  startActivity(intent);
+   CartManager.getInstance().clearCart();
+   refreshCart();
+   Intent intent = new Intent(getContext(), HomeActivity.class);
+   intent.putExtra("FRAGMENT_TO_LOAD", "YOUR ORDER");
+   intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+   startActivity(intent);
+  }
  }
-
  private void saveOrderToFirestore(ArrayList<MenuDomain> cartList, String restaurantId, double totalPrice, int prepTime, YourOrderMainDomain order) {
   FirebaseFirestore db = FirebaseFirestore.getInstance();
   FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -422,11 +464,6 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   cartAdaptor.notifyDataSetChanged();
   updateTotalPrice(CartManager.getInstance().getTotalPrice());
   updateTimeTillReady(CartManager.getInstance().getTotalPrepTime());
-  TextView cartEmpty = getView().findViewById(R.id.cartEmpty);
-  View textInputLayoutPhone = getView().findViewById(R.id.textInputLayoutPhone);
-  View textInputName = getView().findViewById(R.id.textInputName);
-  View linearLayout = getView().findViewById(R.id.linearLayout);
-  ImageView emptyCartImg = getView().findViewById(R.id.emptyCartImg);
 
   updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg);
  }

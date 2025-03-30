@@ -2,7 +2,9 @@ package com.example.skipq.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +21,7 @@ public class DeleteAccountActivity extends AppCompatActivity {
 
     private TextInputEditText passwordEditText;
     private Button deleteButton;
+    private TextView backButton;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
@@ -29,11 +32,17 @@ public class DeleteAccountActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-
+backButton=findViewById(R.id.backButton);
         passwordEditText = findViewById(R.id.deleteAccountPassword);
         deleteButton = findViewById(R.id.deleteAccountButton);
 
         deleteButton.setOnClickListener(v -> verifyAndDeleteAccount());
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
     }
 
     private void verifyAndDeleteAccount() {
