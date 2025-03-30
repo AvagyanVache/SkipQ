@@ -26,12 +26,13 @@ public class MenuDomain implements Parcelable {
         prepTime = in.readInt();
         restaurant = in.readParcelable(RestaurantDomain.class.getClassLoader());
     }
-    public MenuDomain(String itemName, String itemDescription, String itemImg, String itemPrice, int prepTime) {
+    public MenuDomain(String itemName, String itemDescription, String itemImg, String itemPrice, int prepTime, int itemCount) {
         this.itemName = itemName;
         this.itemDescription = itemDescription;
         this.itemImg = itemImg;
         this.itemPrice = itemPrice;
         this.prepTime = prepTime;
+        this.itemCount= itemCount;
     }
 
 

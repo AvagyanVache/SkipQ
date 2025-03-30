@@ -1,4 +1,4 @@
-package com.example.skipq;
+package com.example.skipq.Fragment;
 
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -6,11 +6,14 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.Manifest;
+
+import com.example.skipq.Activity.MainActivity;
+import com.example.skipq.CartManager;
+import com.example.skipq.R;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
@@ -23,7 +26,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.skipq.Adaptor.MenuAdaptor;
 import com.example.skipq.Domain.MenuDomain;
-import com.example.skipq.Domain.RestaurantDomain;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;

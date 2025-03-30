@@ -1,4 +1,4 @@
-package com.example.skipq;
+package com.example.skipq.Fragment;
 
 import android.content.Context;
 import android.content.Intent;
@@ -24,20 +24,21 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.example.skipq.Activity.HomeActivity;
 import com.example.skipq.Adaptor.CartAdaptor;
+import com.example.skipq.CartManager;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.Domain.YourOrderMainDomain;
+import com.example.skipq.R;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -333,7 +334,6 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   Timestamp endTime = new Timestamp(endTimeSeconds, 0);
 
 
-
   Map<String, Object> orderData = new HashMap<>();
   orderData.put("orderId", orderId);
   orderData.put("userId", userId);
@@ -351,6 +351,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    itemData.put("name", item.getItemName());
    itemData.put("price", Double.parseDouble(item.getItemPrice()));
    itemData.put("prepTime", item.getPrepTime());
+   itemData.put("item count", item.getItemCount());
    itemsList.add(itemData);
   }
   orderData.put("items", itemsList);

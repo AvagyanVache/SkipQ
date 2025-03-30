@@ -1,4 +1,4 @@
-package com.example.skipq;
+package com.example.skipq.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.skipq.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -74,8 +75,8 @@ public class ChangePasswordActivity extends AppCompatActivity {
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void unused) {
-                                Toast.makeText(com.example.skipq.ChangePasswordActivity.this, "Reset Password link has been sent to your registered Email", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(com.example.skipq.ChangePasswordActivity.this, MainActivity.class);
+                                Toast.makeText(ChangePasswordActivity.this, "Reset Password link has been sent to your registered Email", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(ChangePasswordActivity.this, MainActivity.class);
                                 startActivity(intent);
                                 finish();
                             }
@@ -83,7 +84,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
                         .addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(com.example.skipq.ChangePasswordActivity.this, "Error :- " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(ChangePasswordActivity.this, "Error :- " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                 btnReset.setVisibility(View.VISIBLE);
                             }
                         });

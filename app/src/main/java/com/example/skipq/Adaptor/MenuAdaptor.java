@@ -11,9 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.example.skipq.CartManager;
 import com.example.skipq.Domain.MenuDomain;
-import com.example.skipq.MainActivity;
 import com.example.skipq.R;
 
 import java.text.MessageFormat;

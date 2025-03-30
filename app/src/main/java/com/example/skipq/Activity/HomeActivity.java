@@ -1,4 +1,4 @@
-package com.example.skipq;
+package com.example.skipq.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,7 +7,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import com.example.skipq.Fragment.CartFragment;
 import com.example.skipq.Domain.MenuDomain;
+import com.example.skipq.Fragment.HomeFragment;
+import com.example.skipq.Fragment.ProfileFragment;
+import com.example.skipq.R;
+import com.example.skipq.Fragment.YourOrderFragment;
+import com.example.skipq.Fragment.YourOrderMainFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;

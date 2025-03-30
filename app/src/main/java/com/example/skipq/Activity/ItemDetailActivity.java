@@ -1,4 +1,4 @@
-package com.example.skipq;
+package com.example.skipq.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +8,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.example.skipq.R;
 
 public class ItemDetailActivity extends AppCompatActivity {
 

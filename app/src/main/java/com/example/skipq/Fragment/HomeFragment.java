@@ -1,4 +1,4 @@
-package com.example.skipq;
+package com.example.skipq.Fragment;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -22,11 +22,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.example.skipq.Activity.HomeActivity;
 import com.example.skipq.Adaptor.CategoryAdaptor;
 import com.example.skipq.Adaptor.RestaurantAdaptor;
 import com.example.skipq.Domain.CategoryDomain;
-import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.Domain.RestaurantDomain;
+import com.example.skipq.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -34,7 +35,6 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryClickListener {
 

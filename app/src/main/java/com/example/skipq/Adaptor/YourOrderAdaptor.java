@@ -40,6 +40,7 @@ public class YourOrderAdaptor extends RecyclerView.Adapter<YourOrderAdaptor.View
         holder.itemPrepTime.setText(MessageFormat.format("{0} min", item.getPrepTime()));
 
         holder.itemDescription.setText(item.getItemDescription());
+        holder.itemCount.setText(String.valueOf(item.getItemCount()));
         double price = 0.0;
         try {
             price = Double.parseDouble(item.getItemPrice().toString());
@@ -62,7 +63,7 @@ public class YourOrderAdaptor extends RecyclerView.Adapter<YourOrderAdaptor.View
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView itemName, itemPrice, itemDescription, itemPrepTime;
+        TextView itemName, itemPrice, itemDescription, itemPrepTime, itemCount;;
         ImageView cartItemImage;
 
         public ViewHolder(@NonNull View itemView) {
@@ -70,7 +71,7 @@ public class YourOrderAdaptor extends RecyclerView.Adapter<YourOrderAdaptor.View
             cartItemImage = itemView.findViewById(R.id.CartItemPhoto);
             itemPrepTime = itemView.findViewById(R.id.PrepTime);
             itemDescription= itemView.findViewById(R.id.CartItemDescription);
-
+            itemCount = itemView.findViewById(R.id.CartItemCount);
             itemName = itemView.findViewById(R.id.CartItemTitle);
             itemPrice = itemView.findViewById(R.id.CartItemPrice);
         }

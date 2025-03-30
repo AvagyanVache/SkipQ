@@ -1,44 +1,33 @@
-package com.example.skipq;
+package com.example.skipq.Fragment;
 
 import android.app.AlertDialog;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.skipq.Adaptor.YourOrderAdaptor;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.Domain.YourOrderMainDomain;
-import com.google.common.reflect.TypeToken;
+import com.example.skipq.R;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
-import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.gson.Gson;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -269,6 +258,14 @@ public class YourOrderFragment extends Fragment {
                                     String itemImg = "";
                                     String itemPrice = "0";
                                     int prepTime = 0;
+                                    int itemCount = 1;
+
+                                    if (orderItem.containsKey("item count")) {
+                                        itemCount = ((Long) orderItem.get("item count")).intValue();
+                                        Log.d("FirestoreDebug", "Item: " + orderItemName + ", Count: " + itemCount);
+                                    } else {
+                                        Log.w("FirestoreDebug", "No item count found for: " + orderItemName);
+                                    }
 
                                     if (menuDocSnapshot != null && menuDocSnapshot.exists()) {
                                         itemDescription = menuDocSnapshot.getString("Item Description") != null ? menuDocSnapshot.getString("Item Description") : itemDescription;
@@ -280,7 +277,7 @@ public class YourOrderFragment extends Fragment {
                                         Log.w("FirestoreDebug", "No menu match for: " + orderItemName);
                                     }
 
-                                    menuList.add(new MenuDomain(orderItemName, itemDescription, itemImg, itemPrice, prepTime));
+                                    menuList.add(new MenuDomain(orderItemName, itemDescription, itemImg, itemPrice, prepTime, itemCount));
                                 }
 
                                 if (!menuList.isEmpty()) {
