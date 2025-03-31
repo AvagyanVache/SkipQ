@@ -6,463 +6,398 @@
     android:layout_height="match_parent"
     android:background="#FF7F50">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:layout_width="189dp"
-            android:layout_height="47dp"
-            android:layout_gravity="center"
-            android:layout_marginTop="5dp"
-            android:text="Your Profile"
-            android:textColor="@color/white"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-    </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
+            <LinearLayout
+                android:id="@+id/linearLayout3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center">
 
-    <ImageView
-        android:id="@+id/profilePicture"
-        android:layout_width="82dp"
-        android:layout_height="81dp"
-        android:layout_marginTop="60dp"
-        android:src="@drawable/profile_picture"
-        app:layout_constraintEnd_toStartOf="@+id/UserNameSurname"
-        app:layout_constraintHorizontal_bias="0.307"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+                <TextView
+                    android:layout_width="189dp"
+                    android:layout_height="47dp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="5dp"
+                    android:text="Your Profile"
+                    android:textColor="@color/white"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-    <TextView
-        android:id="@+id/UserNameSurname"
-        android:layout_width="198dp"
-        android:layout_height="38dp"
-        android:layout_gravity="center"
-        android:layout_marginTop="80dp"
-        android:text="Name Surname"
-        android:textColor="@color/white"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.629"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+            <LinearLayout
+                android:id="@+id/linearLayout4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
 
-    <ImageView
-        android:id="@+id/imageView12"
-        android:layout_width="69dp"
-        android:layout_height="63dp"
-        android:src="@drawable/email_icon"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.099"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView6" />
+                <ImageView
+                    android:id="@+id/profilePicture"
+                    android:layout_width="82dp"
+                    android:layout_height="81dp"
+                    android:layout_marginLeft="20dp"
+                    android:src="@drawable/profile_picture" />
 
-    <TextView
-        android:id="@+id/textView110"
-        android:layout_width="204dp"
-        android:layout_height="27dp"
-        android:layout_marginTop="340dp"
-        android:text="Select Payment"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.092"
-        app:layout_constraintStart_toEndOf="@+id/imageView12"
-        app:layout_constraintTop_toTopOf="parent" />
+                <TextView
+                    android:id="@+id/UserNameSurname"
+                    android:layout_width="198dp"
+                    android:layout_height="38dp"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="20dp"
+                    android:gravity="center"
+                    android:text="Name Surname"
+                    android:textColor="@color/white"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-    <ImageView
-        android:id="@+id/imageView190"
-        android:layout_width="350dp"
-        android:layout_height="3dp"
-        android:layout_marginTop="376dp"
-        android:background="@drawable/white_bg"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.557"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+            <TextView
+                android:id="@+id/textView6"
+                android:layout_width="103dp"
+                android:layout_height="29dp"
+                android:text="About me"
+                android:gravity="center"
+                android:layout_marginLeft="25dp"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+            <RelativeLayout
+                android:id="@+id/relative4"
+                android:layout_width="342dp"
+                android:layout_height="58dp">
 
-    <ImageView
-        android:id="@+id/imageView19011"
-        android:layout_width="350dp"
-        android:layout_height="3dp"
-        android:layout_marginTop="548dp"
-        android:background="@drawable/white_bg"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.524"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+                <ImageView
+                    android:id="@+id/imageView12"
+                    android:layout_width="55dp"
+                    android:layout_height="46dp"
+                    android:layout_marginLeft="45dp"
+                    android:layout_marginTop="15dp"
+                    android:src="@drawable/email"
+                    app:tint="@color/white" />
 
-    <ImageView
-        android:id="@+id/imageView1000"
-        android:layout_width="71dp"
-        android:layout_height="46dp"
-        android:layout_marginTop="248dp"
-        android:src="@drawable/password_icon"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.094"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView13"
-        app:tint="@color/white" />
+                <TextView
+                    android:id="@+id/textView7"
+                    android:layout_width="229dp"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="70dp"
+                    android:layout_marginTop="5dp"
+                    android:gravity="center"
+                    android:text="Email Address"
+                    android:textColor="@color/white"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/textView1201"
-        android:layout_width="122dp"
-        android:layout_height="30dp"
-        android:layout_marginTop="492dp"
-        android:text="Password"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/imageView12"
-        app:layout_constraintTop_toTopOf="parent" />
-    <TextView
-        android:id="@+id/textView1101"
-        android:layout_width="150dp"
-        android:layout_height="29dp"
-        android:layout_marginTop="508dp"
-        android:text="Change Password"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/imageView12"
-        app:layout_constraintTop_toTopOf="parent" />
+                <TextView
+                    android:id="@+id/UserEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="120dp"
+                    android:layout_marginTop="35dp"
+                    android:text="Gmail@gmail.com"
+                    android:textColor="@color/white"
+                    android:textSize="15sp" />
+            </RelativeLayout>
 
-    <ImageView
-        android:id="@+id/changePassword"
-        android:layout_width="35dp"
-        android:layout_height="39dp"
-        android:layout_marginTop="500dp"
-        android:src="@drawable/right_arrow"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.928"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/white" />
-
-
-    <ImageView
-        android:id="@+id/changeLanguage"
-        android:layout_width="35dp"
-        android:layout_height="39dp"
-        android:layout_marginTop="424dp"
-        android:src="@drawable/right_arrow"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.922"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/white" />
-
-    <TextView
-        android:id="@+id/textView10"
-        android:layout_width="251dp"
-        android:layout_height="23dp"
-        android:layout_marginTop="252dp"
-        android:text="Phone Number"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/imageView12"
-        app:layout_constraintTop_toTopOf="parent" />
+            <ImageView
+                android:id="@+id/imageView13"
+                android:layout_width="350dp"
+                android:layout_height="3dp"
+                android:background="@drawable/white_bg" />
 
 
 
-    <TextView
-        android:id="@+id/userPhoneNumber"
-        android:layout_width="253dp"
-        android:layout_height="34dp"
-        android:layout_marginTop="272dp"
-        android:text="+123-456-7890"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/imageView12"
-        app:layout_constraintTop_toTopOf="parent" />
+            <RelativeLayout
+                android:id="@+id/relative3"
+                android:layout_width="350dp"
+                android:layout_height="60dp">
 
-    <ImageView
-        android:id="@+id/selectPayment"
-        android:layout_width="35dp"
-        android:layout_height="39dp"
-        android:layout_marginTop="328dp"
-        android:src="@drawable/right_arrow"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.922"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/white" />
+                <ImageView
+                    android:id="@+id/imageView14"
+                    android:layout_width="71dp"
+                    android:layout_height="46dp"
+                    android:layout_marginLeft="40dp"
+                    android:layout_marginTop="10dp"
+                    android:src="@drawable/phone_icon"
+                    app:tint="@color/white" />
 
-    <TextView
-        android:id="@+id/textView6"
-        android:layout_width="103dp"
-        android:layout_height="29dp"
-        android:layout_marginTop="12dp"
-        android:text="About me"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.107"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/profilePicture" />
+                <TextView
+                    android:id="@+id/textView10"
+                    android:layout_width="251dp"
+                    android:layout_height="23dp"
+                    android:layout_marginLeft="50dp"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:text="Phone Number"
+                    android:textColor="@color/white"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
 
+                <TextView
+                    android:id="@+id/userPhoneNumber"
+                    android:layout_width="253dp"
+                    android:layout_height="34dp"
+                    android:layout_marginLeft="40dp"
+                    android:layout_marginTop="25dp"
+                    android:gravity="center"
+                    android:text="+123-456-7890"
+                    android:textColor="@color/white"
+                    android:textSize="15sp" />
 
+                <ImageView
+                    android:id="@+id/phoneNumber"
+                    android:layout_width="35dp"
+                    android:layout_height="39dp"
+                    android:layout_marginLeft="310dp"
+                    android:layout_marginTop="13dp"
+                    android:src="@drawable/right_arrow"
+                    app:tint="@color/white" />
+            </RelativeLayout>
 
-    <TextView
-        android:id="@+id/textView120"
-        android:layout_width="122dp"
-        android:layout_height="30dp"
-        android:layout_marginTop="324dp"
-        android:text="Payment "
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.15"
-        app:layout_constraintStart_toEndOf="@+id/imageView12"
-        app:layout_constraintTop_toTopOf="parent" />
+            <ImageView
+                android:id="@+id/imageView19"
+                android:layout_width="350dp"
+                android:layout_height="3dp"
+                android:background="@drawable/white_bg" />
 
-    <Button
-        android:id="@+id/btnLogout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="32dp"
-        android:backgroundTint="#ff443a"
-        android:text="Log Out"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.533"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
-        app:layout_constraintVertical_bias="0.111" />
+            <RelativeLayout
+                android:id="@+id/relative2"
+                android:layout_width="354dp"
+                android:layout_height="58dp">
 
-    <TextView
-        android:id="@+id/textView7"
-        android:layout_width="229dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="188dp"
-        android:text="Email Address"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/imageView12"
-        app:layout_constraintTop_toTopOf="parent" />
+                <ImageView
+                    android:id="@+id/imageView100"
+                    android:layout_width="71dp"
+                    android:layout_height="46dp"
+                    android:layout_marginLeft="40dp"
+                    android:layout_marginTop="5dp"
+                    android:src="@drawable/payment_icon"
+                    app:tint="@color/white" />
 
-    <ImageView
-        android:id="@+id/imageView14"
-        android:layout_width="71dp"
-        android:layout_height="46dp"
-        android:layout_marginTop="8dp"
-        android:src="@drawable/phone_icon"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.094"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView13"
-        app:tint="@color/white" />
+                <TextView
+                    android:id="@+id/textView120"
+                    android:layout_width="122dp"
+                    android:layout_height="30dp"
+                    android:layout_marginLeft="90dp"
+                    android:layout_marginTop="5dp"
+                    android:gravity="center"
+                    android:text="Payment "
+                    android:textColor="@color/white"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
 
-    <ImageView
-        android:id="@+id/imageView10000"
-        android:layout_width="71dp"
-        android:layout_height="46dp"
-        android:layout_marginTop="180dp"
-        android:src="@drawable/language_icon"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.094"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView13"
-        app:tint="@color/white" />
+                <TextView
+                    android:id="@+id/textView110"
+                    android:layout_width="204dp"
+                    android:layout_height="27dp"
+                    android:layout_marginLeft="60dp"
+                    android:layout_marginTop="25dp"
+                    android:gravity="center"
+                    android:text="Select Payment"
+                    android:textColor="@color/white"
+                    android:textSize="15sp" />
 
-    <ImageView
-        android:id="@+id/imageView19"
-        android:layout_width="350dp"
-        android:layout_height="3dp"
-        android:layout_marginTop="76dp"
-        android:background="@drawable/white_bg"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.524"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/UserEmail" />
+                <ImageView
+                    android:id="@+id/selectPayment"
+                    android:layout_width="35dp"
+                    android:layout_height="39dp"
+                    android:layout_marginLeft="310dp"
+                    android:layout_marginTop="15dp"
+                    android:src="@drawable/right_arrow"
+                    app:tint="@color/white" />
+            </RelativeLayout>
+            <ImageView
+                android:id="@+id/imageView1901110"
+                android:layout_width="350dp"
+                android:layout_height="3dp"
+                android:background="@drawable/white_bg" />
 
-    <ImageView
-        android:id="@+id/imageView13"
-        android:layout_width="350dp"
-        android:layout_height="3dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/white_bg"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.524"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/UserEmail" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-    <TextView
-        android:id="@+id/textView60"
-        android:layout_width="103dp"
-        android:layout_height="29dp"
-        android:layout_marginTop="244dp"
-        android:text="Settings"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.103"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/profilePicture" />
+                <TextView
+                    android:id="@+id/textView60"
+                    android:layout_width="103dp"
+                    android:layout_height="29dp"
+                    android:layout_marginLeft="25dp"
+                    android:gravity="center"
+                    android:text="Settings"
+                    android:textColor="@color/white"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-    <TextView
-        android:id="@+id/textView12011"
-        android:layout_width="122dp"
-        android:layout_height="30dp"
-        android:layout_marginTop="424dp"
-        android:text="Language"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/imageView12"
-        app:layout_constraintTop_toTopOf="parent" />
+            <RelativeLayout
+                android:id="@+id/relative1"
+                android:layout_width="361dp"
+                android:layout_height="63dp">
 
+                <ImageView
+                    android:id="@+id/imageView10000"
+                    android:layout_width="71dp"
+                    android:layout_height="46dp"
+                    android:layout_marginLeft="35dp"
+                    android:layout_marginTop="5dp"
+                    android:src="@drawable/language_icon"
+                    app:tint="@color/white" />
 
+                <TextView
+                    android:id="@+id/textView12011"
+                    android:layout_width="122dp"
+                    android:layout_height="30dp"
+                    android:layout_marginLeft="90dp"
+                    android:gravity="center"
+                    android:text="Language"
+                    android:textColor="@color/white"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
 
+                <TextView
+                    android:id="@+id/textView110211"
+                    android:layout_width="180dp"
+                    android:layout_height="31dp"
+                    android:layout_marginLeft="60dp"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center"
+                    android:text="English"
+                    android:textColor="@color/white"
+                    android:textSize="15sp" />
 
-    <TextView
-        android:id="@+id/UserEmail"
-        android:layout_width="248dp"
-        android:layout_height="25dp"
-        android:layout_marginTop="208dp"
-        android:text="Gmail@gmail.com"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/imageView12"
-        app:layout_constraintTop_toTopOf="parent" />
+                <ImageView
+                    android:id="@+id/changeLanguage"
+                    android:layout_width="35dp"
+                    android:layout_height="39dp"
+                    android:layout_marginLeft="310dp"
+                    android:layout_marginTop="10dp"
+                    android:src="@drawable/right_arrow"
+                    app:tint="@color/white" />
+            </RelativeLayout>
 
-    <ImageView
-        android:id="@+id/imageView100"
-        android:layout_width="71dp"
-        android:layout_height="46dp"
-        android:layout_marginTop="80dp"
-        android:src="@drawable/payment_icon"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.094"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView13"
-        app:tint="@color/white" />
+            <ImageView
+                android:id="@+id/imageView1901"
+                android:layout_width="350dp"
+                android:layout_height="3dp"
+                android:background="@drawable/white_bg" />
 
-    <ImageView
-        android:id="@+id/imageView1901"
-        android:layout_width="350dp"
-        android:layout_height="3dp"
-        android:layout_marginTop="484dp"
-        android:background="@drawable/white_bg"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.524"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+            <RelativeLayout
+                android:id="@+id/relative"
+                android:layout_width="359dp"
+                android:layout_height="55dp">
 
-    <ImageView
-        android:id="@+id/phoneNumber"
-        android:layout_width="35dp"
-        android:layout_height="39dp"
-        android:layout_marginTop="256dp"
-        android:src="@drawable/right_arrow"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.922"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/white" />
+                <ImageView
+                    android:id="@+id/imageView1000"
+                    android:layout_width="71dp"
+                    android:layout_height="46dp"
+                    android:layout_marginLeft="35dp"
+                    android:src="@drawable/password_icon"
+                    app:tint="@color/white" />
 
-    <TextView
-        android:id="@+id/textView110211"
-        android:layout_width="180dp"
-        android:layout_height="31dp"
-        android:layout_marginTop="440dp"
-        android:text="English"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/imageView12"
-        app:layout_constraintTop_toTopOf="parent" />
+                <TextView
+                    android:id="@+id/textView1201"
+                    android:layout_width="122dp"
+                    android:layout_height="30dp"
+                    android:layout_marginLeft="90dp"
+                    android:gravity="center"
+                    android:text="Password"
+                    android:textColor="@color/white"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
 
-    <LinearLayout
-        android:id="@+id/linearLayout2"
-        android:layout_width="364dp"
-        android:layout_height="62dp"
-        android:layout_marginTop="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.489"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView19011">
+                <TextView
+                    android:id="@+id/textView1101"
+                    android:layout_width="150dp"
+                    android:layout_height="29dp"
+                    android:layout_marginLeft="100dp"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center"
+                    android:text="Change Password"
+                    android:textColor="@color/white"
+                    android:textSize="15sp" />
 
-        <ImageView
-            android:id="@+id/imageView102"
-            android:layout_width="55dp"
-            android:layout_height="39dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="10dp"
+                <ImageView
+                    android:id="@+id/changePassword"
+                    android:layout_width="35dp"
+                    android:layout_height="39dp"
+                    android:layout_marginLeft="310dp"
+                    android:layout_marginTop="10dp"
+                    android:src="@drawable/right_arrow"
+                    app:tint="@color/white" />
+            </RelativeLayout>
 
-            android:src="@drawable/delete"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.12"
-            app:layout_constraintStart_toStartOf="parent"
-            app:tint="@color/white"
-            tools:layout_editor_absoluteY="564dp" />
+            <ImageView
+                android:id="@+id/imageView19011"
+                android:layout_width="350dp"
+                android:layout_height="3dp"
+                android:background="@drawable/white_bg" />
 
-        <TextView
-            android:id="@+id/textView12090"
-            android:layout_width="148dp"
-            android:layout_height="30dp"
-            android:layout_marginTop="15dp"
-            android:layout_marginEnd="75dp"
-            android:text="Delete account"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@+id/imageView12"
-            tools:layout_editor_absoluteY="572dp" />
+            <RelativeLayout
+                android:id="@+id/relative5"
+                android:layout_width="357dp"
+                android:layout_height="57dp">
 
-        <ImageView
-            android:id="@+id/deleteAccount"
-            android:layout_width="35dp"
-            android:layout_height="39dp"
-            android:layout_marginTop="10dp"
-            android:src="@drawable/right_arrow"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.933"
-            app:layout_constraintStart_toStartOf="parent"
-            app:tint="@color/white"
-            tools:layout_editor_absoluteY="564dp" />
-    </LinearLayout>
+                <ImageView
+                    android:id="@+id/imageView102"
+                    android:layout_width="55dp"
+                    android:layout_height="39dp"
+                    android:layout_marginLeft="45dp"
+                    android:layout_marginTop="10dp"
+                    android:src="@drawable/delete"
+                    app:tint="@color/white" />
 
-    <ImageView
-        android:id="@+id/imageView190111"
-        android:layout_width="350dp"
-        android:layout_height="3dp"
-        android:layout_marginTop="616dp"
-        android:background="@drawable/white_bg"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.524"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+                <TextView
+                    android:id="@+id/textView12090"
+                    android:layout_width="148dp"
+                    android:layout_height="30dp"
+                    android:layout_marginLeft="90dp"
+                    android:layout_marginTop="15dp"
+                    android:gravity="center"
+                    android:text="Delete account"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/deleteAccount"
+                    android:layout_width="35dp"
+                    android:layout_height="39dp"
+                    android:layout_marginLeft="310dp"
+                    android:layout_marginTop="10dp"
+                    android:src="@drawable/right_arrow"
+                    app:tint="@color/white" />
+            </RelativeLayout>
+
+            <ImageView
+                android:id="@+id/imageView190111"
+                android:layout_width="350dp"
+                android:layout_height="3dp"
+                android:background="@drawable/white_bg" />
+
+            <Button
+                android:id="@+id/btnLogout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="32dp"
+                android:backgroundTint="#ff443a"
+                android:text="Log Out" />
+
+        </LinearLayout>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

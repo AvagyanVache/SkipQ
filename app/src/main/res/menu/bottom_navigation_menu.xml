@@ -2,21 +2,24 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:title="Home"
+    <item
+        android:title="Home"
         android:icon="@drawable/homeicon"
         android:iconTint="@color/white"
         android:id="@+id/navigationbar_home"/>
 
-    <item android:title="Your Order"
+    <item
+        android:title="Your Order"
         android:icon="@drawable/yourorder"
         android:iconTint="@color/white"
         android:id="@+id/navigationbar_yourorder"/>
-    <item android:title="Cart"
+    <item
+        android:title="Cart"
         android:icon="@drawable/cart"
         android:id="@+id/navigationbar_cart"/>
     <item
         android:title="Profile"
-android:icon="@drawable/profile_picture"
+        android:icon="@drawable/profile_picture"
         android:id="@+id/navigationbar_profilepicture"
         />
 

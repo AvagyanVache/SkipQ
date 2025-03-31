@@ -73,8 +73,10 @@ public class YourOrderMainFragment extends Fragment {
         }
 
         profileIcon.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), HomeActivity.class);intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP); startActivity(intent);
+            Intent intent = new Intent(getActivity(), HomeActivity.class);
+            intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
         });
 
         firestore = FirebaseFirestore.getInstance();
