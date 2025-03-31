@@ -151,7 +151,7 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
                     }
 
                     if (restaurantAdaptor == null) {
-                        restaurantAdaptor = new RestaurantAdaptor(requireContext(), restaurantList, restaurant -> openMenuFragment(restaurant.getName()));
+                        restaurantAdaptor = new RestaurantAdaptor(getContext(), restaurantList, restaurant -> openMenuFragment(restaurant.getName()));
                         recyclerViewRestaurantList.setAdapter(restaurantAdaptor);
                         recyclerViewRestaurantList.setLayoutManager(new GridLayoutManager(getContext(), 2));
                     } else {
