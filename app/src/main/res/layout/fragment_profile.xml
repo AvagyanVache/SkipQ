@@ -159,14 +159,7 @@
                     android:textColor="@color/white"
                     android:textSize="15sp" />
 
-                <ImageView
-                    android:id="@+id/phoneNumber"
-                    android:layout_width="35dp"
-                    android:layout_height="39dp"
-                    android:layout_marginLeft="310dp"
-                    android:layout_marginTop="13dp"
-                    android:src="@drawable/right_arrow"
-                    app:tint="@color/white" />
+
             </RelativeLayout>
 
             <ImageView
