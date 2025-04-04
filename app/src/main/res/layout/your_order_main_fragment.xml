@@ -32,29 +32,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ScrollView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:foregroundGravity="center_horizontal"
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/YourOrderMainRecycleView"
+        android:layout_width="397dp"
+        android:layout_height="507dp"
+        android:layout_marginTop="60dp"
+        android:clipToPadding="false"
+        android:paddingBottom="68dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.668">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/YourOrderMainRecycleView"
-            android:layout_width="416dp"
-            android:layout_height="300dp"
-            android:layout_marginTop="128dp"
-            android:clipToPadding="false"
-            android:paddingBottom="68dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView3" />
-    </ScrollView>
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout5"
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/GoShopping"
@@ -86,6 +76,7 @@
 
 
     <LinearLayout
+        android:id="@+id/linearLayout5"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="100dp"
@@ -102,9 +93,9 @@
             android:layout_width="166dp"
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:gravity="center"
             android:clickable="true"
             android:focusable="true"
+            android:gravity="center"
             android:text="Current Orders"
             android:textColor="@color/white"
             android:textSize="20dp"
@@ -114,6 +105,7 @@
             android:id="@+id/OrderHistory"
             android:layout_width="160dp"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="30dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"

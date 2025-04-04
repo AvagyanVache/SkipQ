@@ -65,7 +65,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
-                android:paddingLeft="20dp" />
+                 />
 
 
             <com.google.android.material.textfield.TextInputLayout
@@ -124,10 +124,10 @@
                 android:layout_width="280dp"
                 android:layout_height="wrap_content"
                 android:background="@drawable/order_summary_bg"
-                android:gravity="center_horizontal"
+                android:gravity="center"
+                android:layout_gravity="center"
                 android:orientation="vertical"
-                android:padding="12dp"
-                android:layout_marginLeft="50dp">
+                android:padding="12dp">
 
                 <TextView
                     android:id="@+id/textViewOrderSummary"
@@ -226,7 +226,8 @@
                 android:layout_marginTop="20dp"
                 android:backgroundTint="#E65100"
                 android:text="Check Out"
-                android:layout_gravity="center_horizontal" />
+                android:layout_gravity="center"
+                android:gravity="center"/>
         </LinearLayout>
     </ScrollView>
 
