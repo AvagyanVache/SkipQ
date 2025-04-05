@@ -51,19 +51,18 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/imageView"
         app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@+id/MenuItemPhoto"
+        app:layout_constraintStart_toStartOf="@+id/imageView"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
-        app:layout_constraintVertical_bias="0.36">
+        app:layout_constraintVertical_bias="0.368">
 
         <TextView
             android:id="@+id/MenuItemPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-
+android:layout_marginRight="10dp"
             android:text="Item Price"
             tools:layout_editor_absoluteX="128dp"
             tools:layout_editor_absoluteY="72dp" />
@@ -73,7 +72,7 @@
             android:id="@+id/imageView8"
             android:layout_width="20dp"
             android:layout_height="17dp"
-            android:layout_marginLeft="20dp"
+
             app:srcCompat="@drawable/timer"
             tools:layout_editor_absoluteX="224dp"
             tools:layout_editor_absoluteY="76dp" />
@@ -84,7 +83,6 @@
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:text="PrepTime"
-            android:layout_marginRight="10dp"
             tools:layout_editor_absoluteX="248dp"
             tools:layout_editor_absoluteY="90dp" />
 
@@ -92,9 +90,10 @@
             android:id="@+id/AddToCart"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-android:layout_marginRight="30dp"            android:background="@drawable/back_background"
+            android:background="@drawable/back_background"
             android:backgroundTint="@color/primary_color"
             android:gravity="center"
+            android:layout_marginRight="10dp"
             android:text="Add to Cart"
             android:textColor="@color/white"
             android:textStyle="bold"
@@ -147,6 +146,7 @@ android:layout_marginRight="30dp"            android:background="@drawable/back_
             android:id="@+id/ItemMinus"
             android:layout_width="19dp"
             android:layout_height="16dp"
+            android:layout_marginRight="30dp"
             app:layout_constraintBottom_toBottomOf="@+id/imageView"
             app:layout_constraintEnd_toEndOf="@+id/imageView"
             app:layout_constraintTop_toTopOf="@+id/imageView"
