@@ -64,6 +64,8 @@
             </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
+            android:gravity="center"
+            android:layout_marginTop="10dp"
             android:layout_height="wrap_content">
 
             <TextView
@@ -71,7 +73,7 @@
                 android:layout_width="103dp"
                 android:layout_height="29dp"
                 android:text="About me"
-                android:gravity="center"
+                android:layout_gravity="center"
                 android:layout_marginLeft="25dp"
                 android:textColor="@color/white"
                 android:textSize="22sp"
@@ -80,6 +82,8 @@
             <RelativeLayout
                 android:id="@+id/relative4"
                 android:layout_width="342dp"
+                android:layout_marginTop="10dp"
+                android:layout_gravity="center"
                 android:layout_height="58dp">
 
                 <ImageView
@@ -118,6 +122,7 @@
                 android:id="@+id/imageView13"
                 android:layout_width="350dp"
                 android:layout_height="3dp"
+                android:layout_gravity="center"
                 android:background="@drawable/white_bg" />
 
 
@@ -125,6 +130,7 @@
             <RelativeLayout
                 android:id="@+id/relative3"
                 android:layout_width="350dp"
+                android:layout_gravity="center"
                 android:layout_height="60dp">
 
                 <ImageView
@@ -166,11 +172,13 @@
                 android:id="@+id/imageView19"
                 android:layout_width="350dp"
                 android:layout_height="3dp"
+                android:layout_gravity="center"
                 android:background="@drawable/white_bg" />
 
             <RelativeLayout
                 android:id="@+id/relative2"
                 android:layout_width="354dp"
+                android:layout_gravity="center"
                 android:layout_height="58dp">
 
                 <ImageView
@@ -218,10 +226,13 @@
                 android:id="@+id/imageView1901110"
                 android:layout_width="350dp"
                 android:layout_height="3dp"
+                android:layout_gravity="center"
                 android:background="@drawable/white_bg" />
 
             <LinearLayout
                 android:layout_width="match_parent"
+                android:gravity="center"
+                android:layout_marginTop="10dp"
                 android:layout_height="wrap_content">
 
                 <TextView
@@ -239,6 +250,8 @@
             <RelativeLayout
                 android:id="@+id/relative1"
                 android:layout_width="361dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="20dp"
                 android:layout_height="63dp">
 
                 <ImageView
@@ -286,11 +299,13 @@
                 android:id="@+id/imageView1901"
                 android:layout_width="350dp"
                 android:layout_height="3dp"
+                android:layout_gravity="center"
                 android:background="@drawable/white_bg" />
 
             <RelativeLayout
                 android:id="@+id/relative"
                 android:layout_width="359dp"
+                android:layout_gravity="center"
                 android:layout_height="55dp">
 
                 <ImageView
@@ -337,11 +352,13 @@
                 android:id="@+id/imageView19011"
                 android:layout_width="350dp"
                 android:layout_height="3dp"
+                android:layout_gravity="center"
                 android:background="@drawable/white_bg" />
 
             <RelativeLayout
                 android:id="@+id/relative5"
                 android:layout_width="357dp"
+                android:layout_gravity="center"
                 android:layout_height="57dp">
 
                 <ImageView
@@ -379,6 +396,7 @@
                 android:id="@+id/imageView190111"
                 android:layout_width="350dp"
                 android:layout_height="3dp"
+                android:layout_gravity="center"
                 android:background="@drawable/white_bg" />
 
             <Button
