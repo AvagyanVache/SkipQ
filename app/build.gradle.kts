@@ -54,6 +54,12 @@ dependencies {
     implementation ("com.hbb20:ccp:2.7.2")
     implementation ("com.googlecode.libphonenumber:libphonenumber:8.12.57")
     implementation ("com.google.firebase:firebase-storage:20.3.0")
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("com.google.code.gson:gson:2.10.1")
+    implementation ("com.google.firebase:firebase-messaging:23.4.1")
+    implementation ("com.android.volley:volley:1.2.1")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
 
 
 

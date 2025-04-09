@@ -22,7 +22,7 @@ import java.util.Map;
 public class SignupActivity extends AppCompatActivity {
 
     EditText signupEmail, signupPassword, signupConfirmPassword;
-    TextView loginRedirectText;
+    TextView SignUpRestaurant;
     Button signupButton;
     TextView back;
     private FirebaseAuth mAuth;
@@ -38,7 +38,7 @@ public class SignupActivity extends AppCompatActivity {
         signupEmail = findViewById(R.id.signup_email);
         signupPassword = findViewById(R.id.signup_password);
         signupConfirmPassword = findViewById(R.id.signup_confirm_password);
-        loginRedirectText = findViewById(R.id.LoginRedirectText);
+        SignUpRestaurant = findViewById(R.id.SignUpRestaurant);
         signupButton = findViewById(R.id.SignUpButton);
 
         mAuth = FirebaseAuth.getInstance();
@@ -61,8 +61,8 @@ public class SignupActivity extends AppCompatActivity {
             }
         });
 
-        loginRedirectText.setOnClickListener(view -> {
-            Intent intent = new Intent(SignupActivity.this, MainActivity.class);
+        SignUpRestaurant.setOnClickListener(view -> {
+            Intent intent = new Intent(SignupActivity.this, RestaurantSignUpActivity.class);
             startActivity(intent);
         });
     }
@@ -104,7 +104,7 @@ public class SignupActivity extends AppCompatActivity {
                     }
                 });
 
-        }
+    }
     private void saveUserToFirestore(FirebaseUser user, String email, String password) {
         Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("email", email);

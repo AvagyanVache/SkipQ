@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,13 +34,11 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import android.os.Handler;
-
+import java.util.concurrent.CountDownLatch;
 
 public class YourOrderMainFragment extends Fragment {
     private RecyclerView recyclerView;
@@ -49,10 +48,8 @@ public class YourOrderMainFragment extends Fragment {
     private FirebaseFirestore firestore;
     private String userId;
     private ImageView profileIcon;
-    private String filterStatus;
     private FirebaseFirestore db;
     private ListenerRegistration profileListener;
-
 
     @Nullable
     @Override
@@ -100,8 +97,6 @@ public class YourOrderMainFragment extends Fragment {
             updateTabSelection(false);
         });
 
-        loadOrdersFromFirestore(true);
-        updateTabSelection(true);
         goShoppingText.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), HomeActivity.class);
             intent.putExtra("FRAGMENT_TO_LOAD", "HOME");
@@ -118,30 +113,31 @@ public class YourOrderMainFragment extends Fragment {
             }
         });
 
-
         return view;
     }
 
-
     private void loadOrdersFromFirestore(boolean isCurrentOrders) {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        FirebaseUser user = auth.getCurrentUser();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
             Log.e("FirestoreError", "User is not logged in");
             return;
         }
         userId = user.getUid();
+        Log.d("YourOrderMainFragment", "Current userId: " + userId);
 
-        long currentTime = System.currentTimeMillis() / 1000;
-        Timestamp currentTimestamp = new Timestamp(currentTime, 0);
+        long currentTimeSeconds = System.currentTimeMillis() / 1000;
+        Timestamp currentTimestamp = new Timestamp(currentTimeSeconds, 0);
+        Log.d("YourOrderMainFragment", "Current time (seconds): " + currentTimeSeconds +
+                ", Timestamp: " + currentTimestamp.toDate().toString());
 
         Query query = firestore.collection("orders")
-                .whereEqualTo("userId", userId);
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("approvalStatus", "accepted");
 
         if (isCurrentOrders) {
-            query = query.whereGreaterThan("endTime", currentTimestamp); // Pending orders
+            query = query.whereGreaterThan("endTime", currentTimestamp); // Current orders
         } else {
-            query = query.whereLessThanOrEqualTo("endTime", currentTimestamp); // Done orders
+            query = query.whereLessThanOrEqualTo("endTime", currentTimestamp); // Past orders
         }
 
         query.orderBy("endTime", Query.Direction.DESCENDING)
@@ -151,60 +147,64 @@ public class YourOrderMainFragment extends Fragment {
                         return;
                     }
 
-                    groupedOrders.clear(); // Clear previous orders
+                    Log.d("YourOrderMainFragment", "Snapshot size: " + (snapshots != null ? snapshots.size() : 0));
+                    groupedOrders.clear();
 
                     if (snapshots != null && !snapshots.isEmpty()) {
-                        Map<String, YourOrderMainDomain> uniqueOrders = new HashMap<>();
-                        int totalOrders = snapshots.size();
-                        final int[] fetchedCount = {0}; // Track how many restaurant details are fetched
+                        CountDownLatch latch = new CountDownLatch(snapshots.size());
 
                         for (QueryDocumentSnapshot document : snapshots) {
-                            String orderId = document.getId();
-                            if (uniqueOrders.containsKey(orderId)) continue; // Skip duplicates
-
                             YourOrderMainDomain order = document.toObject(YourOrderMainDomain.class);
+                            order.setOrderId(document.getId());
                             order.setStartTime(document.getTimestamp("startTime"));
                             order.setEndTime(document.getTimestamp("endTime"));
-                            order.setOrderId(document.getId());
 
-                            long endTimeSeconds = order.getEndTime() != null ? order.getEndTime().getSeconds() : 0;
-                            String status = (currentTime < endTimeSeconds) ? "pending" : "done";
-                            order.setStatus(status);
-                            if ((isCurrentOrders && "pending".equals(status)) || (!isCurrentOrders && "done".equals(status))) {
-                                uniqueOrders.put(orderId, order);
+                            String restaurantId = document.getString("restaurantId");
+                            if (restaurantId != null) {
+                                firestore.collection("FoodPlaces").document(restaurantId)
+                                        .get()
+                                        .addOnSuccessListener(doc -> {
+                                            if (doc.exists()) {
+                                                String name = doc.getString("name");
+                                                String imageUrl = doc.getString("imageUrl");
+                                                order.setRestaurant(new RestaurantDomain(name != null ? name : "Unknown", imageUrl != null ? imageUrl : ""));
+                                            } else {
+                                                order.setRestaurant(new RestaurantDomain("Unknown", ""));
+                                            }
+                                            latch.countDown();
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Log.e("FirestoreError", "Error fetching restaurant: " + e.getMessage());
+                                            order.setRestaurant(new RestaurantDomain("Unknown", ""));
+                                            latch.countDown();
+                                        });
+                            } else {
+                                order.setRestaurant(new RestaurantDomain("Unknown", ""));
+                                latch.countDown();
                             }
-                            if ((isCurrentOrders && "pending".equals(status)) || (!isCurrentOrders && "done".equals(status))) {
-                                String restaurantId = document.getString("restaurantId");
-                                if (restaurantId != null) {
-                                    fetchRestaurantDetails(restaurantId, order, () -> {
-                                        fetchedCount[0]++;
-                                        if (fetchedCount[0] == totalOrders) {
-                                            groupedOrders.clear();
-                                            groupedOrders.addAll(uniqueOrders.values());
-                                            yourOrdersAdapter.notifyDataSetChanged();
-                                            updateEmptyStateVisibility();
-                                        }
-                                    });
-
-                                } else {
-                                    Log.e("FirestoreError", "RestaurantId is null for order: " + order.getOrderId());
-                                    order.setRestaurant(new RestaurantDomain("Unknown", "")); // Fallback
-                                    groupedOrders.addAll(uniqueOrders.values());
-                                    fetchedCount[0]++;
-                                    if (fetchedCount[0] == totalOrders) {
-                                        yourOrdersAdapter.notifyDataSetChanged();
-                                        updateEmptyStateVisibility();
-                                    }
-                                }
-                            }
+                            groupedOrders.add(order);
                         }
+
+                        // Wait for all restaurant fetches to complete
+                        new Thread(() -> {
+                            try {
+                                latch.await(); // Block until all fetches are done
+                                requireActivity().runOnUiThread(() -> {
+                                    Log.d("YourOrderMainFragment", "Grouped orders size: " + groupedOrders.size());
+                                    yourOrdersAdapter.notifyDataSetChanged();
+                                    updateEmptyStateVisibility();
+                                });
+                            } catch (InterruptedException e) {
+                                Log.e("YourOrderMainFragment", "Latch interrupted: " + e.getMessage());
+                            }
+                        }).start();
                     } else {
+                        Log.d("YourOrderMainFragment", "No orders found for userId: " + userId);
                         yourOrdersAdapter.notifyDataSetChanged();
                         updateEmptyStateVisibility();
                     }
                 });
     }
-
 
     private void startOrderCountdownWatcher() {
         Handler handler = new Handler();
@@ -214,12 +214,12 @@ public class YourOrderMainFragment extends Fragment {
                 long currentTime = System.currentTimeMillis() / 1000;
                 boolean hasChanged = false;
 
-                for (YourOrderMainDomain order : new ArrayList<>(groupedOrders)) { // Use copy to avoid concurrent modification
-                    long endTimeSeconds = order.getEndTime() != null ? order.getEndTime().getSeconds() : 0; // Use stored endTime
+                for (YourOrderMainDomain order : new ArrayList<>(groupedOrders)) {
+                    long endTimeSeconds = order.getEndTime() != null ? order.getEndTime().getSeconds() : 0;
                     if ("pending".equals(order.getStatus()) && currentTime >= endTimeSeconds) {
                         order.setStatus("done");
-                        updateOrderStatus(order.getOrderId(), "done"); // Update in Firestore, no endTime overwrite
-                        groupedOrders.remove(order); // Remove from current list
+                        updateOrderStatus(order.getOrderId(), "done");
+                        groupedOrders.remove(order);
                         hasChanged = true;
                     }
                 }
@@ -229,7 +229,7 @@ public class YourOrderMainFragment extends Fragment {
                     updateEmptyStateVisibility();
                 }
 
-                handler.postDelayed(this, 5000); // Check every 5 seconds
+                handler.postDelayed(this, 5000);
             }
         };
         handler.post(runnable);
@@ -240,13 +240,9 @@ public class YourOrderMainFragment extends Fragment {
         updates.put("status", newStatus);
         firestore.collection("orders").document(orderId)
                 .update(updates)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("FirestoreUpdate", "Order " + orderId + " updated to " + newStatus);
-                    loadOrdersFromFirestore(newStatus.equals("pending"));
-                })
+                .addOnSuccessListener(aVoid -> Log.d("FirestoreUpdate", "Order " + orderId + " updated to " + newStatus))
                 .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to update order status: " + e.getMessage()));
     }
-
 
     private void updateTabSelection(boolean isCurrentOrdersSelected) {
         if (isCurrentOrdersSelected) {
@@ -256,63 +252,6 @@ public class YourOrderMainFragment extends Fragment {
             orderHistoryText.setPaintFlags(orderHistoryText.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
             currentOrdersText.setPaintFlags(currentOrdersText.getPaintFlags() & (~Paint.UNDERLINE_TEXT_FLAG));
         }
-    }
-
-
-    private void fetchRestaurantDetails(String restaurantId, YourOrderMainDomain order, Runnable onComplete) {
-        firestore.collection("FoodPlaces")
-                .document(restaurantId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        String name = documentSnapshot.getString("name");
-                        String imageUrl = documentSnapshot.getString("imageUrl");
-                        if (name != null) {
-                            order.setRestaurant(new RestaurantDomain(name, imageUrl));
-                        } else {
-                            order.setRestaurant(new RestaurantDomain("Unknown", imageUrl != null ? imageUrl : ""));
-                        }
-                    } else {
-                        order.setRestaurant(new RestaurantDomain("Unknown", ""));
-                    }
-                    onComplete.run(); // Call the callback when done
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("FirestoreError", "Error fetching restaurant: " + e.getMessage());
-                    order.setRestaurant(new RestaurantDomain("Unknown", "")); // Fallback
-                    onComplete.run();
-                });
-    }
-
-
-    private void saveOrderToFirestore(YourOrderMainDomain order) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        Map<String, Object> orderData = new HashMap<>();
-        orderData.put("orderId", order.getOrderId());
-        orderData.put("restaurantId", order.getRestaurantId());
-        orderData.put("totalPrice", order.getTotalPrice());
-        orderData.put("totalPrepTime", order.getTotalPrepTime());
-        orderData.put("items", order.getItems());
-        orderData.put("startTime", Timestamp.now());
-        db.collection("orders")
-                .document(order.getOrderId())
-                .set(orderData)
-                .addOnSuccessListener(aVoid -> Log.d("Firestore", "Order successfully saved"))
-                .addOnFailureListener(e -> Log.e("Firestore", "Error saving order", e));
-    }
-
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        loadOrdersFromFirestore(true);
-
-    }
-
-
-    public interface OnRestaurantFetchedListener {
-        void onFetched(RestaurantDomain restaurant);
     }
 
     private void updateEmptyStateVisibility() {
@@ -326,6 +265,7 @@ public class YourOrderMainFragment extends Fragment {
             recyclerView.setVisibility(View.VISIBLE);
         }
     }
+
     private void setupProfileListener(FirebaseUser firebaseUser) {
         profileListener = db.collection("users").document(firebaseUser.getUid())
                 .addSnapshotListener((documentSnapshot, e) -> {
@@ -339,6 +279,7 @@ public class YourOrderMainFragment extends Fragment {
                     }
                 });
     }
+
     private void loadProfileImage(String base64Image, ImageView imageView) {
         if (base64Image != null && !base64Image.isEmpty() && isAdded()) {
             byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
@@ -366,10 +307,15 @@ public class YourOrderMainFragment extends Fragment {
                 order.getStatus(),
                 false
         );
-        Log.d("YourOrderMainFragment", "Passing order to fragment: " + new Gson().toJson(order));
         requireActivity().getSupportFragmentManager().beginTransaction()
                 .replace(R.id.frame_layout, fragment)
                 .addToBackStack(null)
                 .commit();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadOrdersFromFirestore(true);
     }
 }

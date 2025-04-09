@@ -18,6 +18,10 @@
         android:icon="@drawable/cart"
         android:id="@+id/navigationbar_cart"/>
     <item
+        android:id="@+id/navigationbar_dashboard"
+        android:icon="@drawable/ic_dashboard"
+        android:title="Dashboard" />
+    <item
         android:title="Profile"
         android:icon="@drawable/profile_picture"
         android:id="@+id/navigationbar_profilepicture"

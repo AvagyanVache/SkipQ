@@ -3,6 +3,7 @@ package com.example.skipq.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -11,6 +12,7 @@ import com.example.skipq.Fragment.CartFragment;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.Fragment.HomeFragment;
 import com.example.skipq.Fragment.ProfileFragment;
+import com.example.skipq.Fragment.RestaurantDashboardFragment;
 import com.example.skipq.R;
 import com.example.skipq.Fragment.YourOrderFragment;
 import com.example.skipq.Fragment.YourOrderMainFragment;
@@ -21,6 +23,8 @@ import java.util.ArrayList;
 public class HomeActivity extends AppCompatActivity {
 
     private BottomNavigationView bottomNavigationView;
+    private String userRole;
+    private String restaurantId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +33,20 @@ public class HomeActivity extends AppCompatActivity {
 
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
-        handleIntent(getIntent());
+        // Get user role and restaurant ID from intent
+        Intent intent = getIntent();
+        userRole = intent.getStringExtra("userRole");
+        restaurantId = intent.getStringExtra("restaurantId");
+
+        // Adjust navigation based on role
+        if ("restaurant".equals(userRole)) {
+            bottomNavigationView.getMenu().findItem(R.id.navigationbar_dashboard).setVisible(true);
+            bottomNavigationView.getMenu().findItem(R.id.navigationbar_cart).setVisible(false); // Hide cart for restaurants
+        } else {
+            bottomNavigationView.getMenu().findItem(R.id.navigationbar_dashboard).setVisible(false);
+        }
+
+        handleIntent(intent);
 
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -48,10 +65,10 @@ public class HomeActivity extends AppCompatActivity {
         if ("PROFILE".equals(fragmentToLoad)) {
             selectedId = R.id.navigationbar_profilepicture;
             fragment = new ProfileFragment();
-        } else if  ("HOME".equals(fragmentToLoad)) {
+        } else if ("HOME".equals(fragmentToLoad)) {
             selectedId = R.id.navigationbar_home;
             fragment = new HomeFragment();
-        } else if ("CART".equals(fragmentToLoad)) {
+        } else if ("CART".equals(fragmentToLoad) && "user".equals(userRole)) {
             selectedId = R.id.navigationbar_cart;
             fragment = new CartFragment();
         } else if ("YOUR ORDER".equals(fragmentToLoad)) {
@@ -65,9 +82,13 @@ public class HomeActivity extends AppCompatActivity {
             Bundle bundle = new Bundle();
             bundle.putDouble("totalPrice", totalPrice);
             bundle.putInt("prepTime", prepTime);
-
             bundle.putParcelableArrayList("cartItems", cartItems);
-
+            fragment.setArguments(bundle);
+        } else if ("RESTAURANT_DASHBOARD".equals(fragmentToLoad) && "restaurant".equals(userRole)) {
+            selectedId = R.id.navigationbar_dashboard;
+            fragment = new RestaurantDashboardFragment();
+            Bundle bundle = new Bundle();
+            bundle.putString("restaurantId", restaurantId);
             fragment.setArguments(bundle);
         }
 
@@ -82,45 +103,32 @@ public class HomeActivity extends AppCompatActivity {
             fragment = new HomeFragment();
         } else if (itemId == R.id.navigationbar_yourorder) {
             fragment = new YourOrderMainFragment();
-        } else if (itemId == R.id.navigationbar_cart) {
+        } else if (itemId == R.id.navigationbar_cart && "user".equals(userRole)) {
             fragment = new CartFragment();
+        } else if (itemId == R.id.navigationbar_dashboard && "restaurant".equals(userRole)) {
+            fragment = new RestaurantDashboardFragment();
+            Bundle bundle = new Bundle();
+            bundle.putString("restaurantId", restaurantId);
+            fragment.setArguments(bundle);
         } else if (itemId == R.id.navigationbar_profilepicture) {
             fragment = new ProfileFragment();
         }
 
         return loadFragment(fragment);
     }
-   /* public void navigateToFragment(Fragment fragment, int menuItemId, Bundle args) {
-        if (args != null) {
-            fragment.setArguments(args);
-        }
+
+    public void switchToYourOrderFragment(Bundle args) {
+        Fragment yourOrderFragment = new YourOrderFragment();
+        yourOrderFragment.setArguments(args);
+
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.frame_layout, fragment)
+                .replace(R.id.frame_layout, yourOrderFragment)
                 .addToBackStack(null)
                 .commit();
 
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        bottomNavigationView.setSelectedItemId(menuItemId);
+        bottomNavigationView.post(() -> bottomNavigationView.setSelectedItemId(R.id.navigationbar_yourorder));
     }
-
-    */
-   public void switchToYourOrderFragment(Bundle args) {
-       Fragment yourOrderFragment = new YourOrderFragment();
-       yourOrderFragment.setArguments(args);
-
-       getSupportFragmentManager()
-               .beginTransaction()
-               .replace(R.id.frame_layout, yourOrderFragment)
-               .addToBackStack(null)
-               .commit();
-
-
-       bottomNavigationView.post(() -> bottomNavigationView.setSelectedItemId(R.id.navigationbar_yourorder));
-   }
-
-
-
 
     private boolean loadFragment(Fragment fragment) {
         if (fragment != null) {

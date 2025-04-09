@@ -51,6 +51,14 @@
             android:exported="false">
 
         </activity>
+        <activity android:name=".Activity.RestaurantSignUpActivity"
+            android:exported="false">
+
+        </activity>
+        <activity android:name=".Activity.RestaurantSignUpActivity2"
+            android:exported="false">
+
+        </activity>
 <activity android:name=".Activity.DeleteAccountActivity"
     android:exported="false"/>
         <meta-data

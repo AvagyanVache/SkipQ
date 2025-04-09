@@ -386,6 +386,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   orderData.put("items", order.getItems());
   orderData.put("endTime", endTime);
   orderData.put("status", "pending");
+  orderData.put("approvalStatus", "pendingApproval");
 
   List<Map<String, Object>> itemsList = new ArrayList<>();
   for (MenuDomain item : cartList) {
