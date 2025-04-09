@@ -19,6 +19,7 @@ public class YourOrderMainDomain implements Parcelable {
 
     private String userId;
     private String status;
+    private String approvalStatus;
     private ArrayList<MenuDomain> items;
 
     @Exclude
@@ -28,7 +29,7 @@ public class YourOrderMainDomain implements Parcelable {
     public YourOrderMainDomain() {}
 
     public YourOrderMainDomain(String orderId, String restaurantId, double totalPrice, int totalPrepTime,
-                               Timestamp startTime, String userId, String status, ArrayList<MenuDomain> items) {
+                               Timestamp startTime, String userId, String status,String approvalStatus, ArrayList<MenuDomain> items) {
         this.orderId = orderId;
         this.restaurantId = restaurantId;
         this.totalPrice = totalPrice;
@@ -36,8 +37,11 @@ public class YourOrderMainDomain implements Parcelable {
         this.startTime = startTime;
         this.userId = userId;
         this.status = status;
+        this.approvalStatus = approvalStatus;
         this.items = items;
     }
+
+
 
     protected YourOrderMainDomain(Parcel in) {
         orderId = in.readString();
@@ -47,6 +51,7 @@ public class YourOrderMainDomain implements Parcelable {
         startTime = in.readParcelable(Timestamp.class.getClassLoader());
         userId = in.readString();
         status = in.readString();
+        approvalStatus = in.readString();
         items = in.createTypedArrayList(MenuDomain.CREATOR);
     }
 
@@ -69,6 +74,14 @@ public class YourOrderMainDomain implements Parcelable {
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
+    public String getApprovalStatus() {
+        return approvalStatus;
+    }
+
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
+    }
+
 
     public String getRestaurantId() {
         return restaurantId;

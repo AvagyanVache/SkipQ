@@ -1,5 +1,6 @@
 package com.example.skipq.Fragment;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -34,11 +36,11 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 
 public class YourOrderMainFragment extends Fragment {
     private RecyclerView recyclerView;
@@ -50,6 +52,11 @@ public class YourOrderMainFragment extends Fragment {
     private ImageView profileIcon;
     private FirebaseFirestore db;
     private ListenerRegistration profileListener;
+    private ListenerRegistration pendingApprovalListener; // Added to manage pending approval listener
+    private AlertDialog waitingDialog;
+    private TextView waitingTimerText;
+    private Handler timerHandler;
+    private long startTime;
 
     @Nullable
     @Override
@@ -78,6 +85,7 @@ public class YourOrderMainFragment extends Fragment {
 
         firestore = FirebaseFirestore.getInstance();
         groupedOrders = new ArrayList<>();
+        timerHandler = new Handler();
 
         yourOrdersAdapter = new YourOrderMainAdaptor(requireContext(), groupedOrders);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -85,6 +93,7 @@ public class YourOrderMainFragment extends Fragment {
 
         loadOrdersFromFirestore(true);
         startOrderCountdownWatcher();
+        checkForPendingApprovalOrders(); // Start checking for pending approval orders
         updateEmptyStateVisibility();
 
         currentOrdersText.setOnClickListener(v -> {
@@ -117,27 +126,25 @@ public class YourOrderMainFragment extends Fragment {
     }
 
     private void loadOrdersFromFirestore(boolean isCurrentOrders) {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser user = auth.getCurrentUser();
         if (user == null) {
             Log.e("FirestoreError", "User is not logged in");
             return;
         }
         userId = user.getUid();
-        Log.d("YourOrderMainFragment", "Current userId: " + userId);
 
-        long currentTimeSeconds = System.currentTimeMillis() / 1000;
-        Timestamp currentTimestamp = new Timestamp(currentTimeSeconds, 0);
-        Log.d("YourOrderMainFragment", "Current time (seconds): " + currentTimeSeconds +
-                ", Timestamp: " + currentTimestamp.toDate().toString());
+        long currentTime = System.currentTimeMillis() / 1000;
+        Timestamp currentTimestamp = new Timestamp(currentTime, 0);
 
         Query query = firestore.collection("orders")
                 .whereEqualTo("userId", userId)
-                .whereEqualTo("approvalStatus", "accepted");
+                .whereEqualTo("approvalStatus", "accepted"); // Only accepted orders
 
         if (isCurrentOrders) {
-            query = query.whereGreaterThan("endTime", currentTimestamp); // Current orders
+            query = query.whereGreaterThan("endTime", currentTimestamp); // Pending accepted orders
         } else {
-            query = query.whereLessThanOrEqualTo("endTime", currentTimestamp); // Past orders
+            query = query.whereLessThanOrEqualTo("endTime", currentTimestamp); // Done accepted orders
         }
 
         query.orderBy("endTime", Query.Direction.DESCENDING)
@@ -147,63 +154,152 @@ public class YourOrderMainFragment extends Fragment {
                         return;
                     }
 
-                    Log.d("YourOrderMainFragment", "Snapshot size: " + (snapshots != null ? snapshots.size() : 0));
-                    groupedOrders.clear();
+                    groupedOrders.clear(); // Clear previous orders
 
                     if (snapshots != null && !snapshots.isEmpty()) {
-                        CountDownLatch latch = new CountDownLatch(snapshots.size());
+                        Map<String, YourOrderMainDomain> uniqueOrders = new HashMap<>();
+                        int totalOrders = snapshots.size();
+                        final int[] fetchedCount = {0};
 
                         for (QueryDocumentSnapshot document : snapshots) {
+                            String orderId = document.getId();
+                            if (uniqueOrders.containsKey(orderId)) continue;
+
                             YourOrderMainDomain order = document.toObject(YourOrderMainDomain.class);
-                            order.setOrderId(document.getId());
                             order.setStartTime(document.getTimestamp("startTime"));
                             order.setEndTime(document.getTimestamp("endTime"));
+                            order.setOrderId(document.getId());
+
+                            long endTimeSeconds = order.getEndTime() != null ? order.getEndTime().getSeconds() : 0;
+                            String status = (currentTime < endTimeSeconds) ? "pending" : "done";
+                            order.setStatus(status);
+
+                            uniqueOrders.put(orderId, order);
 
                             String restaurantId = document.getString("restaurantId");
                             if (restaurantId != null) {
-                                firestore.collection("FoodPlaces").document(restaurantId)
-                                        .get()
-                                        .addOnSuccessListener(doc -> {
-                                            if (doc.exists()) {
-                                                String name = doc.getString("name");
-                                                String imageUrl = doc.getString("imageUrl");
-                                                order.setRestaurant(new RestaurantDomain(name != null ? name : "Unknown", imageUrl != null ? imageUrl : ""));
-                                            } else {
-                                                order.setRestaurant(new RestaurantDomain("Unknown", ""));
-                                            }
-                                            latch.countDown();
-                                        })
-                                        .addOnFailureListener(e -> {
-                                            Log.e("FirestoreError", "Error fetching restaurant: " + e.getMessage());
-                                            order.setRestaurant(new RestaurantDomain("Unknown", ""));
-                                            latch.countDown();
-                                        });
+                                fetchRestaurantDetails(restaurantId, order, () -> {
+                                    fetchedCount[0]++;
+                                    if (fetchedCount[0] == totalOrders) {
+                                        groupedOrders.clear();
+                                        groupedOrders.addAll(uniqueOrders.values());
+                                        yourOrdersAdapter.notifyDataSetChanged();
+                                        updateEmptyStateVisibility();
+                                    }
+                                });
                             } else {
                                 order.setRestaurant(new RestaurantDomain("Unknown", ""));
-                                latch.countDown();
-                            }
-                            groupedOrders.add(order);
-                        }
-
-                        // Wait for all restaurant fetches to complete
-                        new Thread(() -> {
-                            try {
-                                latch.await(); // Block until all fetches are done
-                                requireActivity().runOnUiThread(() -> {
-                                    Log.d("YourOrderMainFragment", "Grouped orders size: " + groupedOrders.size());
+                                fetchedCount[0]++;
+                                if (fetchedCount[0] == totalOrders) {
+                                    groupedOrders.clear();
+                                    groupedOrders.addAll(uniqueOrders.values());
                                     yourOrdersAdapter.notifyDataSetChanged();
                                     updateEmptyStateVisibility();
-                                });
-                            } catch (InterruptedException e) {
-                                Log.e("YourOrderMainFragment", "Latch interrupted: " + e.getMessage());
+                                }
                             }
-                        }).start();
+                        }
                     } else {
-                        Log.d("YourOrderMainFragment", "No orders found for userId: " + userId);
                         yourOrdersAdapter.notifyDataSetChanged();
                         updateEmptyStateVisibility();
                     }
                 });
+    }
+
+    private void checkForPendingApprovalOrders() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser user = auth.getCurrentUser();
+        if (user == null) return;
+
+        Query pendingQuery = firestore.collection("orders")
+                .whereEqualTo("userId", user.getUid())
+                .whereEqualTo("approvalStatus", "pendingApproval");
+
+        pendingApprovalListener = pendingQuery.addSnapshotListener((snapshots, error) -> {
+            if (error != null) {
+                Log.e("FirestoreError", "Failed to check pending approval orders: " + error.getMessage());
+                return;
+            }
+
+            if (snapshots != null && !snapshots.isEmpty() && isAdded()) { // Check if fragment is attached
+                for (QueryDocumentSnapshot document : snapshots) {
+                    String orderId = document.getId();
+                    showWaitingDialog(orderId);
+                    break; // Show dialog for the first pending order
+                }
+            } else if (waitingDialog != null && waitingDialog.isShowing()) {
+                waitingDialog.dismiss();
+            }
+        });
+    }
+
+    private void showWaitingDialog(String orderId) {
+        if (!isAdded()) { // Check if fragment is attached
+            Log.w("YourOrderMainFragment", "Fragment not attached, skipping dialog");
+            return;
+        }
+
+        if (waitingDialog != null && waitingDialog.isShowing()) {
+            return; // Dialog already showing
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_waiting_order, null);
+        builder.setView(dialogView);
+
+        waitingTimerText = dialogView.findViewById(R.id.waiting_timer_text);
+        TextView cancelButton = dialogView.findViewById(R.id.CancelOrder);
+
+        builder.setCancelable(false);
+        waitingDialog = builder.create();
+        waitingDialog.show();
+
+        startTime = System.currentTimeMillis();
+        updateWaitingTimer();
+
+        cancelButton.setOnClickListener(v -> {
+            cancelOrder(orderId);
+            waitingDialog.dismiss();
+        });
+
+        // Listener to dismiss dialog when order is accepted
+        firestore.collection("orders").document(orderId)
+                .addSnapshotListener((snapshot, e) -> {
+                    if (e != null) return;
+                    if (snapshot != null && snapshot.exists() && isAdded()) { // Check if fragment is attached
+                        String approvalStatus = snapshot.getString("approvalStatus");
+                        if ("accepted".equals(approvalStatus) && waitingDialog != null && waitingDialog.isShowing()) {
+                            waitingDialog.dismiss();
+                            loadOrdersFromFirestore(true); // Refresh current orders
+                        }
+                    }
+                });
+    }
+
+    private void updateWaitingTimer() {
+        timerHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (waitingDialog != null && waitingDialog.isShowing() && isAdded()) { // Check if fragment is attached
+                    long elapsedTime = System.currentTimeMillis() - startTime;
+                    long seconds = elapsedTime / 1000;
+                    long minutes = seconds / 60;
+                    seconds = seconds % 60;
+                    waitingTimerText.setText(String.format("Please wait until the foodplace accepts your order\nWaiting: %02d:%02d", minutes, seconds));
+                    timerHandler.postDelayed(this, 1000);
+                }
+            }
+        });
+    }
+
+    private void cancelOrder(String orderId) {
+        firestore.collection("orders").document(orderId)
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("FirestoreUpdate", "Order " + orderId + " canceled");
+                    if (isAdded()) loadOrdersFromFirestore(true); // Only refresh if attached
+                })
+                .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to cancel order: " + e.getMessage()));
     }
 
     private void startOrderCountdownWatcher() {
@@ -224,7 +320,7 @@ public class YourOrderMainFragment extends Fragment {
                     }
                 }
 
-                if (hasChanged) {
+                if (hasChanged && isAdded()) { // Only update UI if attached
                     yourOrdersAdapter.notifyDataSetChanged();
                     updateEmptyStateVisibility();
                 }
@@ -240,7 +336,10 @@ public class YourOrderMainFragment extends Fragment {
         updates.put("status", newStatus);
         firestore.collection("orders").document(orderId)
                 .update(updates)
-                .addOnSuccessListener(aVoid -> Log.d("FirestoreUpdate", "Order " + orderId + " updated to " + newStatus))
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("FirestoreUpdate", "Order " + orderId + " updated to " + newStatus);
+                    if (isAdded()) loadOrdersFromFirestore(newStatus.equals("pending")); // Only refresh if attached
+                })
                 .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to update order status: " + e.getMessage()));
     }
 
@@ -252,6 +351,51 @@ public class YourOrderMainFragment extends Fragment {
             orderHistoryText.setPaintFlags(orderHistoryText.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
             currentOrdersText.setPaintFlags(currentOrdersText.getPaintFlags() & (~Paint.UNDERLINE_TEXT_FLAG));
         }
+    }
+
+    private void fetchRestaurantDetails(String restaurantId, YourOrderMainDomain order, Runnable onComplete) {
+        firestore.collection("FoodPlaces")
+                .document(restaurantId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String name = documentSnapshot.getString("name");
+                        String imageUrl = documentSnapshot.getString("imageUrl");
+                        if (name != null) {
+                            order.setRestaurant(new RestaurantDomain(name, imageUrl));
+                        } else {
+                            order.setRestaurant(new RestaurantDomain("Unknown", imageUrl != null ? imageUrl : ""));
+                        }
+                    } else {
+                        order.setRestaurant(new RestaurantDomain("Unknown", ""));
+                    }
+                    onComplete.run();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirestoreError", "Error fetching restaurant: " + e.getMessage());
+                    order.setRestaurant(new RestaurantDomain("Unknown", ""));
+                    onComplete.run();
+                });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadOrdersFromFirestore(true);
+        checkForPendingApprovalOrders();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (pendingApprovalListener != null) {
+            pendingApprovalListener.remove(); // Unregister the listener
+            pendingApprovalListener = null;
+        }
+        if (waitingDialog != null && waitingDialog.isShowing()) {
+            waitingDialog.dismiss(); // Dismiss dialog if showing
+        }
+        timerHandler.removeCallbacksAndMessages(null); // Stop timer updates
     }
 
     private void updateEmptyStateVisibility() {
@@ -311,11 +455,5 @@ public class YourOrderMainFragment extends Fragment {
                 .replace(R.id.frame_layout, fragment)
                 .addToBackStack(null)
                 .commit();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        loadOrdersFromFirestore(true);
     }
 }
