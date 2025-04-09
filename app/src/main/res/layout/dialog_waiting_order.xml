@@ -15,6 +15,17 @@
 
         android:text="Please wait until the foodplace accepts your order\nWaiting: 00:00"
         android:textSize="16sp" />
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:fontFamily="sans-serif-medium"
+        android:paddingTop="20dp"
+        android:text="*You can't cancel order after it has been accepted\n and the money will not be returned "
+
+        android:textSize="12sp" />
+
 
     <TextView
         android:id="@+id/CancelOrder"

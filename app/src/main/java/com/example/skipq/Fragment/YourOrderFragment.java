@@ -48,7 +48,7 @@ public class YourOrderFragment extends Fragment {
     private double totalPrice;
     private FirebaseFirestore db;
     private FirebaseAuth auth;
-    private TextView CancelButton;
+
     private boolean isOrderCanceled = false;
     private TextView backButton;
     private long timeRemaining = 0;
@@ -84,7 +84,6 @@ public class YourOrderFragment extends Fragment {
         totalPriceTextView = view.findViewById(R.id.orderTotal);
         orderCountdownTextView = view.findViewById(R.id.OrderCountdown);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        CancelButton = view.findViewById(R.id.CancelOrder);
         backButton = view.findViewById(R.id.backButton);
 
 
@@ -108,19 +107,15 @@ public class YourOrderFragment extends Fragment {
                     timeRemaining = endTimeMillis - currentTimeMillis;
                     if ("done".equals(status)) {
                         orderCountdownTextView.setText("00:00");
-                        CancelButton.setVisibility(View.GONE);
                     } else if ("pending".equals(status) && timeRemaining > 0) {
                         if (countDownTimer == null) {
                             startCountdown(timeRemaining);
                         }
-                        CancelButton.setVisibility(View.VISIBLE);
                     } else {
                         orderCountdownTextView.setText("00:00");
-                        CancelButton.setVisibility(View.GONE);
                     }
                 } else {
                     orderCountdownTextView.setText("Order status unavailable");
-                    CancelButton.setVisibility(View.GONE);
                 }
 
                 boolean isNewOrder = args.getBoolean("isNewOrder", false);
@@ -146,7 +141,6 @@ public class YourOrderFragment extends Fragment {
             requireActivity().getSupportFragmentManager().popBackStack();
         });
 
-        CancelButton.setOnClickListener(v -> cancelOrder());
 
         return view;
     }
@@ -174,17 +168,13 @@ public class YourOrderFragment extends Fragment {
 
                                 if ("done".equals(status)) {
                                     orderCountdownTextView.setText("00:00");
-                                    CancelButton.setVisibility(View.GONE);
                                 } else if ("pending".equals(status) && timeRemaining > 0) {
                                     startCountdown(timeRemaining);
-                                    CancelButton.setVisibility(View.VISIBLE);
                                 } else {
                                     orderCountdownTextView.setText("00:00");
-                                    CancelButton.setVisibility(View.GONE);
                                 }
                             } else {
                                 orderCountdownTextView.setText("Time unavailable");
-                                CancelButton.setVisibility(View.GONE);
                             }
                         } else {
                             Log.e("FirestoreDebug", "RestaurantId or items missing in order document");
@@ -325,7 +315,6 @@ public class YourOrderFragment extends Fragment {
                 if (countdownLabel != null) {
                     countdownLabel.setText("Ready! Go pick up your order now!");
                 }
-                CancelButton.setVisibility(View.GONE);
             }
         }.start();
     }
@@ -378,40 +367,7 @@ public class YourOrderFragment extends Fragment {
                 });
     }
 
-    private void cancelOrder() {
-        if (getArguments() == null) {
-            Log.e("YourOrderFragment", "Arguments are null, cannot cancel order.");
-            return;
-        }
 
-        String orderId = getArguments().getString("orderId");
-        if (orderId == null || orderId.isEmpty()) {
-            Log.e("YourOrderFragment", "Order ID is null or empty, cannot cancel order.");
-            return;
-        }
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Cancel Order")
-                .setMessage("Are you sure you want to cancel this order?")
-                .setPositiveButton("Yes", (dialog, which) -> {
-                    db.collection("orders").document(orderId)
-                            .delete()
-                            .addOnSuccessListener(aVoid -> {
-                                Log.d("FirestoreDebug", "Order successfully deleted: " + orderId);
-                                Toast.makeText(getContext(), "Order canceled successfully", Toast.LENGTH_SHORT).show();
-
-                                if (cartItems != null) {
-                                    cartItems.clear();
-                                    yourOrderAdapter.notifyDataSetChanged();
-                                }
-
-                                requireActivity().getSupportFragmentManager().popBackStack();
-                            })
-                            .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to delete order: " + e.getMessage()));
-                })
-                .setNegativeButton("No", null)
-                .show();
-    }
 
 
 

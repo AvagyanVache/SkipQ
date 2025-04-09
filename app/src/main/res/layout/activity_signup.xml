@@ -35,6 +35,8 @@
             android:textSize="50sp"
             android:textColor="#F2E5BF"
             android:textStyle="bold"
+            android:gravity="center"
+            android:layout_gravity="center"
             android:fontFamily="sans-serif-medium"
             android:layout_marginStart="20dp"
             android:paddingLeft="40dp"/>
