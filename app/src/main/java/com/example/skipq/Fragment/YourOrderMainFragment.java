@@ -92,6 +92,7 @@ public class YourOrderMainFragment extends Fragment {
         recyclerView.setAdapter(yourOrdersAdapter);
 
         loadOrdersFromFirestore(true);
+
         startOrderCountdownWatcher();
         checkForPendingApprovalOrders(); // Start checking for pending approval orders
         updateEmptyStateVisibility();
@@ -257,12 +258,16 @@ public class YourOrderMainFragment extends Fragment {
         startTime = System.currentTimeMillis();
         updateWaitingTimer();
 
+        // Set to Current Orders when dialog opens
+        loadOrdersFromFirestore(true);
+        updateTabSelection(true);
+
         cancelButton.setOnClickListener(v -> {
             cancelOrder(orderId);
             waitingDialog.dismiss();
         });
 
-        // Listener to dismiss dialog when order is accepted
+        // Listener to dismiss dialog and ensure Current Orders is refreshed
         firestore.collection("orders").document(orderId)
                 .addSnapshotListener((snapshot, e) -> {
                     if (e != null) return;
@@ -270,7 +275,8 @@ public class YourOrderMainFragment extends Fragment {
                         String approvalStatus = snapshot.getString("approvalStatus");
                         if ("accepted".equals(approvalStatus) && waitingDialog != null && waitingDialog.isShowing()) {
                             waitingDialog.dismiss();
-                            loadOrdersFromFirestore(true); // Refresh current orders
+                            loadOrdersFromFirestore(true); // Force reload Current Orders
+                            yourOrdersAdapter.notifyDataSetChanged(); // Ensure RecyclerView updates
                         }
                     }
                 });
