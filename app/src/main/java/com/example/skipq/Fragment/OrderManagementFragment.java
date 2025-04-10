@@ -1,6 +1,7 @@
 package com.example.skipq.Fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -95,30 +96,45 @@ public class OrderManagementFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        Timestamp startTime = documentSnapshot.getTimestamp("startTime");
                         Long totalPrepTimeMinutes = documentSnapshot.getLong("totalPrepTime"); // in minutes
 
-                        if (startTime != null && totalPrepTimeMinutes != null) {
-                            // Convert totalPrepTime from minutes to seconds and add to startTime
-                            long totalPrepTimeSeconds = totalPrepTimeMinutes * 60;
-                            long endTimeSeconds = startTime.getSeconds() + totalPrepTimeSeconds;
-                            Timestamp endTime = new Timestamp(endTimeSeconds, 0);
+                        if (totalPrepTimeMinutes != null) {
+                            // Set startTime to current time at acceptance
+                            long currentTimeMillis = System.currentTimeMillis();
+                            Timestamp startTime = new Timestamp(currentTimeMillis / 1000, (int) ((currentTimeMillis % 1000) * 1_000_000));
+
+                            // Calculate endTime from new startTime
+                            long totalPrepTimeMillis = totalPrepTimeMinutes * 60 * 1000; // Convert minutes to milliseconds
+                            long endTimeMillis = currentTimeMillis + totalPrepTimeMillis;
+                            Timestamp endTime = new Timestamp(endTimeMillis / 1000, (int) ((endTimeMillis % 1000) * 1_000_000));
+
+                            Log.d("OrderManagement", "Accepting order - orderId: " + orderId +
+                                    ", totalPrepTime: " + totalPrepTimeMinutes + " minutes" +
+                                    ", startTime: " + startTime.toDate() +
+                                    ", endTime: " + endTime.toDate() +
+                                    ", currentTimeMillis: " + currentTimeMillis);
 
                             Map<String, Object> updates = new HashMap<>();
                             updates.put("approvalStatus", "accepted");
+                            updates.put("startTime", startTime);
                             updates.put("endTime", endTime);
 
                             db.collection("orders").document(orderId)
                                     .update(updates)
-                                    .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Order accepted!", Toast.LENGTH_SHORT).show())
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d("OrderManagement", "Order accepted at: " + new java.util.Date(System.currentTimeMillis()));
+                                        Toast.makeText(getContext(), "Order accepted!", Toast.LENGTH_SHORT).show();
+                                    })
                                     .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to accept order: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                         } else {
-                            Toast.makeText(getContext(), "Missing startTime or totalPrepTime", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), "Missing totalPrepTime", Toast.LENGTH_SHORT).show();
                         }
                     }
                 })
                 .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to fetch order: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
+
+
 
     private void declineOrder(String orderId) {
         db.collection("orders").document(orderId)

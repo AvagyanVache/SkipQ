@@ -372,9 +372,6 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   order.setOrderId(orderId);
 
   Timestamp startTime = Timestamp.now();
-  long endTimeSeconds = startTime.getSeconds() + (prepTime * 60);
-  Timestamp endTime = new Timestamp(endTimeSeconds, 0);
-
 
   Map<String, Object> orderData = new HashMap<>();
   orderData.put("orderId", orderId);
@@ -384,7 +381,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   orderData.put("totalPrepTime", prepTime);
   orderData.put("startTime", startTime);
   orderData.put("items", order.getItems());
-  orderData.put("endTime", endTime);
+  orderData.put("endTime", null);
   orderData.put("status", "pending");
   orderData.put("approvalStatus", "pendingApproval");
 
