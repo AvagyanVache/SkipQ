@@ -19,8 +19,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.skipq.Adaptor.MenuManagementAdapter;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.R;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +40,8 @@ public class MenuManagementFragment extends Fragment {
     private FirebaseFirestore db;
     private String restaurantId;
     private TextView itemImg;
+    private boolean isUpdating = false; // Flag to track add vs update mode
+    private String originalItemName; // Store original name for updating Firestore
 
     @Nullable
     @Override
@@ -66,15 +70,21 @@ public class MenuManagementFragment extends Fragment {
         // Load data
         loadMenuItems();
 
-        // Add item button listener to toggle CardView visibility
+        // Add/Update item button listener
         addItemButton.setOnClickListener(v -> {
             if (cardView.getVisibility() == View.GONE) {
-                // Show the CardView when button is clicked for the first time
+                // Show CardView for adding a new item
                 cardView.setVisibility(View.VISIBLE);
-                addItemButton.setText("Submit Item"); // Change button text
+                isUpdating = false;
+                addItemButton.setText("Submit Item");
+                clearInputs();
             } else {
-                // Submit the item and hide the CardView
-                addItem();
+                // Submit based on mode (add or update)
+                if (isUpdating) {
+                    submitUpdate();
+                } else {
+                    addItem();
+                }
             }
         });
 
@@ -95,13 +105,16 @@ public class MenuManagementFragment extends Fragment {
                             item.setPrepTime(doc.getLong("Prep Time").intValue());
                         } else {
                             item.setPrepTime(0);
-                        }                        item.setItemDescription(doc.getString("Item Description"));
+                        }
+                        item.setItemDescription(doc.getString("Item Description"));
                         item.setItemImg(doc.getString("Item Img"));
                         menuItems.add(item);
                     }
                     menuAdapter.notifyDataSetChanged();
                 })
-                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load menu: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Failed to load menu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void addItem() {
@@ -130,28 +143,76 @@ public class MenuManagementFragment extends Fragment {
                     Toast.makeText(getContext(), "Item added!", Toast.LENGTH_SHORT).show();
                     loadMenuItems();
                     clearInputs();
-                    cardView.setVisibility(View.GONE); // Hide CardView after adding
-                    addItemButton.setText("Add Item"); // Reset button text
+                    cardView.setVisibility(View.GONE);
+                    addItemButton.setText("Add Item");
                 })
-                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void updateItem(MenuDomain item) {
-        Map<String, Object> itemData = new HashMap<>();
-        itemData.put("Item Name", item.getItemName());
-        itemData.put("Item Price", item.getItemPrice());
-        itemData.put("Prep Time", item.getPrepTime());
-        itemData.put("Item Description", item.getItemDescription());
-        itemData.put("Item Img", item.getItemImg());
+        // Populate input fields with item data
+        itemName.setText(item.getItemName());
+        itemPrice.setText(item.getItemPrice());
+        itemPrepTime.setText(String.valueOf(item.getPrepTime()));
+        itemDescription.setText(item.getItemDescription());
+        itemImg.setText(item.getItemImg());
 
-        db.collection("FoodPlaces").document(restaurantId).collection("Menu")
-                .document("DefaultMenu").collection("Items").document(item.getItemName())
-                .set(itemData)
+        // Show CardView and set update mode
+        cardView.setVisibility(View.VISIBLE);
+        isUpdating = true;
+        originalItemName = item.getItemName(); // Store original name for Firestore update
+        addItemButton.setText("Update Item");
+    }
+
+    private void submitUpdate() {
+        String name = itemName.getText().toString().trim();
+        String price = itemPrice.getText().toString().trim();
+        String prepTime = itemPrepTime.getText().toString().trim();
+        String description = itemDescription.getText().toString().trim();
+        String img = itemImg.getText().toString().trim();
+
+        if (name.isEmpty() || price.isEmpty() || prepTime.isEmpty()) {
+            Toast.makeText(getContext(), "Name, price, and prep time are required", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Map<String, Object> itemData = new HashMap<>();
+        itemData.put("Item Name", name);
+        itemData.put("Item Price", price);
+        itemData.put("Prep Time", Integer.parseInt(prepTime));
+        itemData.put("Item Description", description.isEmpty() ? "" : description);
+        itemData.put("Item Img", img.isEmpty() ? "" : img);
+
+        // Start a batch to ensure atomic updates
+        WriteBatch batch = db.batch();
+
+        // If the name changed, delete the old document
+        if (!originalItemName.equals(name)) {
+            DocumentReference oldDocRef = db.collection("FoodPlaces").document(restaurantId)
+                    .collection("Menu").document("DefaultMenu").collection("Items").document(originalItemName);
+            batch.delete(oldDocRef);
+        }
+
+        // Write the updated item to the new document ID (name)
+        DocumentReference newDocRef = db.collection("FoodPlaces").document(restaurantId)
+                .collection("Menu").document("DefaultMenu").collection("Items").document(name);
+        batch.set(newDocRef, itemData);
+
+        // Commit the batch
+        batch.commit()
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(getContext(), "Item updated!", Toast.LENGTH_SHORT).show();
                     loadMenuItems();
+                    clearInputs();
+                    cardView.setVisibility(View.GONE);
+                    addItemButton.setText("Add Item");
+                    isUpdating = false;
                 })
-                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update item: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Failed to update item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void deleteItem(String itemName) {
@@ -162,7 +223,9 @@ public class MenuManagementFragment extends Fragment {
                     Toast.makeText(getContext(), "Item deleted!", Toast.LENGTH_SHORT).show();
                     loadMenuItems();
                 })
-                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to delete item: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Failed to delete item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void clearInputs() {
