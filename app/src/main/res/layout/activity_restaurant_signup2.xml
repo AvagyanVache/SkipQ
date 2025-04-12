@@ -7,7 +7,7 @@
     android:background="@drawable/background"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context=".Activity.SignupActivity">
+    tools:context=".Activity.RestaurantSignUpActivity2">
 
     <!-- Header with Back Button and Title -->
     <LinearLayout
@@ -49,83 +49,118 @@
         android:layout_marginBottom="16dp"
         app:cardCornerRadius="28dp">
 
-        <LinearLayout
+        <!-- ScrollView to make the form scrollable -->
+        <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="28dp">
+            android:fillViewport="true">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Sign Up - Step 2 of 2"
-                android:textColor="@color/secondary_color"
-                android:textSize="32sp"
-                android:textStyle="bold" />
+                android:orientation="vertical"
+                android:padding="28dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:alpha="0.7"
-                android:text="Complete your restaurant profile" />
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textInputLayout1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="15dp">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/restaurant_name"
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Restaurant Name"
-                    android:inputType="text"
-                    android:textColorHint="@color/secondary_color" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:text="Sign Up - Step 2 of 2"
+                    android:textColor="@color/secondary_color"
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textInputLayout2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="15dp">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/restaurant_address"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.7"
+                    android:text="Complete your restaurant profile" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputLayout1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Restaurant Address"
-                    android:inputType="textPostalAddress"
-                    android:textColorHint="@color/secondary_color" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:padding="15dp">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/restaurant_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Restaurant Name"
+                        android:inputType="text"
+                        android:textColorHint="@color/secondary_color" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textInputLayout3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="15dp">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/restaurant_api_link"
+                <!-- Address Input Section -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputLayoutAddress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="API Link (Optional)"
-                    android:inputType="textUri"
-                    android:textColorHint="@color/secondary_color" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:padding="15dp">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/address_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter Restaurant Address"
+                        android:inputType="textPostalAddress"
+                        android:textColorHint="@color/secondary_color" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/uploadLogoButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Upload Logo (Optional)"
-                android:layout_marginTop="10dp" />
+                <Button
+                    android:id="@+id/add_address_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Add Address"
+                    android:layout_marginTop="10dp"
+                    android:backgroundTint="@color/primary_color"
+                    android:textColor="#FFFFFF" />
 
-            <Button
-                android:id="@+id/SignUpButton"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_marginTop="16dp"
-                android:backgroundTint="@color/primary_color"
-                android:text="Sign Up"
-                android:textColor="#FFFFFF" />
-        </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Added Addresses"
+                    android:textColor="@color/secondary_color"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"/>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_view_addresses"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxHeight="200dp"
+                android:layout_marginBottom="16dp"/>
+
+                <!-- API Link and Buttons -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputLayout3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="15dp">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/restaurant_api_link"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="API Link (Optional)"
+                        android:inputType="textUri"
+                        android:textColorHint="@color/secondary_color" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <Button
+                    android:id="@+id/uploadLogoButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Upload Logo (Optional)"
+                    android:layout_marginTop="10dp" />
+
+                <Button
+                    android:id="@+id/SignUpButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:layout_marginTop="16dp"
+                    android:backgroundTint="@color/primary_color"
+                    android:text="Sign Up"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
+        </ScrollView>
     </androidx.cardview.widget.CardView>
 </LinearLayout>

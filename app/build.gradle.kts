@@ -60,7 +60,8 @@ dependencies {
     implementation ("com.google.firebase:firebase-messaging:23.4.1")
     implementation ("com.android.volley:volley:1.2.1")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
-
+    implementation ("com.google.firebase:firebase-messaging:23.4.1")
+    implementation ("com.google.firebase:firebase-functions:20.4.0")
 
 
     annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1")

@@ -119,6 +119,16 @@
                     android:inputType="textPersonName"/>
 
             </com.google.android.material.textfield.TextInputLayout>
+            <TextView
+                android:id="@+id/selected_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Selected Adress"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:textSize="20sp"/>
             <LinearLayout
                 android:id="@+id/linearLayout"
                 android:layout_width="280dp"

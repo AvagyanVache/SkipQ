@@ -31,6 +31,7 @@ import com.example.skipq.CartManager;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.Domain.YourOrderMainDomain;
 import com.example.skipq.R;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -38,24 +39,24 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.gson.Gson;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber;
 
 public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedListener {
  private RecyclerView recyclerView;
  private CartAdaptor cartAdaptor;
  private TextView totalPriceTextView;
  private TextView timeTillReadyTextView;
+ private TextView selectedLocationTextView; // Added for displaying selected address
  private ArrayList<MenuDomain> cartList;
  private ImageView profileIcon;
  private Button checkOutButton;
-
  private ImageView emptyCartImg;
  private TextView cartEmpty;
  private View textInputLayoutPhone;
@@ -68,10 +69,13 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
  public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
   View view = inflater.inflate(R.layout.fragment_cart, container, false);
   CartManager.getInstance().setListener(this);
+
+  // Initialize views
   checkOutButton = view.findViewById(R.id.CheckOutbutton);
   recyclerView = view.findViewById(R.id.cartRecycleView);
   totalPriceTextView = view.findViewById(R.id.totalPrice);
   timeTillReadyTextView = view.findViewById(R.id.TimeTillReady);
+  selectedLocationTextView = view.findViewById(R.id.selected_location); // Initialize selected location TextView
   profileIcon = view.findViewById(R.id.profileIcon);
   cartEmpty = view.findViewById(R.id.cartEmpty);
   textInputLayoutPhone = view.findViewById(R.id.textInputLayoutPhone);
@@ -84,25 +88,32 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
 
   FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
-
+  // Set up profile icon click listener
   profileIcon.setOnClickListener(v -> {
-   Intent intent = new Intent(getActivity(), HomeActivity.class);intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
-   intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP); startActivity(intent);
+   Intent intent = new Intent(getActivity(), HomeActivity.class);
+   intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
+   intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+   startActivity(intent);
   });
 
-  checkOutButton.setOnClickListener(v -> {
-   proceedToOrder();
-  });
+  // Set up checkout button click listener
+  checkOutButton.setOnClickListener(v -> proceedToOrder());
 
+  // Initialize input fields
   com.hbb20.CountryCodePicker countryCodePicker = view.findViewById(R.id.countryCodePicker);
   TextInputEditText phoneNumberInput = view.findViewById(R.id.phoneNumberInput);
   TextInputEditText nameInput = view.findViewById(R.id.userNameSurname);
-  updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg);  FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+  // Update UI based on cart state
+  updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg, selectedLocationTextView);
+
+  // Load user data if authenticated
   if (currentUser != null) {
    setupProfileListener(currentUser);
    loadUserData(currentUser, phoneNumberInput, nameInput, countryCodePicker);
   }
 
+  // Load saved user data
   if (currentUser != null) {
    db.collection("users").document(currentUser.getUid())
            .get()
@@ -112,13 +123,12 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
              String savedName = documentSnapshot.getString("name");
 
              if (savedPhoneNumber != null && !savedPhoneNumber.isEmpty()) {
-              // Extract national number by removing country code
               String countryCode = countryCodePicker.getSelectedCountryCodeWithPlus();
               if (savedPhoneNumber.startsWith(countryCode)) {
                String nationalNumber = savedPhoneNumber.substring(countryCode.length());
                phoneNumberInput.setText(nationalNumber);
               } else {
-               phoneNumberInput.setText(savedPhoneNumber); // Fallback if country code mismatch
+               phoneNumberInput.setText(savedPhoneNumber);
               }
              }
              if (savedName != null && !savedName.isEmpty()) {
@@ -129,7 +139,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
            .addOnFailureListener(e -> Log.e("CartFragment", "Failed to fetch user data", e));
   }
 
-  // Save phone number when focus is lost
+  // Save phone number on focus loss
   phoneNumberInput.setOnFocusChangeListener((v, hasFocus) -> {
    if (!hasFocus && currentUser != null) {
     String nationalNumber = phoneNumberInput.getText().toString().trim();
@@ -142,6 +152,8 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
     }
    }
   });
+
+  // Save name on focus loss
   nameInput.setOnFocusChangeListener((v, hasFocus) -> {
    if (!hasFocus && currentUser != null) {
     String name = nameInput.getText().toString().trim();
@@ -154,13 +166,21 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    }
   });
 
+  // Initialize RecyclerView
   cartAdaptor = new CartAdaptor(requireContext(), cartList, this);
   recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
   recyclerView.setAdapter(cartAdaptor);
+
+  // Update total price and prep time
   updateTotalPrice(CartManager.getInstance().getTotalPrice());
   updateTimeTillReady(CartManager.getInstance().getTotalPrepTime());
+
+  // Update selected address display
+  updateSelectedAddress();
+
   return view;
  }
+
  private void setupProfileListener(FirebaseUser firebaseUser) {
   profileListener = db.collection("users").document(firebaseUser.getUid())
           .addSnapshotListener((documentSnapshot, e) -> {
@@ -174,6 +194,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
            }
           });
  }
+
  private void loadProfileImage(String base64Image, ImageView imageView) {
   if (base64Image != null && !base64Image.isEmpty() && isAdded()) {
    byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
@@ -189,6 +210,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
            .into(imageView);
   }
  }
+
  private void loadUserData(FirebaseUser currentUser, TextInputEditText phoneNumberInput,
                            TextInputEditText nameInput, com.hbb20.CountryCodePicker countryCodePicker) {
   db.collection("users").document(currentUser.getUid())
@@ -214,6 +236,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
           })
           .addOnFailureListener(e -> Log.e("CartFragment", "Failed to fetch user data", e));
  }
+
  private boolean validatePhoneNumber() {
   com.hbb20.CountryCodePicker countryCodePicker = getView().findViewById(R.id.countryCodePicker);
   TextInputEditText phoneNumberInput = getView().findViewById(R.id.phoneNumberInput);
@@ -250,6 +273,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    return false;
   }
  }
+
  private boolean validateName() {
   TextInputEditText nameInput = getView().findViewById(R.id.userNameSurname);
   String name = nameInput.getText().toString().trim();
@@ -262,9 +286,18 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   }
  }
 
+ private boolean validateAddress() {
+  String selectedAddress = CartManager.getInstance().getSelectedAddress();
+  if (selectedAddress == null || selectedAddress.isEmpty()) {
+   Toast.makeText(getContext(), "Please select a restaurant address", Toast.LENGTH_SHORT).show();
+   return false;
+  }
+  return true;
+ }
+
  private void proceedToOrder() {
   if (!validateName() || !validatePhoneNumber()) {
-   Toast.makeText(getContext(), "Please fill in all required fields", Toast.LENGTH_SHORT).show();
+   Toast.makeText(getContext(), "Please fill in all required fields and select an address", Toast.LENGTH_SHORT).show();
    return;
   }
 
@@ -347,7 +380,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
 
    YourOrderMainDomain order = new YourOrderMainDomain();
    order.setTotalPrepTime(totalPrepTime);
-   order.setItems(new ArrayList<>(cartList)); // Ensure a new list to avoid modifications
+   order.setItems(new ArrayList<>(cartList));
    saveOrderToFirestore(new ArrayList<>(cartList), restaurantId, totalPrice, totalPrepTime, order);
 
    CartManager.getInstance().clearCart();
@@ -358,6 +391,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    startActivity(intent);
   }
  }
+
  private void saveOrderToFirestore(ArrayList<MenuDomain> cartList, String restaurantId, double totalPrice, int prepTime, YourOrderMainDomain order) {
   FirebaseFirestore db = FirebaseFirestore.getInstance();
   FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -384,6 +418,8 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   orderData.put("endTime", null);
   orderData.put("status", "pending");
   orderData.put("approvalStatus", "pendingApproval");
+  // Add selected address to order
+  orderData.put("selectedAddress", CartManager.getInstance().getSelectedAddress());
 
   List<Map<String, Object>> itemsList = new ArrayList<>();
   for (MenuDomain item : cartList) {
@@ -391,7 +427,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    itemData.put("name", item.getItemName());
    itemData.put("price", Double.parseDouble(item.getItemPrice()));
    itemData.put("prepTime", item.getPrepTime());
-   itemData.put("item count", item.getItemCount());
+   itemData.put("itemCount", item.getItemCount());
    itemsList.add(itemData);
   }
   orderData.put("items", itemsList);
@@ -400,7 +436,6 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
           .set(orderData)
           .addOnSuccessListener(aVoid -> {
            Log.d("FirestoreDebug", "Order stored successfully with ID: " + orderId);
-
            if (isAdded() && getActivity() != null) {
             Intent intent = new Intent(getActivity(), HomeActivity.class);
             intent.putExtra("FRAGMENT_TO_LOAD", "YOUR ORDER");
@@ -410,39 +445,53 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
             Log.e("CartFragment", "Fragment is not attached to an activity");
            }
           })
-          .addOnFailureListener(e -> {
-           Log.e("FirestoreError", "Failed to store order: " + e.getMessage());
-          });
+          .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to store order: " + e.getMessage()));
  }
+
  private void updateCartVisibility(TextView cartEmpty, View recyclerView,
                                    View textInputLayoutPhone, View textInputName,
-                                   View linearLayout, Button checkOutButton, ImageView emptyCartImg) {
+                                   View linearLayout, Button checkOutButton,
+                                   ImageView emptyCartImg, TextView selectedLocationTextView) {
   if (cartList.isEmpty()) {
    cartEmpty.setVisibility(View.VISIBLE);
-   emptyCartImg.setVisibility(View.VISIBLE); // Show the image
+   emptyCartImg.setVisibility(View.VISIBLE);
    recyclerView.setVisibility(View.GONE);
    textInputLayoutPhone.setVisibility(View.GONE);
    textInputName.setVisibility(View.GONE);
    linearLayout.setVisibility(View.GONE);
    checkOutButton.setVisibility(View.GONE);
+   selectedLocationTextView.setVisibility(View.GONE);
   } else {
    cartEmpty.setVisibility(View.GONE);
-   emptyCartImg.setVisibility(View.GONE); // Hide the image
+   emptyCartImg.setVisibility(View.GONE);
    recyclerView.setVisibility(View.VISIBLE);
    textInputLayoutPhone.setVisibility(View.VISIBLE);
    textInputName.setVisibility(View.VISIBLE);
    linearLayout.setVisibility(View.VISIBLE);
    checkOutButton.setVisibility(View.VISIBLE);
+   selectedLocationTextView.setVisibility(View.VISIBLE);
   }
  }
+
+ private void updateSelectedAddress() {
+  String selectedAddress = CartManager.getInstance().getSelectedAddress();
+  if (selectedAddress != null && !selectedAddress.isEmpty()) {
+   selectedLocationTextView.setText("Selected Address: " + selectedAddress);
+  } else {
+   selectedLocationTextView.setText("No address selected");
+  }
+ }
+
  @Override
  public void onCartUpdated(double total, int totalPrepTime) {
   updateTotalPrice(total);
   updateTimeTillReady(totalPrepTime);
+  updateSelectedAddress();
   if (cartEmpty != null && textInputLayoutPhone != null && textInputName != null && linearLayout != null) {
-   updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg);
+   updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg, selectedLocationTextView);
   }
  }
+
  private void updateTimeTillReady(int totalPrepTime) {
   if (timeTillReadyTextView != null) {
    timeTillReadyTextView.setText(totalPrepTime + " min");
@@ -462,7 +511,15 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   cartAdaptor.notifyDataSetChanged();
   updateTotalPrice(CartManager.getInstance().getTotalPrice());
   updateTimeTillReady(CartManager.getInstance().getTotalPrepTime());
+  updateSelectedAddress();
+  updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg, selectedLocationTextView);
+ }
 
-  updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg);
+ @Override
+ public void onDestroyView() {
+  super.onDestroyView();
+  if (profileListener != null) {
+   profileListener.remove();
+  }
  }
 }
