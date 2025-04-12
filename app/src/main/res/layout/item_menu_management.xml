@@ -36,6 +36,8 @@
         android:layout_height="23dp"
         android:layout_marginEnd="56dp"
         android:text="Item Name"
+
+        android:gravity="center"
         android:textColor="@color/black"
         android:textSize="15sp"
         android:textStyle="bold"
@@ -51,6 +53,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:gravity="center"
+
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.462"
         app:layout_constraintStart_toEndOf="@+id/CartItemPhoto"
@@ -60,6 +64,7 @@
             android:id="@+id/item_description_text"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_gravity="center"
             android:text="Item Description"
             tools:layout_editor_absoluteX="130dp"
             tools:layout_editor_absoluteY="43dp" />
@@ -70,8 +75,9 @@
             android:layout_height="25dp"
             android:tint="#FF0000"
             app:srcCompat="@drawable/delete_order"
-            tools:ignore="UseAppTint"
             android:layout_marginLeft="20dp"
+            android:visibility="gone"
+            tools:ignore="UseAppTint"
             tools:layout_editor_absoluteX="305dp"
             tools:layout_editor_absoluteY="41dp" />
 
@@ -81,8 +87,9 @@
             android:layout_height="25dp"
             app:srcCompat="@drawable/edit"
             android:layout_marginLeft="7dp"
-            tools:layout_editor_absoluteX="273dp"
-            tools:layout_editor_absoluteY="41dp" />
+            android:visibility="gone"
+        tools:layout_editor_absoluteX="273dp"
+        tools:layout_editor_absoluteY="41dp" />
     </LinearLayout>
 
 
