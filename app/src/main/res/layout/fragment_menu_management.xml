@@ -34,6 +34,17 @@
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-medium"/>
             </LinearLayout>
+            <TextView
+                android:id="@+id/backButton"
+                android:layout_width="60dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/back_background"
+                android:text="Back"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/add_item_button"
@@ -117,6 +128,6 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/menu_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1" />
 </LinearLayout>

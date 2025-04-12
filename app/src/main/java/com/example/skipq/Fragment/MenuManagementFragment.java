@@ -25,9 +25,9 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 public class MenuManagementFragment extends Fragment {
 
@@ -39,7 +39,7 @@ public class MenuManagementFragment extends Fragment {
     private CardView cardView;
     private FirebaseFirestore db;
     private String restaurantId;
-    private TextView itemImg;
+    private TextView itemImg, backButton; // Added backButton
     private boolean isUpdating = false; // Flag to track add vs update mode
     private String originalItemName; // Store original name for updating Firestore
 
@@ -57,6 +57,7 @@ public class MenuManagementFragment extends Fragment {
         itemImg = view.findViewById(R.id.item_img);
         addItemButton = view.findViewById(R.id.add_item_button);
         cardView = view.findViewById(R.id.cardView);
+        backButton = view.findViewById(R.id.backButton); // Initialize backButton
 
         db = FirebaseFirestore.getInstance();
         restaurantId = getArguments().getString("restaurantId");
@@ -67,14 +68,18 @@ public class MenuManagementFragment extends Fragment {
         menuRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         menuRecyclerView.setAdapter(menuAdapter);
 
+        // Set backButton initial visibility to GONE
+        backButton.setVisibility(View.GONE);
+
         // Load data
         loadMenuItems();
 
         // Add/Update item button listener
         addItemButton.setOnClickListener(v -> {
             if (cardView.getVisibility() == View.GONE) {
-                // Show CardView for adding a new item
+                // Show CardView and backButton for adding a new item
                 cardView.setVisibility(View.VISIBLE);
+                backButton.setVisibility(View.VISIBLE); // Show backButton
                 isUpdating = false;
                 addItemButton.setText("Submit Item");
                 clearInputs();
@@ -86,6 +91,16 @@ public class MenuManagementFragment extends Fragment {
                     addItem();
                 }
             }
+        });
+
+        // Back button click listener
+        backButton.setOnClickListener(v -> {
+            // Hide CardView and backButton, reset UI
+            cardView.setVisibility(View.GONE);
+            backButton.setVisibility(View.GONE);
+            addItemButton.setText("Add Item");
+            clearInputs();
+            isUpdating = false; // Reset update mode
         });
 
         return view;
@@ -144,6 +159,7 @@ public class MenuManagementFragment extends Fragment {
                     loadMenuItems();
                     clearInputs();
                     cardView.setVisibility(View.GONE);
+                    backButton.setVisibility(View.GONE); // Hide backButton
                     addItemButton.setText("Add Item");
                 })
                 .addOnFailureListener(e -> {
@@ -159,8 +175,9 @@ public class MenuManagementFragment extends Fragment {
         itemDescription.setText(item.getItemDescription());
         itemImg.setText(item.getItemImg());
 
-        // Show CardView and set update mode
+        // Show CardView and backButton, set update mode
         cardView.setVisibility(View.VISIBLE);
+        backButton.setVisibility(View.VISIBLE); // Show backButton
         isUpdating = true;
         originalItemName = item.getItemName(); // Store original name for Firestore update
         addItemButton.setText("Update Item");
@@ -207,6 +224,7 @@ public class MenuManagementFragment extends Fragment {
                     loadMenuItems();
                     clearInputs();
                     cardView.setVisibility(View.GONE);
+                    backButton.setVisibility(View.GONE); // Hide backButton
                     addItemButton.setText("Add Item");
                     isUpdating = false;
                 })
