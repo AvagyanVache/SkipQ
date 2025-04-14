@@ -40,7 +40,9 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class YourOrderMainFragment extends Fragment {
     private RecyclerView recyclerView;
@@ -52,12 +54,14 @@ public class YourOrderMainFragment extends Fragment {
     private ImageView profileIcon;
     private FirebaseFirestore db;
     private ListenerRegistration profileListener;
-    private ListenerRegistration pendingApprovalListener; // Added to manage pending approval listener
+    private ListenerRegistration pendingApprovalListener;
+    private ListenerRegistration declinedOrdersListener;
     private AlertDialog waitingDialog;
     private TextView waitingTimerText;
     private Handler timerHandler;
     private long startTime;
-
+    private final Set<String> shownDeclineDialogs = new HashSet<>();
+    private String currentPendingOrderId;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -94,7 +98,8 @@ public class YourOrderMainFragment extends Fragment {
         loadOrdersFromFirestore(true);
 
         startOrderCountdownWatcher();
-        checkForPendingApprovalOrders(); // Start checking for pending approval orders
+        checkForPendingApprovalOrders();
+        checkForDeclinedOrders();
         updateEmptyStateVisibility();
 
         currentOrdersText.setOnClickListener(v -> {
@@ -221,28 +226,76 @@ public class YourOrderMainFragment extends Fragment {
                 return;
             }
 
-            if (snapshots != null && !snapshots.isEmpty() && isAdded()) { // Check if fragment is attached
+            if (snapshots != null && !snapshots.isEmpty() && isAdded()) {
                 for (QueryDocumentSnapshot document : snapshots) {
                     String orderId = document.getId();
+                    Log.d("YourOrderMainFragment", "Pending order detected: " + orderId);
                     showWaitingDialog(orderId);
-                    break; // Show dialog for the first pending order
+                    break; // Show waiting dialog for the first pending order
                 }
             } else if (waitingDialog != null && waitingDialog.isShowing()) {
                 waitingDialog.dismiss();
+                Log.d("YourOrderMainFragment", "No pending orders, dismissing waiting dialog");
+            }
+        });
+    }
+
+    private void checkForDeclinedOrders() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser user = auth.getCurrentUser();
+        if (user == null) return;
+
+        Query declinedQuery = firestore.collection("orders")
+                .whereEqualTo("userId", user.getUid())
+                .whereEqualTo("approvalStatus", "declined");
+
+        declinedOrdersListener = declinedQuery.addSnapshotListener((snapshots, error) -> {
+            if (error != null) {
+                Log.e("FirestoreError", "Failed to check declined orders: " + error.getMessage());
+                return;
+            }
+
+            if (snapshots != null && !snapshots.isEmpty() && isAdded()) {
+                for (QueryDocumentSnapshot document : snapshots) {
+                    String orderId = document.getId();
+                    // Only process the decline if it matches the current pending order
+                    if (!orderId.equals(currentPendingOrderId)) {
+                        Log.d("YourOrderMainFragment", "Ignoring decline for non-current order: " + orderId);
+                        continue;
+                    }
+                    // Skip if we've already shown a dialog for this order
+                    if (shownDeclineDialogs.contains(orderId)) {
+                        Log.d("YourOrderMainFragment", "Skipping duplicate decline dialog for order: " + orderId);
+                        continue;
+                    }
+
+                    String declineReason = document.getString("declineReason");
+                    if (declineReason == null || declineReason.isEmpty()) {
+                        declineReason = "No reason provided";
+                    }
+                    Log.d("YourOrderMainFragment", "Declined order detected: " + orderId + ", reason: " + declineReason);
+
+                    shownDeclineDialogs.add(orderId); // Mark this order as shown
+                    showDeclineDialog(orderId, declineReason);
+                    currentPendingOrderId = null; // Clear current order after decline
+                    break; // Show only one decline dialog per snapshot
+                }
             }
         });
     }
 
     private void showWaitingDialog(String orderId) {
-        if (!isAdded()) { // Check if fragment is attached
+        if (!isAdded()) {
             Log.w("YourOrderMainFragment", "Fragment not attached, skipping dialog");
             return;
         }
 
         if (waitingDialog != null && waitingDialog.isShowing()) {
-            return; // Dialog already showing
+            Log.d("YourOrderMainFragment", "Waiting dialog already showing for order: " + orderId);
+            return;
         }
 
+        currentPendingOrderId = orderId; // Track the current order
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         LayoutInflater inflater = requireActivity().getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_waiting_order, null);
@@ -254,32 +307,76 @@ public class YourOrderMainFragment extends Fragment {
         builder.setCancelable(false);
         waitingDialog = builder.create();
         waitingDialog.show();
+        Log.d("YourOrderMainFragment", "Showing waiting dialog for order: " + orderId);
 
         startTime = System.currentTimeMillis();
         updateWaitingTimer();
 
-        // Set to Current Orders when dialog opens
         loadOrdersFromFirestore(true);
         updateTabSelection(true);
 
         cancelButton.setOnClickListener(v -> {
             cancelOrder(orderId);
             waitingDialog.dismiss();
+            currentPendingOrderId = null;
+            Log.d("YourOrderMainFragment", "Waiting dialog canceled for order: " + orderId);
         });
 
-        // Listener to dismiss dialog and ensure Current Orders is refreshed
+        // Monitor this specific order for status changes
         firestore.collection("orders").document(orderId)
                 .addSnapshotListener((snapshot, e) -> {
-                    if (e != null) return;
-                    if (snapshot != null && snapshot.exists() && isAdded()) { // Check if fragment is attached
+                    if (e != null) {
+                        Log.e("FirestoreError", "Error listening for order status: " + e.getMessage());
+                        return;
+                    }
+                    if (snapshot != null && snapshot.exists() && isAdded()) {
                         String approvalStatus = snapshot.getString("approvalStatus");
-                        if ("accepted".equals(approvalStatus) && waitingDialog != null && waitingDialog.isShowing()) {
-                            waitingDialog.dismiss();
-                            loadOrdersFromFirestore(true); // Force reload Current Orders
-                            yourOrdersAdapter.notifyDataSetChanged(); // Ensure RecyclerView updates
+                        Log.d("YourOrderMainFragment", "Order " + orderId + " status: " + approvalStatus);
+                        if ("accepted".equals(approvalStatus)) {
+                            if (waitingDialog != null && waitingDialog.isShowing()) {
+                                waitingDialog.dismiss();
+                                loadOrdersFromFirestore(true);
+                                yourOrdersAdapter.notifyDataSetChanged();
+                                Log.d("YourOrderMainFragment", "Waiting dialog dismissed, order accepted: " + orderId);
+                            }
+                            currentPendingOrderId = null;
+                        } else if ("declined".equals(approvalStatus) && orderId.equals(currentPendingOrderId)) {
+                            String declineReason = snapshot.getString("declineReason");
+                            if (declineReason == null || declineReason.isEmpty()) {
+                                declineReason = "No reason provided";
+                            }
+                            Log.d("YourOrderMainFragment", "Declined order detected: " + orderId + ", reason: " + declineReason);
+                            if (waitingDialog != null && waitingDialog.isShowing()) {
+                                waitingDialog.dismiss();
+                            }
+                            showDeclineDialog(orderId, declineReason);
+                            currentPendingOrderId = null;
                         }
+                    } else if (snapshot != null && !snapshot.exists() && waitingDialog != null && waitingDialog.isShowing()) {
+                        waitingDialog.dismiss();
+                        Log.d("YourOrderMainFragment", "Waiting dialog dismissed, order deleted: " + orderId);
+                        currentPendingOrderId = null;
                     }
                 });
+    }
+
+    private void showDeclineDialog(String orderId, String declineReason) {
+        if (!isAdded()) {
+            Log.w("YourOrderMainFragment", "Fragment not attached, skipping decline dialog");
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Order Declined");
+        builder.setMessage("Sorry, your order was declined because: " + declineReason);
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            loadOrdersFromFirestore(true);
+            dialog.dismiss();
+            Log.d("YourOrderMainFragment", "Decline dialog dismissed for order: " + orderId);
+        });
+        builder.setCancelable(false);
+        AlertDialog declineDialog = builder.create();
+        declineDialog.show();
     }
 
     private void updateWaitingTimer() {
@@ -395,15 +492,15 @@ public class YourOrderMainFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         if (pendingApprovalListener != null) {
-            pendingApprovalListener.remove(); // Unregister the listener
+            pendingApprovalListener.remove();
             pendingApprovalListener = null;
         }
         if (waitingDialog != null && waitingDialog.isShowing()) {
-            waitingDialog.dismiss(); // Dismiss dialog if showing
+            waitingDialog.dismiss();
         }
-        timerHandler.removeCallbacksAndMessages(null); // Stop timer updates
+        timerHandler.removeCallbacksAndMessages(null);
+        currentPendingOrderId = null;
     }
-
     private void updateEmptyStateVisibility() {
         if (groupedOrders.isEmpty()) {
             emptyOrderText.setVisibility(View.VISIBLE);

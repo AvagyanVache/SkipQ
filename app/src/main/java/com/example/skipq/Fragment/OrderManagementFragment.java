@@ -1,6 +1,8 @@
 package com.example.skipq.Fragment;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -137,9 +139,50 @@ public class OrderManagementFragment extends Fragment {
 
 
     private void declineOrder(String orderId) {
-        db.collection("orders").document(orderId)
-                .update("approvalStatus", "declined")
-                .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Order declined!", Toast.LENGTH_SHORT).show())
-                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to decline order: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Select Reason for Declining Order");
+
+        String[] declineReasons = {
+                "Out of stock",
+                "Kitchen overload",
+                "Order not feasible",
+                "Other"
+        };
+
+        builder.setItems(declineReasons, (dialog, which) -> {
+            String selectedReason = declineReasons[which];
+            Log.d("OrderManagement", "Declining order " + orderId + " with reason: " + selectedReason);
+
+            // Update Firestore with decline reason and status
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("approvalStatus", "declined");
+            updates.put("declineReason", selectedReason);
+
+            db.collection("orders").document(orderId)
+                    .update(updates)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d("OrderManagement", "Order " + orderId + " updated to declined with reason: " + selectedReason);
+                        // Delete the order after a delay to ensure client detects update
+                        new Handler().postDelayed(() -> {
+                            db.collection("orders").document(orderId)
+                                    .delete()
+                                    .addOnSuccessListener(aVoid2 -> {
+                                        Toast.makeText(getContext(), "Order declined and removed!", Toast.LENGTH_SHORT).show();
+                                        Log.d("OrderManagement", "Order " + orderId + " deleted successfully");
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Toast.makeText(getContext(), "Failed to delete order: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                        Log.e("OrderManagement", "Failed to delete order: " + e.getMessage());
+                                    });
+                        }, 2000); // 2-second delay for robust sync
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(getContext(), "Failed to decline order: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("OrderManagement", "Failed to decline order: " + e.getMessage());
+                    });
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.create().show();
     }
 }
