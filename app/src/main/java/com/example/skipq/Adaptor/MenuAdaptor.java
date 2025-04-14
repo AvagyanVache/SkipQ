@@ -1,6 +1,9 @@
 package com.example.skipq.Adaptor;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,9 +58,22 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
         holder.menuItemDescription.setText(menuItem.getItemDescription());
         holder.menuItemPrice.setText(MessageFormat.format("֏ {0}", menuItem.getItemPrice()));
 
-        Glide.with(context)
-                .load(menuItem.getItemImg())
-                .into(holder.menuItemPhoto);
+        // Decode and display Base64 image
+        String base64Image = menuItem.getItemImg();
+        if (base64Image != null && !base64Image.isEmpty()) {
+            try {
+                byte[] decodedBytes = Base64.decode(base64Image, Base64.DEFAULT);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                holder.menuItemPhoto.setImageBitmap(bitmap);
+                holder.menuItemPhoto.setVisibility(View.VISIBLE);
+            } catch (Exception e) {
+                holder.menuItemPhoto.setVisibility(View.GONE);
+                // Optional: Log.e("MenuAdaptor", "Failed to decode image: " + e.getMessage());
+            }
+        } else {
+            holder.menuItemPhoto.setVisibility(View.GONE);
+        }
+
         holder.prepTime.setText(MessageFormat.format("{0} min", menuItem.getPrepTime()));
         holder.itemCount.setText(String.valueOf(menuItem.getItemCount()));
         holder.addToCart.setOnClickListener(v -> {
@@ -65,7 +81,6 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
                 onAddToCartListener.onAddToCart(menuItem);
             }
         });
-
 
         holder.plusButton.setOnClickListener(v -> {
             menuItem.setItemCount(menuItem.getItemCount() + 1);

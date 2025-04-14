@@ -1,6 +1,12 @@
 package com.example.skipq.Fragment;
 
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,21 +15,27 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.skipq.Adaptor.MenuManagementAdapter;
 import com.example.skipq.Domain.MenuDomain;
+import android.Manifest;
 import com.example.skipq.R;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.WriteBatch;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +54,9 @@ public class MenuManagementFragment extends Fragment {
     private TextView itemImg, backButton; // Added backButton
     private boolean isUpdating = false; // Flag to track add vs update mode
     private String originalItemName; // Store original name for updating Firestore
-
+    private String selectedImageBase64; // Store Base64 string for selected image
+    private ActivityResultLauncher<String> pickImageLauncher; // Image picker
+    private ActivityResultLauncher<String> requestPermissionLauncher; // Permission handler
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -57,34 +71,29 @@ public class MenuManagementFragment extends Fragment {
         itemImg = view.findViewById(R.id.item_img);
         addItemButton = view.findViewById(R.id.add_item_button);
         cardView = view.findViewById(R.id.cardView);
-        backButton = view.findViewById(R.id.backButton); // Initialize backButton
+        backButton = view.findViewById(R.id.backButton);
+        selectedImageBase64 = null;
 
         db = FirebaseFirestore.getInstance();
         restaurantId = getArguments().getString("restaurantId");
 
-        // Setup menu management
         menuItems = new ArrayList<>();
         menuAdapter = new MenuManagementAdapter(menuItems, this::updateItem, this::deleteItem);
         menuRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         menuRecyclerView.setAdapter(menuAdapter);
 
-        // Set backButton initial visibility to GONE
         backButton.setVisibility(View.GONE);
 
-        // Load data
         loadMenuItems();
 
-        // Add/Update item button listener
         addItemButton.setOnClickListener(v -> {
             if (cardView.getVisibility() == View.GONE) {
-                // Show CardView and backButton for adding a new item
                 cardView.setVisibility(View.VISIBLE);
-                backButton.setVisibility(View.VISIBLE); // Show backButton
+                backButton.setVisibility(View.VISIBLE);
                 isUpdating = false;
                 addItemButton.setText("Submit Item");
                 clearInputs();
             } else {
-                // Submit based on mode (add or update)
                 if (isUpdating) {
                     submitUpdate();
                 } else {
@@ -93,16 +102,43 @@ public class MenuManagementFragment extends Fragment {
             }
         });
 
-        // Back button click listener
         backButton.setOnClickListener(v -> {
             // Hide CardView and backButton, reset UI
             cardView.setVisibility(View.GONE);
             backButton.setVisibility(View.GONE);
             addItemButton.setText("Add Item");
             clearInputs();
-            isUpdating = false; // Reset update mode
+            isUpdating = false;
+        });
+        pickImageLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+            if (uri != null) {
+                try {
+                    // Convert image to Base64
+                    Bitmap bitmap = loadBitmapFromUri(uri);
+                    if (bitmap != null) {
+                        selectedImageBase64 = bitmapToBase64(bitmap);
+                        itemImg.setText("Image selected"); // Visual feedback
+                        Toast.makeText(getContext(), "Image selected", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Failed to load image", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(getContext(), "Error processing image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
         });
 
+// Initialize permission launcher
+        requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+            if (isGranted) {
+                pickImageLauncher.launch("image/*");
+            } else {
+                Toast.makeText(getContext(), "Permission denied. Cannot select image.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+// Make itemImg clickable to select image
+        itemImg.setOnClickListener(v -> checkAndRequestPermission());
         return view;
     }
 
@@ -122,7 +158,8 @@ public class MenuManagementFragment extends Fragment {
                             item.setPrepTime(0);
                         }
                         item.setItemDescription(doc.getString("Item Description"));
-                        item.setItemImg(doc.getString("Item Img"));
+                        String itemImgBase64 = doc.getString("Item Img");
+                        item.setItemImg(itemImgBase64 != null ? itemImgBase64 : ""); // Ensure null safety
                         menuItems.add(item);
                     }
                     menuAdapter.notifyDataSetChanged();
@@ -131,13 +168,11 @@ public class MenuManagementFragment extends Fragment {
                     Toast.makeText(getContext(), "Failed to load menu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
-
     private void addItem() {
         String name = itemName.getText().toString().trim();
         String price = itemPrice.getText().toString().trim();
         String prepTime = itemPrepTime.getText().toString().trim();
         String description = itemDescription.getText().toString().trim();
-        String img = itemImg.getText().toString().trim();
 
         if (name.isEmpty() || price.isEmpty() || prepTime.isEmpty()) {
             Toast.makeText(getContext(), "Name, price, and prep time are required", Toast.LENGTH_SHORT).show();
@@ -149,7 +184,7 @@ public class MenuManagementFragment extends Fragment {
         itemData.put("Item Price", price);
         itemData.put("Prep Time", Integer.parseInt(prepTime));
         itemData.put("Item Description", description.isEmpty() ? "" : description);
-        itemData.put("Item Img", img.isEmpty() ? "" : img);
+        itemData.put("Item Img", selectedImageBase64 != null ? selectedImageBase64 : "");
 
         db.collection("FoodPlaces").document(restaurantId).collection("Menu")
                 .document("DefaultMenu").collection("Items").document(name)
@@ -159,27 +194,25 @@ public class MenuManagementFragment extends Fragment {
                     loadMenuItems();
                     clearInputs();
                     cardView.setVisibility(View.GONE);
-                    backButton.setVisibility(View.GONE); // Hide backButton
+                    backButton.setVisibility(View.GONE);
                     addItemButton.setText("Add Item");
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(getContext(), "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
-
     private void updateItem(MenuDomain item) {
-        // Populate input fields with item data
         itemName.setText(item.getItemName());
         itemPrice.setText(item.getItemPrice());
         itemPrepTime.setText(String.valueOf(item.getPrepTime()));
         itemDescription.setText(item.getItemDescription());
-        itemImg.setText(item.getItemImg());
+        selectedImageBase64 = item.getItemImg(); // Load existing image
+        itemImg.setText(selectedImageBase64 != null && !selectedImageBase64.isEmpty() ? "Image selected" : "");
 
-        // Show CardView and backButton, set update mode
         cardView.setVisibility(View.VISIBLE);
-        backButton.setVisibility(View.VISIBLE); // Show backButton
+        backButton.setVisibility(View.VISIBLE);
         isUpdating = true;
-        originalItemName = item.getItemName(); // Store original name for Firestore update
+        originalItemName = item.getItemName();
         addItemButton.setText("Update Item");
     }
 
@@ -188,7 +221,6 @@ public class MenuManagementFragment extends Fragment {
         String price = itemPrice.getText().toString().trim();
         String prepTime = itemPrepTime.getText().toString().trim();
         String description = itemDescription.getText().toString().trim();
-        String img = itemImg.getText().toString().trim();
 
         if (name.isEmpty() || price.isEmpty() || prepTime.isEmpty()) {
             Toast.makeText(getContext(), "Name, price, and prep time are required", Toast.LENGTH_SHORT).show();
@@ -200,31 +232,27 @@ public class MenuManagementFragment extends Fragment {
         itemData.put("Item Price", price);
         itemData.put("Prep Time", Integer.parseInt(prepTime));
         itemData.put("Item Description", description.isEmpty() ? "" : description);
-        itemData.put("Item Img", img.isEmpty() ? "" : img);
+        itemData.put("Item Img", selectedImageBase64 != null ? selectedImageBase64 : "");
 
-        // Start a batch to ensure atomic updates
         WriteBatch batch = db.batch();
 
-        // If the name changed, delete the old document
         if (!originalItemName.equals(name)) {
             DocumentReference oldDocRef = db.collection("FoodPlaces").document(restaurantId)
                     .collection("Menu").document("DefaultMenu").collection("Items").document(originalItemName);
             batch.delete(oldDocRef);
         }
 
-        // Write the updated item to the new document ID (name)
         DocumentReference newDocRef = db.collection("FoodPlaces").document(restaurantId)
                 .collection("Menu").document("DefaultMenu").collection("Items").document(name);
         batch.set(newDocRef, itemData);
 
-        // Commit the batch
         batch.commit()
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(getContext(), "Item updated!", Toast.LENGTH_SHORT).show();
                     loadMenuItems();
                     clearInputs();
                     cardView.setVisibility(View.GONE);
-                    backButton.setVisibility(View.GONE); // Hide backButton
+                    backButton.setVisibility(View.GONE);
                     addItemButton.setText("Add Item");
                     isUpdating = false;
                 })
@@ -232,7 +260,6 @@ public class MenuManagementFragment extends Fragment {
                     Toast.makeText(getContext(), "Failed to update item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
-
     private void deleteItem(String itemName) {
         db.collection("FoodPlaces").document(restaurantId).collection("Menu")
                 .document("DefaultMenu").collection("Items").document(itemName)
@@ -245,12 +272,38 @@ public class MenuManagementFragment extends Fragment {
                     Toast.makeText(getContext(), "Failed to delete item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
+    private void checkAndRequestPermission() {
+        String permission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ?
+                Manifest.permission.READ_MEDIA_IMAGES : Manifest.permission.READ_EXTERNAL_STORAGE;
 
+        if (ContextCompat.checkSelfPermission(requireContext(), permission) == PackageManager.PERMISSION_GRANTED) {
+            pickImageLauncher.launch("image/*");
+        } else {
+            requestPermissionLauncher.launch(permission);
+        }
+    }
+
+    private Bitmap loadBitmapFromUri(Uri uri) throws Exception {
+        InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
+        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+        if (inputStream != null) {
+            inputStream.close();
+        }
+        return bitmap;
+    }
+
+    private String bitmapToBase64(Bitmap bitmap) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos); // 80% quality to reduce size
+        byte[] bytes = baos.toByteArray();
+        return Base64.encodeToString(bytes, Base64.DEFAULT);
+    }
     private void clearInputs() {
         itemName.setText("");
         itemPrice.setText("");
         itemPrepTime.setText("");
         itemDescription.setText("");
         itemImg.setText("");
+        selectedImageBase64 = null; // Reset image
     }
 }
