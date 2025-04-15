@@ -5,16 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/primary_color"
-    tools:context=".Fragment.YourOrderFragment"
-
-    >
+    tools:context=".Fragment.YourOrderFragment">
 
     <TextView
         android:id="@+id/backButton"
         android:layout_width="60dp"
         android:layout_height="20dp"
         android:layout_marginStart="4dp"
-
         android:layout_marginTop="30dp"
         android:layout_marginBottom="505dp"
         android:background="@drawable/back_background"
@@ -52,6 +49,16 @@
         android:layout_marginTop="110dp"
         android:textStyle="bold" />
 
+    <TextView
+        android:id="@+id/orderNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="40dp"
+        android:text="Order Number: --"
+        android:textColor="@color/white"
+        android:textSize="28dp"
+        android:textStyle="bold" />
 
     <ImageView
         android:id="@+id/imageView4"
@@ -61,8 +68,7 @@
         app:tint="@color/white"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="210dp"
-        android:layout_marginRight="70dp"
-        />
+        android:layout_marginRight="70dp" />
 
     <TextView
         android:id="@+id/OrderCountdown"
@@ -76,6 +82,7 @@
         android:textColor="@color/white"
         android:textSize="30dp"
         android:textStyle="bold" />
+
     <TextView
         android:id="@+id/orderTotal"
         android:layout_width="wrap_content"
@@ -94,4 +101,12 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="270dp" />
 
+    <ImageView
+        android:id="@+id/qrCodeImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="540dp"
+        android:contentDescription="QR Code for Order"
+        android:visibility="gone" />
 </FrameLayout>

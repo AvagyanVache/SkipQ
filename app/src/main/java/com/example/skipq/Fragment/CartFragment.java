@@ -31,13 +31,13 @@ import com.example.skipq.CartManager;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.Domain.YourOrderMainDomain;
 import com.example.skipq.R;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.gson.Gson;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -53,7 +53,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
  private CartAdaptor cartAdaptor;
  private TextView totalPriceTextView;
  private TextView timeTillReadyTextView;
- private TextView selectedLocationTextView; // Added for displaying selected address
+ private TextView selectedLocationTextView;
  private ArrayList<MenuDomain> cartList;
  private ImageView profileIcon;
  private Button checkOutButton;
@@ -75,7 +75,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   recyclerView = view.findViewById(R.id.cartRecycleView);
   totalPriceTextView = view.findViewById(R.id.totalPrice);
   timeTillReadyTextView = view.findViewById(R.id.TimeTillReady);
-  selectedLocationTextView = view.findViewById(R.id.selected_location); // Initialize selected location TextView
+  selectedLocationTextView = view.findViewById(R.id.selected_location);
   profileIcon = view.findViewById(R.id.profileIcon);
   cartEmpty = view.findViewById(R.id.cartEmpty);
   textInputLayoutPhone = view.findViewById(R.id.textInputLayoutPhone);
@@ -104,7 +104,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   TextInputEditText phoneNumberInput = view.findViewById(R.id.phoneNumberInput);
   TextInputEditText nameInput = view.findViewById(R.id.userNameSurname);
 
-  // Update UI based on cart state
+  // Update UI casting on cart state
   updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg, selectedLocationTextView);
 
   // Load user data if authenticated
@@ -296,7 +296,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
  }
 
  private void proceedToOrder() {
-  if (!validateName() || !validatePhoneNumber()) {
+  if (!validateName() || !validatePhoneNumber() || !validateAddress()) {
    Toast.makeText(getContext(), "Please fill in all required fields and select an address", Toast.LENGTH_SHORT).show();
    return;
   }
@@ -407,45 +407,60 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
 
   Timestamp startTime = Timestamp.now();
 
-  Map<String, Object> orderData = new HashMap<>();
-  orderData.put("orderId", orderId);
-  orderData.put("userId", userId);
-  orderData.put("restaurantId", restaurantId);
-  orderData.put("totalPrice", totalPrice);
-  orderData.put("totalPrepTime", prepTime);
-  orderData.put("startTime", startTime);
-  orderData.put("items", order.getItems());
-  orderData.put("endTime", null);
-  orderData.put("status", "pending");
-  orderData.put("approvalStatus", "pendingApproval");
-  // Add selected address to order
-  orderData.put("selectedAddress", CartManager.getInstance().getSelectedAddress());
+  // Get user device token for notifications
+  FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+   if (!task.isSuccessful()) {
+    Log.e("FCM", "Failed to get user device token", task.getException());
+    // Proceed without token to avoid blocking order creation
+   }
 
-  List<Map<String, Object>> itemsList = new ArrayList<>();
-  for (MenuDomain item : cartList) {
-   Map<String, Object> itemData = new HashMap<>();
-   itemData.put("name", item.getItemName());
-   itemData.put("price", Double.parseDouble(item.getItemPrice()));
-   itemData.put("prepTime", item.getPrepTime());
-   itemData.put("itemCount", item.getItemCount());
-   itemsList.add(itemData);
-  }
-  orderData.put("items", itemsList);
+   String userDeviceToken = task.isSuccessful() ? task.getResult() : null;
 
-  db.collection("orders").document(order.getOrderId())
-          .set(orderData)
-          .addOnSuccessListener(aVoid -> {
-           Log.d("FirestoreDebug", "Order stored successfully with ID: " + orderId);
-           if (isAdded() && getActivity() != null) {
-            Intent intent = new Intent(getActivity(), HomeActivity.class);
-            intent.putExtra("FRAGMENT_TO_LOAD", "YOUR ORDER");
-            intent.putExtra("orderId", orderId);
-            startActivity(intent);
-           } else {
-            Log.e("CartFragment", "Fragment is not attached to an activity");
-           }
-          })
-          .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to store order: " + e.getMessage()));
+   Map<String, Object> orderData = new HashMap<>();
+   orderData.put("orderId", orderId);
+   orderData.put("userId", userId);
+   orderData.put("restaurantId", restaurantId);
+   orderData.put("totalPrice", totalPrice);
+   orderData.put("totalPrepTime", prepTime);
+   orderData.put("startTime", startTime);
+   orderData.put("items", order.getItems());
+   orderData.put("endTime", null);
+   orderData.put("status", "pending");
+   orderData.put("approvalStatus", "pendingApproval");
+   orderData.put("selectedAddress", CartManager.getInstance().getSelectedAddress());
+   if (userDeviceToken != null) {
+    orderData.put("userDeviceToken", userDeviceToken);
+   }
+
+   List<Map<String, Object>> itemsList = new ArrayList<>();
+   for (MenuDomain item : cartList) {
+    Map<String, Object> itemData = new HashMap<>();
+    itemData.put("name", item.getItemName());
+    itemData.put("price", Double.parseDouble(item.getItemPrice()));
+    itemData.put("prepTime", item.getPrepTime());
+    itemData.put("itemCount", item.getItemCount());
+    itemsList.add(itemData);
+   }
+   orderData.put("items", itemsList);
+
+   db.collection("orders").document(order.getOrderId())
+           .set(orderData)
+           .addOnSuccessListener(aVoid -> {
+            Log.d("FirestoreDebug", "Order stored successfully with ID: " + orderId);
+            if (isAdded() && getActivity() != null) {
+             Intent intent = new Intent(getActivity(), HomeActivity.class);
+             intent.putExtra("FRAGMENT_TO_LOAD", "YOUR ORDER");
+             intent.putExtra("orderId", orderId);
+             startActivity(intent);
+            } else {
+             Log.e("CartFragment", "Fragment is not attached to an activity");
+            }
+           })
+           .addOnFailureListener(e -> {
+            Log.e("FirestoreError", "Failed to store order: " + e.getMessage());
+            Toast.makeText(getContext(), "Failed to place order", Toast.LENGTH_SHORT).show();
+           });
+  });
  }
 
  private void updateCartVisibility(TextView cartEmpty, View recyclerView,

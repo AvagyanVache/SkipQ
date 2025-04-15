@@ -1,23 +1,30 @@
 package com.example.skipq.Activity;
 
+import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.view.View;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.example.skipq.Fragment.CartFragment;
 import com.example.skipq.R;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView signupRedirectText;
     private TextView forgotPassword;
     private FirebaseFirestore db;
+    private ActivityResultLauncher<String> requestPermissionLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,9 +44,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         db = FirebaseFirestore.getInstance();
-        if (FirebaseApp.getApps(this).isEmpty()) {
-            FirebaseApp.initializeApp(this);
-        }
         mAuth = FirebaseAuth.getInstance();
 
         Loginemail = findViewById(R.id.Loginemail);
@@ -48,11 +53,30 @@ public class MainActivity extends AppCompatActivity {
         CheckBox = findViewById(R.id.checkbox);
         forgotPassword = findViewById(R.id.forgot_password);
 
+        // Request notification permission for Android 13+
+        requestPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (!isGranted) {
+                        Toast.makeText(this, "Notifications disabled. You may miss order updates.", Toast.LENGTH_LONG).show();
+                    }
+                });
+
+        // Check notification permission on start
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                checkNotificationPermission();
+            }
+        }
+
+        // Check if user is already logged in
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
             user.reload().addOnCompleteListener(task -> {
                 if (task.isSuccessful() && user.isEmailVerified()) {
                     checkUserRole(user);
+                    registerDeviceToken(user.getUid());
                 }
             });
         }
@@ -83,6 +107,53 @@ public class MainActivity extends AppCompatActivity {
         signupRedirectText.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, SignupActivity.class);
             startActivity(intent);
+        });
+    }
+
+    private void checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                        != PackageManager.PERMISSION_GRANTED) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Enable Notifications")
+                    .setMessage("Notifications are required to receive order updates. Please enable them.")
+                    .setPositiveButton("Settings", (dialog, which) ->
+                            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS))
+                    .setNegativeButton("Cancel", (dialog, which) ->
+                            Toast.makeText(this, "Notifications disabled. You may miss updates.", Toast.LENGTH_LONG).show())
+                    .show();
+        }
+    }
+
+    private void registerDeviceToken(String userId) {
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (!task.isSuccessful()) {
+                Log.e("FCM", "Failed to get token", task.getException());
+                return;
+            }
+
+            String token = task.getResult();
+
+            // Save token for user (if in users collection)
+            db.collection("users").document(userId)
+                    .update("deviceToken", token)
+                    .addOnSuccessListener(aVoid -> Log.d("FCM", "User token updated"))
+                    .addOnFailureListener(e -> Log.e("FCM", "Failed to update user token: " + e.getMessage()));
+
+            // Save token for restaurant (if in FoodPlaces collection)
+            db.collection("FoodPlaces")
+                    .whereEqualTo("uid", userId)
+                    .get()
+                    .addOnSuccessListener(querySnapshot -> {
+                        if (!querySnapshot.isEmpty()) {
+                            for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                                document.getReference().update("deviceToken", token)
+                                        .addOnSuccessListener(aVoid -> Log.d("FCM", "Restaurant token updated"))
+                                        .addOnFailureListener(e -> Log.e("FCM", "Failed to update restaurant token: " + e.getMessage()));
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> Log.e("FCM", "Failed to find restaurant doc: " + e.getMessage()));
         });
     }
 
@@ -122,6 +193,7 @@ public class MainActivity extends AppCompatActivity {
                         if (user != null && user.isEmailVerified()) {
                             Toast.makeText(MainActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
                             checkUserRole(user);
+                            registerDeviceToken(user.getUid());
                         } else {
                             Toast.makeText(MainActivity.this, "Please verify your email address.", Toast.LENGTH_LONG).show();
                         }
@@ -132,7 +204,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkUserRole(FirebaseUser user) {
-        // Check if user is a regular user
         db.collection("users").document(user.getUid()).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
@@ -145,7 +216,6 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                         finish();
                     } else {
-                        // Check if user is a restaurant
                         db.collection("FoodPlaces").whereEqualTo("uid", user.getUid()).get()
                                 .addOnSuccessListener(querySnapshot -> {
                                     if (!querySnapshot.isEmpty()) {
