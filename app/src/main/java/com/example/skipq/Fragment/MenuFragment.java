@@ -9,18 +9,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.skipq.Activity.MainActivity;
 import com.example.skipq.Adaptor.MenuAdaptor;
 import com.example.skipq.CartManager;
@@ -37,7 +37,6 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-
 import java.util.ArrayList;
 
 public class MenuFragment extends Fragment implements OnMapReadyCallback {
@@ -50,8 +49,9 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
 
     private SearchView searchBar;
     public TextView backButton;
-    private Spinner addressSpinner; // New Spinner for address selection
-    private ArrayList<RestaurantAddress> addressList = new ArrayList<>(); // List of restaurant addresses
+    private Spinner addressSpinner;
+    private ArrayList<RestaurantAddress> addressList = new ArrayList<>();
+    private ImageView restaurantInfo;
 
     private FusedLocationProviderClient fusedLocationClient;
     private Marker currentLocationMarker;
@@ -69,7 +69,8 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
         searchBar = view.findViewById(R.id.searchBar);
         searchBar.clearFocus();
 
-        addressSpinner = view.findViewById(R.id.address_spinner); // Initialize Spinner
+        addressSpinner = view.findViewById(R.id.address_spinner);
+        restaurantInfo = view.findViewById(R.id.restaurantInfo);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         if (mapFragment == null) {
@@ -116,12 +117,14 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
             stopSearchBar();
         });
 
+        restaurantInfo.setOnClickListener(v -> showRestaurantInfoDialog());
+
         db = FirebaseFirestore.getInstance();
 
         if (getArguments() != null) {
             restaurantId = getArguments().getString("restaurantId");
             fetchMenuItems();
-            fetchRestaurantAddresses(); // Fetch addresses when restaurantId is available
+            fetchRestaurantAddresses();
         }
 
         MenuAdaptor.OnAddToCartListener onAddToCartListener = new MenuAdaptor.OnAddToCartListener() {
@@ -172,7 +175,7 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
         menuAdaptor = new MenuAdaptor(requireContext(), menuList, onAddToCartListener);
         recyclerViewMenu.setAdapter(menuAdaptor);
 
-        setupAddressSpinner(); // Set up the address spinner listener
+        setupAddressSpinner();
 
         return view;
     }
@@ -284,14 +287,18 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
                     }
 
                     ArrayList<String> addressStrings = new ArrayList<>();
-                    addressStrings.add("Select an address"); // Placeholder
+                    addressStrings.add("Select an address");
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        String address = doc.getString("address");
-                        Double latitude = doc.getDouble("latitude");
-                        Double longitude = doc.getDouble("longitude");
-                        if (address != null && latitude != null && longitude != null) {
-                            addressList.add(new RestaurantAddress(address, latitude, longitude));
-                            addressStrings.add(address);
+                        Boolean isAvailable = doc.getBoolean("isAvailable");
+                        // Only include addresses where isAvailable is true (or unset, default to true)
+                        if (isAvailable == null || isAvailable) {
+                            String address = doc.getString("address");
+                            Double latitude = doc.getDouble("latitude");
+                            Double longitude = doc.getDouble("longitude");
+                            if (address != null && latitude != null && longitude != null) {
+                                addressList.add(new RestaurantAddress(address, latitude, longitude));
+                                addressStrings.add(address);
+                            }
                         }
                     }
 
@@ -305,21 +312,60 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
                 });
     }
 
+    private void showRestaurantInfoDialog() {
+        if (restaurantId == null || restaurantId.isEmpty()) {
+            Log.e("MenuFragment", "Restaurant ID is null for info dialog");
+            Toast.makeText(getContext(), "Error loading restaurant info", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        db.collection("FoodPlaces").document(restaurantId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String name = documentSnapshot.getString("name");
+                        String operatingHours = documentSnapshot.getString("operatingHours");
+                        String contactPhone = documentSnapshot.getString("contactPhone");
+
+                        LayoutInflater inflater = LayoutInflater.from(getContext());
+                        View dialogView = inflater.inflate(R.layout.dialog_restaurant_info, null);
+
+                        TextView nameText = dialogView.findViewById(R.id.restaurant_name);
+                        TextView hoursText = dialogView.findViewById(R.id.operating_hours);
+                        TextView phoneText = dialogView.findViewById(R.id.contact_phone);
+
+                        nameText.setText(name != null ? name : "N/A");
+                        hoursText.setText(operatingHours != null ? operatingHours : "N/A");
+                        phoneText.setText(contactPhone != null ? contactPhone : "N/A");
+
+                        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                                .setTitle("Restaurant Information")
+                                .setView(dialogView)
+                                .setPositiveButton("OK", (d, which) -> d.dismiss())
+                                .create();
+                        dialog.show();
+                    } else {
+                        Log.e("MenuFragment", "Restaurant document not found: " + restaurantId);
+                        Toast.makeText(getContext(), "Restaurant info not found", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error fetching restaurant info", e);
+                    Toast.makeText(getContext(), "Failed to load restaurant info", Toast.LENGTH_SHORT).show();
+                });
+    }
+
     private void setupAddressSpinner() {
         addressSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
-                    // "Select an address" selected, clear the selection in CartManager
                     CartManager.getInstance().setSelectedAddress(null, null);
                 } else {
-                    // Valid address selected, update CartManager
-                    RestaurantAddress selectedAddress = addressList.get(position - 1); // -1 because of placeholder
+                    RestaurantAddress selectedAddress = addressList.get(position - 1);
                     CartManager.getInstance().setSelectedAddress(selectedAddress.getAddress(),
                             new LatLng(selectedAddress.getLatitude(), selectedAddress.getLongitude()));
                     Toast.makeText(getContext(), "Selected: " + selectedAddress.getAddress(), Toast.LENGTH_SHORT).show();
 
-                    // Optionally move map to selected address
                     if (gMap != null) {
                         LatLng addressLatLng = new LatLng(selectedAddress.getLatitude(), selectedAddress.getLongitude());
                         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(addressLatLng, 15));
@@ -385,7 +431,6 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
-    // RestaurantAddress helper class
     private static class RestaurantAddress {
         private String address;
         private double latitude;
