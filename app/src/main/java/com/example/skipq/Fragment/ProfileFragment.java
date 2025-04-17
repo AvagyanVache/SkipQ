@@ -49,7 +49,7 @@ public class ProfileFragment extends Fragment {
     // Restaurant-specific views
     private EditText restaurantName, restaurantContactPhone, restaurantOperatingHours;
     private ImageView restaurantLogo;
-    private LinearLayout restaurantProfileSection, addressesContainer;
+    private LinearLayout restaurantProfileSection, addressesContainer, addressesSection;
     private Button saveRestaurantChanges, addAddressButton;
     private Button btnLogout;
     private String userRole, restaurantId;
@@ -57,6 +57,12 @@ public class ProfileFragment extends Fragment {
     private List<String> addressIds;
     private Uri logoUri;
     private ActivityResultLauncher<Intent> logoPickerLauncher;
+    // Original values for change detection
+    private String originalName = "";
+    private String originalContactPhone = "";
+    private String originalOperatingHours = "";
+    private String originalLogoUrl = "";
+    private List<Map<String, Object>> originalAddresses = new ArrayList<>();
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -75,6 +81,7 @@ public class ProfileFragment extends Fragment {
                 logoUri = result.getData().getData();
                 Glide.with(this).load(logoUri).into(restaurantLogo);
                 Log.d(TAG, "Logo selected: " + logoUri);
+                checkForChanges();
             }
         });
     }
@@ -85,7 +92,11 @@ public class ProfileFragment extends Fragment {
         Log.d(TAG, "onCreateView: Inflating layout");
 
         // Get user role from HomeActivity
-        Intent intent = ((HomeActivity) getActivity()).getIntent();
+        if (!isAdded()) {
+            Log.w(TAG, "Fragment not attached to activity");
+            return view;
+        }
+        Intent intent = ((HomeActivity) requireActivity()).getIntent();
         userRole = intent.getStringExtra("userRole");
         restaurantId = intent.getStringExtra("restaurantId");
         Log.d(TAG, "UserRole: " + userRole + ", RestaurantId: " + restaurantId);
@@ -102,6 +113,7 @@ public class ProfileFragment extends Fragment {
         restaurantOperatingHours = view.findViewById(R.id.restaurantOperatingHours);
         restaurantLogo = view.findViewById(R.id.restaurantLogo);
         addressesContainer = view.findViewById(R.id.addressesContainer);
+        addressesSection = view.findViewById(R.id.addressesSection);
         saveRestaurantChanges = view.findViewById(R.id.saveRestaurantChanges);
         addAddressButton = view.findViewById(R.id.addAddressButton);
         btnLogout = view.findViewById(R.id.btnLogout);
@@ -146,10 +158,10 @@ public class ProfileFragment extends Fragment {
         btnLogout.setOnClickListener(v -> {
             mAuth.signOut();
             Toast.makeText(getContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(getActivity(), MainActivity.class);
+            Intent intent = new Intent(requireActivity(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
-            getActivity().finish();
+            requireActivity().finish();
         });
     }
 
@@ -162,9 +174,7 @@ public class ProfileFragment extends Fragment {
         restaurantContactPhone.setVisibility(View.VISIBLE);
         restaurantOperatingHours.setVisibility(View.VISIBLE);
         restaurantLogo.setVisibility(View.VISIBLE);
-        addressesContainer.setVisibility(View.VISIBLE);
-        saveRestaurantChanges.setVisibility(View.VISIBLE);
-        addAddressButton.setVisibility(View.VISIBLE);
+        addressesSection.setVisibility(View.VISIBLE);
         userNameSurname.setVisibility(View.GONE);
         userEmail.setVisibility(View.GONE);
         userPhoneNumber.setVisibility(View.GONE);
@@ -185,6 +195,48 @@ public class ProfileFragment extends Fragment {
         view.findViewById(R.id.divider5).setVisibility(View.GONE);
         view.findViewById(R.id.divider6).setVisibility(View.GONE);
 
+        // Setup dropdown for addresses
+        addressesSection.setOnClickListener(v -> {
+            boolean isVisible = addressesContainer.getVisibility() == View.VISIBLE;
+            addressesContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+            addAddressButton.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+            Log.d(TAG, "Addresses dropdown toggled: " + (isVisible ? "collapsed" : "expanded"));
+        });
+
+        // Setup text watchers for change detection
+        restaurantName.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                checkForChanges();
+            }
+        });
+
+        restaurantContactPhone.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                checkForChanges();
+            }
+        });
+
+        restaurantOperatingHours.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                checkForChanges();
+            }
+        });
+
         restaurantLogo.setOnClickListener(v -> {
             Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             logoPickerLauncher.launch(pickIntent);
@@ -195,6 +247,9 @@ public class ProfileFragment extends Fragment {
         addAddressButton.setOnClickListener(v -> {
             Log.d(TAG, "Add address button clicked");
             addNewAddressField();
+            // Ensure dropdown is expanded
+            addressesContainer.setVisibility(View.VISIBLE);
+            addAddressButton.setVisibility(View.VISIBLE);
         });
 
         saveRestaurantChanges.setOnClickListener(v -> {
@@ -206,19 +261,19 @@ public class ProfileFragment extends Fragment {
             Log.d(TAG, "Logout button clicked");
             mAuth.signOut();
             Toast.makeText(getContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(getActivity(), MainActivity.class);
+            Intent intent = new Intent(requireActivity(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
-            getActivity().finish();
+            requireActivity().finish();
         });
     }
 
     private void loadUserData() {
         FirebaseUser user = mAuth.getCurrentUser();
-        if (user != null) {
+        if (user != null && isAdded()) {
             db.collection("users").document(user.getUid()).get()
                     .addOnSuccessListener(documentSnapshot -> {
-                        if (documentSnapshot.exists()) {
+                        if (documentSnapshot.exists() && isAdded()) {
                             String name = documentSnapshot.getString("name");
                             String email = documentSnapshot.getString("email");
                             String phone = documentSnapshot.getString("phoneNumber");
@@ -233,70 +288,91 @@ public class ProfileFragment extends Fragment {
                         }
                     })
                     .addOnFailureListener(e -> {
-                        Log.e(TAG, "Error loading user data", e);
-                        Toast.makeText(getContext(), "Error loading user data", Toast.LENGTH_SHORT).show();
+                        if (isAdded()) {
+                            Log.e(TAG, "Error loading user data", e);
+                            Toast.makeText(getContext(), "Error loading user data", Toast.LENGTH_SHORT).show();
+                        }
                     });
         } else {
-            Log.w(TAG, "No user logged in");
+            Log.w(TAG, "No user logged in or fragment not attached");
         }
     }
 
     private void loadRestaurantData() {
-        if (restaurantId != null) {
+        if (restaurantId != null && isAdded()) {
             db.collection("FoodPlaces").document(restaurantId).get()
                     .addOnSuccessListener(documentSnapshot -> {
-                        if (documentSnapshot.exists()) {
+                        if (documentSnapshot.exists() && isAdded()) {
                             String name = documentSnapshot.getString("name");
                             String contactPhone = documentSnapshot.getString("contactPhone");
                             String operatingHours = documentSnapshot.getString("operatingHours");
                             String logoUrl = documentSnapshot.getString("logoUrl");
 
-                            restaurantName.setText(name != null ? name : "");
-                            restaurantContactPhone.setText(contactPhone != null ? contactPhone : "");
-                            restaurantOperatingHours.setText(operatingHours != null ? operatingHours : "");
+                            // Store original values
+                            originalName = name != null ? name : "";
+                            originalContactPhone = contactPhone != null ? contactPhone : "";
+                            originalOperatingHours = operatingHours != null ? operatingHours : "";
+                            originalLogoUrl = logoUrl != null ? logoUrl : "";
+
+                            restaurantName.setText(originalName);
+                            restaurantContactPhone.setText(originalContactPhone);
+                            restaurantOperatingHours.setText(originalOperatingHours);
                             if (logoUrl != null) {
                                 Glide.with(this).load(logoUrl).into(restaurantLogo);
                             }
 
                             db.collection("FoodPlaces").document(restaurantId).collection("Addresses").get()
                                     .addOnSuccessListener(querySnapshot -> {
-                                        addresses.clear();
-                                        addressIds.clear();
-                                        addressesContainer.removeAllViews();
-                                        if (!querySnapshot.isEmpty()) {
-                                            for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
-                                                Map<String, Object> addr = doc.getData();
-                                                String addressText = (String) addr.get("address");
-                                                Double latitude = addr.get("latitude") instanceof Number ? ((Number) addr.get("latitude")).doubleValue() : 0.0;
-                                                Double longitude = addr.get("longitude") instanceof Number ? ((Number) addr.get("longitude")).doubleValue() : 0.0;
-                                                Boolean isAvailable = addr.get("isAvailable") instanceof Boolean ? (Boolean) addr.get("isAvailable") : true;
-                                                addAddressField(addressText, latitude, longitude, isAvailable);
-                                                addresses.add(addr);
-                                                addressIds.add(doc.getId());
+                                        if (isAdded()) {
+                                            addresses.clear();
+                                            addressIds.clear();
+                                            originalAddresses.clear();
+                                            addressesContainer.removeAllViews();
+                                            if (!querySnapshot.isEmpty()) {
+                                                for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                                                    Map<String, Object> addr = doc.getData();
+                                                    String addressText = (String) addr.get("address");
+                                                    Double latitude = addr.get("latitude") instanceof Number ? ((Number) addr.get("latitude")).doubleValue() : 0.0;
+                                                    Double longitude = addr.get("longitude") instanceof Number ? ((Number) addr.get("longitude")).doubleValue() : 0.0;
+                                                    Boolean isAvailable = addr.get("isAvailable") instanceof Boolean ? (Boolean) addr.get("isAvailable") : true;
+                                                    addAddressField(addressText, latitude, longitude, isAvailable);
+                                                    addresses.add(addr);
+                                                    originalAddresses.add(new HashMap<>(addr)); // Deep copy
+                                                    addressIds.add(doc.getId());
+                                                }
+                                            } else {
+                                                addNewAddressField();
                                             }
-                                        } else {
-                                            addNewAddressField();
+                                            checkForChanges();
+                                            Log.d(TAG, "Restaurant data loaded: name=" + name + ", addresses=" + addresses.size());
                                         }
-                                        Log.d(TAG, "Restaurant data loaded: name=" + name + ", addresses=" + addresses.size());
                                     })
                                     .addOnFailureListener(e -> {
-                                        Log.e(TAG, "Error loading addresses", e);
-                                        Toast.makeText(getContext(), "Error loading addresses", Toast.LENGTH_SHORT).show();
-                                        addNewAddressField();
+                                        if (isAdded()) {
+                                            Log.e(TAG, "Error loading addresses", e);
+                                            Toast.makeText(getContext(), "Error loading addresses", Toast.LENGTH_SHORT).show();
+                                            addNewAddressField();
+                                        }
                                     });
                         } else {
-                            Log.w(TAG, "Restaurant document does not exist");
-                            addNewAddressField();
+                            if (isAdded()) {
+                                Log.w(TAG, "Restaurant document does not exist");
+                                addNewAddressField();
+                            }
                         }
                     })
                     .addOnFailureListener(e -> {
-                        Log.e(TAG, "Error loading restaurant data", e);
-                        Toast.makeText(getContext(), "Error loading restaurant data", Toast.LENGTH_SHORT).show();
-                        addNewAddressField();
+                        if (isAdded()) {
+                            Log.e(TAG, "Error loading restaurant data", e);
+                            Toast.makeText(getContext(), "Error loading restaurant data", Toast.LENGTH_SHORT).show();
+                            addNewAddressField();
+                        }
                     });
         } else {
-            Log.w(TAG, "Restaurant ID is null");
-            addNewAddressField();
+            if (isAdded()) {
+                Log.w(TAG, "Restaurant ID is null or fragment not attached");
+                addNewAddressField();
+            }
         }
     }
 
@@ -310,6 +386,7 @@ public class ProfileFragment extends Fragment {
         newAddress.put("isAvailable", true);
         addresses.add(newAddress);
         addressIds.add(null);
+        checkForChanges();
     }
 
     private void addAddressField(String addressText, double latitude, double longitude, boolean isAvailable) {
@@ -364,6 +441,13 @@ public class ProfileFragment extends Fragment {
         availabilityToggle.setTextColor(getResources().getColor(android.R.color.white));
         availabilityToggle.setChecked(isAvailable);
         availabilityToggle.setPadding(8, 0, 8, 0);
+        availabilityToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            int index = addressesContainer.indexOfChild(addressLayout);
+            if (index >= 0 && index < addresses.size()) {
+                addresses.get(index).put("isAvailable", isChecked);
+                checkForChanges();
+            }
+        });
 
         Button deleteButton = new Button(getContext());
         deleteButton.setLayoutParams(new LinearLayout.LayoutParams(
@@ -381,6 +465,7 @@ public class ProfileFragment extends Fragment {
                 addressesContainer.removeView(addressLayout);
                 addresses.remove(index);
                 addressIds.remove(index);
+                checkForChanges();
             }
         });
 
@@ -423,6 +508,7 @@ public class ProfileFragment extends Fragment {
                         addr.put("longitude", 0.0);
                         coordinatesText.setText("Lat: 0.0, Lon: 0.0");
                     }
+                    checkForChanges();
                 }
             }
         });
@@ -539,5 +625,51 @@ public class ProfileFragment extends Fragment {
                     Log.e(TAG, "Error saving restaurant changes", e);
                     Toast.makeText(getContext(), "Error saving changes", Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    private void checkForChanges() {
+        boolean hasChanges = false;
+
+        // Check restaurant name
+        String currentName = restaurantName.getText().toString().trim();
+        if (!currentName.equals(originalName)) {
+            hasChanges = true;
+        }
+
+        // Check contact phone
+        String currentPhone = restaurantContactPhone.getText().toString().trim();
+        if (!currentPhone.equals(originalContactPhone)) {
+            hasChanges = true;
+        }
+
+        // Check operating hours
+        String currentHours = restaurantOperatingHours.getText().toString().trim();
+        if (!currentHours.equals(originalOperatingHours)) {
+            hasChanges = true;
+        }
+
+        // Check logo
+        if (logoUri != null && !logoUri.toString().equals(originalLogoUrl)) {
+            hasChanges = true;
+        }
+
+        // Check addresses
+        if (addresses.size() != originalAddresses.size()) {
+            hasChanges = true;
+        } else {
+            for (int i = 0; i < addresses.size(); i++) {
+                Map<String, Object> currentAddr = addresses.get(i);
+                Map<String, Object> originalAddr = originalAddresses.get(i);
+                if (!currentAddr.get("address").equals(originalAddr.get("address")) ||
+                        !currentAddr.get("latitude").equals(originalAddr.get("latitude")) ||
+                        !currentAddr.get("longitude").equals(originalAddr.get("longitude")) ||
+                        !currentAddr.get("isAvailable").equals(originalAddr.get("isAvailable"))) {
+                    hasChanges = true;
+                    break;
+                }
+            }
+        }
+
+        saveRestaurantChanges.setVisibility(hasChanges ? View.VISIBLE : View.GONE);
     }
 }
