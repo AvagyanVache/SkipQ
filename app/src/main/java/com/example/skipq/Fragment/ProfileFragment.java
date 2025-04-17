@@ -1,9 +1,13 @@
 package com.example.skipq.Fragment;
 
+import android.content.Context;
 import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,8 +22,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.example.skipq.Activity.ChangePasswordActivity;
+import com.example.skipq.Activity.DeleteAccountActivity;
 import com.example.skipq.Activity.HomeActivity;
 import com.example.skipq.Activity.MainActivity;
 import com.example.skipq.R;
@@ -27,6 +36,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -36,6 +46,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
+import android.Manifest;
+
 
 public class ProfileFragment extends Fragment {
 
@@ -56,8 +70,9 @@ public class ProfileFragment extends Fragment {
     private List<Map<String, Object>> addresses;
     private List<String> addressIds;
     private Uri logoUri;
+    private Uri profilePictureUri;
     private ActivityResultLauncher<Intent> logoPickerLauncher;
-    // Original values for change detection
+    private ActivityResultLauncher<Intent> profilePicturePickerLauncher;
     private String originalName = "";
     private String originalContactPhone = "";
     private String originalOperatingHours = "";
@@ -76,12 +91,26 @@ public class ProfileFragment extends Fragment {
         storage = FirebaseStorage.getInstance();
         addresses = new ArrayList<>();
         addressIds = new ArrayList<>();
+
+        // Initialize logo picker
         logoPickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null) {
                 logoUri = result.getData().getData();
                 Glide.with(this).load(logoUri).into(restaurantLogo);
                 Log.d(TAG, "Logo selected: " + logoUri);
                 checkForChanges();
+            }
+        });
+
+        profilePicturePickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null) {
+                profilePictureUri = result.getData().getData();
+                Glide.with(this)
+                        .load(profilePictureUri)
+                        .transform(new CircleCrop())
+                        .into(profilePicture);
+                Log.d(TAG, "Profile picture selected: " + profilePictureUri);
+                uploadProfilePicture();
             }
         });
     }
@@ -153,6 +182,53 @@ public class ProfileFragment extends Fragment {
         view.findViewById(R.id.divider6).setVisibility(View.VISIBLE);
         restaurantProfileSection.setVisibility(View.GONE);
 
+        profilePicture.setOnClickListener(v -> {
+            Log.d(TAG, "Profile picture clicked");
+            String permission;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                permission = Manifest.permission.READ_MEDIA_IMAGES;
+            } else {
+                permission = Manifest.permission.READ_EXTERNAL_STORAGE;
+            }
+            if (ContextCompat.checkSelfPermission(requireContext(), permission)
+                    != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), permission)) {
+                    Toast.makeText(requireContext(), "Permission is needed to access your photos", Toast.LENGTH_LONG).show();
+                }
+                Log.d(TAG, "Requesting permission: " + permission);
+                ActivityCompat.requestPermissions(requireActivity(),
+                        new String[]{permission}, 100);
+            } else {
+                Log.d(TAG, "Launching gallery picker");
+                Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                Intent getContentIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                getContentIntent.setType("image/*");
+                Intent chooserIntent = Intent.createChooser(pickIntent, "Select Image");
+                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{getContentIntent});
+                if (chooserIntent.resolveActivity(requireActivity().getPackageManager()) != null) {
+                    profilePicturePickerLauncher.launch(chooserIntent);
+                } else {
+                    Log.e(TAG, "No app available to handle image picking");
+                    Toast.makeText(getContext(), "No gallery app available", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        // Setup navigation for password and delete account
+        ImageView changePassword = view.findViewById(R.id.changePassword);
+        changePassword.setOnClickListener(v -> {
+            Log.d(TAG, "Change password clicked");
+            Intent intent = new Intent(requireActivity(), ChangePasswordActivity.class);
+            startActivity(intent);
+        });
+
+        ImageView deleteAccount = view.findViewById(R.id.deleteAccount);
+        deleteAccount.setOnClickListener(v -> {
+            Log.d(TAG, "Delete account clicked");
+            Intent intent = new Intent(requireActivity(), DeleteAccountActivity.class);
+            startActivity(intent);
+        });
+
         loadUserData();
 
         btnLogout.setOnClickListener(v -> {
@@ -163,6 +239,17 @@ public class ProfileFragment extends Fragment {
             startActivity(intent);
             requireActivity().finish();
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            profilePicturePickerLauncher.launch(pickIntent);
+        } else {
+            Toast.makeText(getContext(), "Permission denied to access images", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setupRestaurantProfile(View view) {
@@ -277,12 +364,23 @@ public class ProfileFragment extends Fragment {
                             String name = documentSnapshot.getString("name");
                             String email = documentSnapshot.getString("email");
                             String phone = documentSnapshot.getString("phoneNumber");
+                            String profilePictureUrl = documentSnapshot.getString("profilePictureUrl");
 
                             userNameSurname.setText(name != null ? name : "Name Surname");
                             userEmail.setText(email != null ? email : "Gmail@gmail.com");
                             userPhoneNumber.setText(phone != null ? phone : "+123-456-7890");
-
-                            Log.d(TAG, "User data loaded: name=" + name + ", email=" + email);
+                            if (profilePictureUrl != null && !profilePictureUrl.isEmpty()) {
+                                Glide.with(this)
+                                        .load(profilePictureUrl)
+                                        .transform(new CircleCrop())
+                                        .into(profilePicture);
+                            } else {
+                                Glide.with(this)
+                                        .load(R.drawable.profile_picture)
+                                        .transform(new CircleCrop())
+                                        .into(profilePicture);
+                            }
+                            Log.d(TAG, "User data loaded: name=" + name + ", email=" + email + ", profilePictureUrl=" + profilePictureUrl);
                         } else {
                             Log.w(TAG, "User document does not exist");
                         }
@@ -295,6 +393,49 @@ public class ProfileFragment extends Fragment {
                     });
         } else {
             Log.w(TAG, "No user logged in or fragment not attached");
+        }
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager cm = (ConnectivityManager) requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
+
+    private void uploadProfilePicture() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        Log.d(TAG, "Upload attempt: user=" + (user != null ? user.getUid() : "null") + ", uri=" + profilePictureUri);
+        if (!isNetworkAvailable()) {
+            Log.w(TAG, "No internet connection");
+            Toast.makeText(getContext(), "No internet connection", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (user != null && profilePictureUri != null && isAdded()) {
+            StorageReference profilePicRef = storage.getReference().child("profile_pictures/" + user.getUid() + ".jpg");
+            profilePicRef.putFile(profilePictureUri)
+                    .addOnSuccessListener(taskSnapshot -> profilePicRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        String profilePictureUrl = uri.toString();
+                        Map<String, Object> updates = new HashMap<>();
+                        updates.put("profilePictureUrl", profilePictureUrl);
+                        updates.put("profileImage", FieldValue.delete()); // Remove old Base64 field
+                        db.collection("users").document(user.getUid())
+                                .update(updates)
+                                .addOnSuccessListener(aVoid -> {
+                                    Log.d(TAG, "Profile picture URL updated: " + profilePictureUrl);
+                                    Toast.makeText(getContext(), "Profile picture updated", Toast.LENGTH_SHORT).show();
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e(TAG, "Failed to update profile picture URL", e);
+                                    Toast.makeText(getContext(), "Failed to update profile picture", Toast.LENGTH_SHORT).show();
+                                });
+                    }))
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to upload profile picture", e);
+                        Toast.makeText(getContext(), "Failed to upload profile picture: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    });
+        } else {
+            Log.w(TAG, "Cannot upload profile picture: user null or URI null");
+            Toast.makeText(getContext(), "Please log in to upload profile picture", Toast.LENGTH_SHORT).show();
         }
     }
 

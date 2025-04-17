@@ -1,10 +1,7 @@
 package com.example.skipq.Fragment;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -51,7 +48,6 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
     private final ArrayList<RestaurantDomain> restaurantList = new ArrayList<>();
 
     private final int[] categoryImg = {R.drawable.white, R.drawable.fastfood, R.drawable.restaurant, R.drawable.coffee};
-   // private final int[] restaurantImg = {R.drawable.coffeehouse_logo, R.drawable.icelava_logo, R.drawable.jellyfish_logo, R.drawable.kfc_logo, R.drawable.kamancha_logo, R.drawable.mcd_logo};
 
     private ImageView profileIcon;
 
@@ -72,9 +68,6 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
         recyclerViewRestaurantList = view.findViewById(R.id.recyclerViewRestaurants);
         recyclerViewCategoryList = view.findViewById(R.id.recyclerViewCategories);
         profileIcon = view.findViewById(R.id.profileIcon);
-
-        db = FirebaseFirestore.getInstance();
-
 
         view.setOnTouchListener((v, event) -> {
             if (searchBar.hasFocus()) {
@@ -104,13 +97,12 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
             }
         });
 
-
-
         profileIcon.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), HomeActivity.class);intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP); startActivity(intent);
+            Intent intent = new Intent(getActivity(), HomeActivity.class);
+            intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
         });
-
 
         return view;
     }
@@ -119,6 +111,7 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
         searchBar.clearFocus();
         searchBar.setIconified(true);
     }
+
     private void setupCategoryList() {
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         recyclerViewCategoryList.setLayoutManager(layoutManager);
@@ -163,7 +156,6 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
                 });
     }
 
-
     @Override
     public void onCategoryClick(String category) {
         selectedCategory = category;
@@ -183,25 +175,25 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
         transaction.addToBackStack(null);
         transaction.commit();
     }
+
     private void setupProfileListener(FirebaseUser firebaseUser) {
         profileListener = db.collection("users").document(firebaseUser.getUid())
                 .addSnapshotListener((documentSnapshot, e) -> {
                     if (e != null) {
-                        Log.e("CartFragment", "Listen failed", e);
+                        Log.e("HomeFragment", "Listen failed", e);
                         return;
                     }
                     if (documentSnapshot != null && documentSnapshot.exists() && isAdded()) {
-                        String base64Image = documentSnapshot.getString("profileImage");
-                        loadProfileImage(base64Image, profileIcon);
+                        String profilePictureUrl = documentSnapshot.getString("profilePictureUrl");
+                        loadProfileImage(profilePictureUrl, profileIcon);
                     }
                 });
     }
-    private void loadProfileImage(String base64Image, ImageView imageView) {
-        if (base64Image != null && !base64Image.isEmpty() && isAdded()) {
-            byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
-            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+    private void loadProfileImage(String profilePictureUrl, ImageView imageView) {
+        if (profilePictureUrl != null && !profilePictureUrl.isEmpty() && isAdded()) {
             Glide.with(this)
-                    .load(decodedByte)
+                    .load(profilePictureUrl)
                     .transform(new CircleCrop())
                     .into(imageView);
         } else {
@@ -211,6 +203,7 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
                     .into(imageView);
         }
     }
+
     private void filterList(String text) {
         ArrayList<RestaurantDomain> filteredList = new ArrayList<>();
 
@@ -222,9 +215,4 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
 
         restaurantAdaptor.updateList(filteredList);
     }
-
-
-
-
-
 }

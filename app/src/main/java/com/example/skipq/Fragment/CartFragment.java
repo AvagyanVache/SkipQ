@@ -189,18 +189,16 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
             return;
            }
            if (documentSnapshot != null && documentSnapshot.exists() && isAdded()) {
-            String base64Image = documentSnapshot.getString("profileImage");
-            loadProfileImage(base64Image, profileIcon);
+            String profilePictureUrl = documentSnapshot.getString("profilePictureUrl");
+            loadProfileImage(profilePictureUrl, profileIcon);
            }
           });
  }
 
- private void loadProfileImage(String base64Image, ImageView imageView) {
-  if (base64Image != null && !base64Image.isEmpty() && isAdded()) {
-   byte[] decodedString = Base64.decode(base64Image, Base64.DEFAULT);
-   Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+ private void loadProfileImage(String profilePictureUrl, ImageView imageView) {
+  if (profilePictureUrl != null && !profilePictureUrl.isEmpty() && isAdded()) {
    Glide.with(this)
-           .load(decodedByte)
+           .load(profilePictureUrl)
            .transform(new CircleCrop())
            .into(imageView);
   } else {
