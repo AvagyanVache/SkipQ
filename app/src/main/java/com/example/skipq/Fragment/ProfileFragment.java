@@ -26,7 +26,9 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.skipq.Activity.ChangePasswordActivity;
 import com.example.skipq.Activity.DeleteAccountActivity;
 import com.example.skipq.Activity.HomeActivity;
@@ -49,7 +51,6 @@ import java.util.Map;
 import android.content.pm.PackageManager;
 import androidx.core.app.ActivityCompat;
 import android.Manifest;
-
 
 public class ProfileFragment extends Fragment {
 
@@ -247,6 +248,9 @@ public class ProfileFragment extends Fragment {
         if (requestCode == 100 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             profilePicturePickerLauncher.launch(pickIntent);
+        } else if (requestCode == 101 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            logoPickerLauncher.launch(pickIntent);
         } else {
             Toast.makeText(getContext(), "Permission denied to access images", Toast.LENGTH_SHORT).show();
         }
@@ -325,8 +329,26 @@ public class ProfileFragment extends Fragment {
         });
 
         restaurantLogo.setOnClickListener(v -> {
-            Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            logoPickerLauncher.launch(pickIntent);
+            Log.d(TAG, "Restaurant logo clicked");
+            String permission;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                permission = Manifest.permission.READ_MEDIA_IMAGES;
+            } else {
+                permission = Manifest.permission.READ_EXTERNAL_STORAGE;
+            }
+            if (ContextCompat.checkSelfPermission(requireContext(), permission)
+                    != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), permission)) {
+                    Toast.makeText(requireContext(), "Permission is needed to access your photos", Toast.LENGTH_LONG).show();
+                }
+                Log.d(TAG, "Requesting permission: " + permission);
+                ActivityCompat.requestPermissions(requireActivity(),
+                        new String[]{permission}, 101);
+            } else {
+                Log.d(TAG, "Launching gallery picker for logo");
+                Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                logoPickerLauncher.launch(pickIntent);
+            }
         });
 
         loadRestaurantData();
@@ -399,7 +421,9 @@ public class ProfileFragment extends Fragment {
     private boolean isNetworkAvailable() {
         ConnectivityManager cm = (ConnectivityManager) requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        Log.d(TAG, "Network available: " + isConnected);
+        return isConnected;
     }
 
     private void uploadProfilePicture() {
@@ -441,27 +465,72 @@ public class ProfileFragment extends Fragment {
 
     private void loadRestaurantData() {
         if (restaurantId != null && isAdded()) {
+            Log.d(TAG, "Loading restaurant data for ID: " + restaurantId);
             db.collection("FoodPlaces").document(restaurantId).get()
                     .addOnSuccessListener(documentSnapshot -> {
                         if (documentSnapshot.exists() && isAdded()) {
                             String name = documentSnapshot.getString("name");
                             String contactPhone = documentSnapshot.getString("contactPhone");
                             String operatingHours = documentSnapshot.getString("operatingHours");
-                            String logoUrl = documentSnapshot.getString("logoUrl");
 
                             // Store original values
                             originalName = name != null ? name : "";
                             originalContactPhone = contactPhone != null ? contactPhone : "";
                             originalOperatingHours = operatingHours != null ? operatingHours : "";
-                            originalLogoUrl = logoUrl != null ? logoUrl : "";
+                            originalLogoUrl = documentSnapshot.getString("logoUrl") != null ? documentSnapshot.getString("logoUrl") : "";
 
                             restaurantName.setText(originalName);
                             restaurantContactPhone.setText(originalContactPhone);
                             restaurantOperatingHours.setText(originalOperatingHours);
-                            if (logoUrl != null) {
-                                Glide.with(this).load(logoUrl).into(restaurantLogo);
+
+                            // Load logo from Firestore logoUrl
+                            Log.d(TAG, "Fetched logoUrl: " + originalLogoUrl);
+                            Log.d(TAG, "Network available: " + isNetworkAvailable());
+                            Log.d(TAG, "restaurantLogo visibility: " + (restaurantLogo.getVisibility() == View.VISIBLE ? "VISIBLE" : "GONE/INVISIBLE"));
+                            if (!isNetworkAvailable()) {
+                                Log.w(TAG, "No internet connection, loading default logo");
+                                Toast.makeText(getContext(), "No internet connection", Toast.LENGTH_SHORT).show();
+                                Glide.with(ProfileFragment.this)
+                                        .load(R.drawable.white) // Replace with your default image resource
+                                        .apply(new RequestOptions()
+                                                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                                .skipMemoryCache(true))
+                                        .into(restaurantLogo);
+                            } else if (originalLogoUrl != null && !originalLogoUrl.isEmpty()) {
+                                Log.d(TAG, "Loading logo from Firestore logoUrl: " + originalLogoUrl);
+                                Glide.with(ProfileFragment.this)
+                                        .load(originalLogoUrl)
+                                        .apply(new RequestOptions()
+                                                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                                .skipMemoryCache(true))
+                                        .error(R.drawable.white) // Fallback if URL fails to load
+                                        .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {
+                                            @Override
+                                            public boolean onLoadFailed(@androidx.annotation.Nullable com.bumptech.glide.load.engine.GlideException e, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
+                                                Log.e(TAG, "Glide failed to load logo: " + originalLogoUrl, e);
+                                                Toast.makeText(getContext(), "Failed to load logo", Toast.LENGTH_SHORT).show();
+                                                return false; // Let Glide handle the error drawable
+                                            }
+
+                                            @Override
+                                            public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
+                                                Log.d(TAG, "Glide successfully loaded logo: " + originalLogoUrl);
+                                                return false;
+                                            }
+                                        })
+                                        .into(restaurantLogo);
+                            } else {
+                                Log.w(TAG, "logoUrl is null or empty, loading default logo");
+                                Toast.makeText(getContext(), "No logo available", Toast.LENGTH_SHORT).show();
+                                Glide.with(ProfileFragment.this)
+                                        .load(R.drawable.white) // Replace with your default image resource
+                                        .apply(new RequestOptions()
+                                                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                                .skipMemoryCache(true))
+                                        .into(restaurantLogo);
                             }
 
+                            // Load addresses
                             db.collection("FoodPlaces").document(restaurantId).collection("Addresses").get()
                                     .addOnSuccessListener(querySnapshot -> {
                                         if (isAdded()) {
@@ -478,7 +547,7 @@ public class ProfileFragment extends Fragment {
                                                     Boolean isAvailable = addr.get("isAvailable") instanceof Boolean ? (Boolean) addr.get("isAvailable") : true;
                                                     addAddressField(addressText, latitude, longitude, isAvailable);
                                                     addresses.add(addr);
-                                                    originalAddresses.add(new HashMap<>(addr)); // Deep copy
+                                                    originalAddresses.add(new HashMap<>(addr));
                                                     addressIds.add(doc.getId());
                                                 }
                                             } else {
@@ -717,6 +786,7 @@ public class ProfileFragment extends Fragment {
             return;
         }
 
+        FirebaseUser user = mAuth.getCurrentUser();
         DocumentReference restaurantRef = db.collection("FoodPlaces").document(restaurantId);
         Map<String, Object> updates = new HashMap<>();
         updates.put("name", name);
@@ -724,14 +794,38 @@ public class ProfileFragment extends Fragment {
         updates.put("operatingHours", operatingHours);
         updates.put("rememberMe", true);
         updates.put("role", "restaurant");
-        updates.put("uid", mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : "");
+        updates.put("uid", user != null ? user.getUid() : "");
 
         if (logoUri != null) {
             StorageReference logoRef = storage.getReference().child("restaurant_logos/" + restaurantId + "_logo.jpg");
             logoRef.putFile(logoUri)
                     .addOnSuccessListener(taskSnapshot -> logoRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                        updates.put("logoUrl", uri.toString());
+                        String logoUrl = uri.toString();
+                        Log.d(TAG, "Logo uploaded successfully, URL: " + logoUrl);
+                        updates.put("logoUrl", logoUrl);
+                        // Update users collection with logoUrl as profilePictureUrl
+                        if (user != null) {
+                            Map<String, Object> userUpdates = new HashMap<>();
+                            userUpdates.put("profilePictureUrl", logoUrl);
+                            db.collection("users").document(user.getUid())
+                                    .update(userUpdates)
+                                    .addOnSuccessListener(aVoid -> Log.d(TAG, "User profile picture URL updated: " + logoUrl))
+                                    .addOnFailureListener(e -> Log.e(TAG, "Failed to update user profile picture URL", e));
+                        }
+                        // Update Firestore and refresh logo
                         updateFirestore(restaurantRef, updates, updatedAddresses);
+                        if (isAdded()) {
+                            Log.d(TAG, "Refreshing logo in ProfileFragment with URL: " + logoUrl);
+                            originalLogoUrl = logoUrl; // Update originalLogoUrl
+                            Glide.with(ProfileFragment.this)
+                                    .load(logoUrl)
+                                    .apply(new RequestOptions()
+                                            .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                            .skipMemoryCache(true))
+                                    .error(R.drawable.white)
+                                    .into(restaurantLogo);
+                            logoUri = null; // Clear local logoUri
+                        }
                     }))
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to upload logo", e);

@@ -58,7 +58,6 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
         holder.menuItemDescription.setText(menuItem.getItemDescription());
         holder.menuItemPrice.setText(MessageFormat.format("֏ {0}", menuItem.getItemPrice()));
 
-        // Decode and display Base64 image
         String base64Image = menuItem.getItemImg();
         if (base64Image != null && !base64Image.isEmpty()) {
             try {
@@ -68,7 +67,6 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
                 holder.menuItemPhoto.setVisibility(View.VISIBLE);
             } catch (Exception e) {
                 holder.menuItemPhoto.setVisibility(View.GONE);
-                // Optional: Log.e("MenuAdaptor", "Failed to decode image: " + e.getMessage());
             }
         } else {
             holder.menuItemPhoto.setVisibility(View.GONE);

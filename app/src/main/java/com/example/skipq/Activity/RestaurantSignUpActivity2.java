@@ -5,6 +5,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -164,13 +165,30 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
         logoRef.putFile(logoUri)
                 .addOnSuccessListener(taskSnapshot -> logoRef.getDownloadUrl().addOnSuccessListener(uri -> {
                     String logoUrl = uri.toString();
+                    // Update users collection with logoUrl as profilePictureUrl
+                    Map<String, Object> userUpdates = new HashMap<>();
+                    userUpdates.put("profilePictureUrl", logoUrl);
+                    db.collection("users").document(uid)
+                            .update(userUpdates)
+                            .addOnSuccessListener(aVoid -> Log.d("RestaurantSignUp", "User profile picture URL updated: " + logoUrl))
+                            .addOnFailureListener(e -> Log.e("RestaurantSignUp", "Failed to update user profile picture URL", e));
+                    // Proceed with restaurant data
                     if (!apiLink.isEmpty()) {
                         fetchMenuFromApiAndSave(apiLink, name, logoUrl);
                     } else {
                         saveRestaurantWithMenu(name, apiLink, logoUrl, null);
                     }
                 }))
-                .addOnFailureListener(e -> Toast.makeText(this, "Failed to upload logo: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    Log.e("RestaurantSignUp", "Failed to upload logo", e);
+                    Toast.makeText(this, "Failed to upload logo: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    // Proceed without logo if upload fails
+                    if (!apiLink.isEmpty()) {
+                        fetchMenuFromApiAndSave(apiLink, name, null);
+                    } else {
+                        saveRestaurantWithMenu(name, apiLink, null, null);
+                    }
+                });
     }
 
     private void fetchMenuFromApiAndSave(String apiLink, String restaurantName, String logoUrl) {
@@ -228,6 +246,7 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                                         addressData.put("address", address.getAddress());
                                         addressData.put("latitude", address.getLatitude());
                                         addressData.put("longitude", address.getLongitude());
+                                        addressData.put("isAvailable", true);
                                         db.collection("FoodPlaces").document(name)
                                                 .collection("Addresses").add(addressData);
                                     }
@@ -245,20 +264,28 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                                                 .document(menuDocName).set(new HashMap<>());
                                     }
 
-                                    Toast.makeText(this, "Restaurant registered successfully!", Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(RestaurantSignUpActivity2.this, HomeActivity.class);
-                                    intent.putExtra("userRole", "restaurant");
-                                    intent.putExtra("restaurantId", name);
-                                    intent.putExtra("FRAGMENT_TO_LOAD", "RESTAURANT_DASHBOARD");
-                                    startActivity(intent);
-                                    finish();
+                                    // Update user document with role and restaurantId
+                                    Map<String, Object> userUpdates = new HashMap<>();
+                                    userUpdates.put("role", "restaurant");
+                                    userUpdates.put("restaurantId", name);
+                                    db.collection("users").document(uid)
+                                            .update(userUpdates)
+                                            .addOnSuccessListener(aVoid2 -> {
+                                                Toast.makeText(this, "Restaurant registered successfully!", Toast.LENGTH_SHORT).show();
+                                                Intent intent = new Intent(RestaurantSignUpActivity2.this, HomeActivity.class);
+                                                intent.putExtra("userRole", "restaurant");
+                                                intent.putExtra("restaurantId", name);
+                                                intent.putExtra("FRAGMENT_TO_LOAD", "RESTAURANT_DASHBOARD");
+                                                startActivity(intent);
+                                                finish();
+                                            })
+                                            .addOnFailureListener(e -> Toast.makeText(this, "Failed to update user role: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                                 })
                                 .addOnFailureListener(e -> Toast.makeText(this, "Failed to save restaurant: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                     }
                 });
     }
 
-    // Address model class
     private static class RestaurantAddress {
         private String address;
         private double latitude;

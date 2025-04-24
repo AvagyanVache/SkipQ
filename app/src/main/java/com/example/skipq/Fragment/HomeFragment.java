@@ -133,13 +133,13 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
 
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         String name = document.getId();
-                        String imageUrl = document.getString("imageUrl");
+                        String logoUrl = document.getString("logoUrl"); // Changed from imageUrl
                         String restaurantCategory = document.getString("category");
 
-                        Log.d("Firestore", "Fetched Restaurant: " + name + " Image URL: " + imageUrl);
+                        Log.d("Firestore", "Fetched Restaurant: " + name + " Logo URL: " + logoUrl);
 
                         if (category == null || category.equals("All") || category.equals(restaurantCategory)) {
-                            restaurantList.add(new RestaurantDomain(name, imageUrl));
+                            restaurantList.add(new RestaurantDomain(name, logoUrl));
                         }
                     }
 
