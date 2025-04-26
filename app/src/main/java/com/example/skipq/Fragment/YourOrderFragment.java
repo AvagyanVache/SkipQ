@@ -72,7 +72,6 @@ public class YourOrderFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,7 +82,7 @@ public class YourOrderFragment extends Fragment {
         if (args != null) {
             String orderId = args.getString("orderId");
             if (orderId != null) {
-                listenForOrderAcceptance(orderId); // Start listening immediately
+                listenForOrderAcceptance(orderId);
             }
         }
     }
@@ -98,7 +97,6 @@ public class YourOrderFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         backButton = view.findViewById(R.id.backButton);
 
-        // Ensure countdown is null initially
         if (countDownTimer != null) {
             countDownTimer.cancel();
             countDownTimer = null;
@@ -138,6 +136,114 @@ public class YourOrderFragment extends Fragment {
         return view;
     }
 
+    private void listenForOrderAcceptance(String orderId) {
+        orderListener = db.collection("orders").document(orderId)
+                .addSnapshotListener((snapshot, e) -> {
+                    if (e != null) {
+                        Log.e("FirestoreError", "Listen failed: " + e.getMessage());
+                        return;
+                    }
+
+                    if (snapshot == null || !snapshot.exists()) {
+                        Log.d("FirestoreDebug", "Snapshot null or does not exist");
+                        orderCountdownTextView.setText("Order not found");
+                        return;
+                    }
+
+                    String approvalStatus = snapshot.getString("approvalStatus");
+                    String status = snapshot.getString("status");
+                    Timestamp endTime = snapshot.getTimestamp("endTime");
+                    Long totalPrepTime = snapshot.getLong("totalPrepTime");
+
+                    Log.d("FirestoreDebug", "Order snapshot: approvalStatus=" + approvalStatus +
+                            ", status=" + status + ", endTime=" + endTime + ", totalPrepTime=" + totalPrepTime);
+
+                    // Cancel any existing timer to prevent overlap
+                    if (countDownTimer != null) {
+                        countDownTimer.cancel();
+                        countDownTimer = null;
+                    }
+
+                    // Handle completed order
+                    if ("done".equals(status)) {
+                        orderCountdownTextView.setText("00:00");
+                        TextView countdownLabel = getView().findViewById(R.id.countdownLabel);
+                        if (countdownLabel != null) {
+                            countdownLabel.setText("Ready! Go pick up your order now!");
+                        }
+                        lastApprovalStatus = approvalStatus;
+                        return;
+                    }
+
+                    // If not accepted, show waiting message
+                    if (!"accepted".equals(approvalStatus)) {
+                        orderCountdownTextView.setText("Waiting for acceptance...");
+                        lastApprovalStatus = approvalStatus;
+                        return;
+                    }
+
+                    // If accepted but missing endTime or totalPrepTime, show error state
+                    if (endTime == null || totalPrepTime == null) {
+                        orderCountdownTextView.setText("Error: Order data incomplete");
+                        Log.e("FirestoreDebug", "Missing endTime or totalPrepTime for accepted order");
+                        lastApprovalStatus = approvalStatus;
+                        return;
+                    }
+
+                    // Calculate remaining time using server time
+                    db.collection("serverTime").document("current")
+                            .set(new HashMap<String, Object>() {{
+                                put("timestamp", com.google.firebase.firestore.FieldValue.serverTimestamp());
+                            }})
+                            .addOnSuccessListener(aVoid -> {
+                                db.collection("serverTime").document("current")
+                                        .get()
+                                        .addOnSuccessListener(doc -> {
+                                            Timestamp serverTime = doc.getTimestamp("timestamp");
+                                            if (serverTime == null || !"accepted".equals(approvalStatus)) {
+                                                orderCountdownTextView.setText("Waiting for acceptance...");
+                                                Log.d("FirestoreDebug", "Server time null or status changed");
+                                                return;
+                                            }
+
+                                            long endTimeMillis = endTime.toDate().getTime();
+                                            long serverTimeMillis = serverTime.toDate().getTime();
+                                            long timeRemaining = endTimeMillis - serverTimeMillis;
+
+                                            // Fallback to totalPrepTime if timeRemaining is invalid
+                                            long expectedTimeRemaining = totalPrepTime * 60 * 1000;
+                                            if (timeRemaining <= 0 || timeRemaining > expectedTimeRemaining + 60000) {
+                                                timeRemaining = expectedTimeRemaining;
+                                                Log.d("FirestoreDebug", "Adjusted timeRemaining to: " + timeRemaining);
+                                            }
+
+                                            if (timeRemaining > 0) {
+                                                orderCountdownTextView.setText("Order accepted, preparing...");
+                                                startCountdown(timeRemaining);
+                                                Log.d("FirestoreDebug", "Countdown started with timeRemaining: " + timeRemaining + "ms");
+                                            } else {
+                                                orderCountdownTextView.setText("00:00");
+                                                TextView countdownLabel = getView().findViewById(R.id.countdownLabel);
+                                                if (countdownLabel != null) {
+                                                    countdownLabel.setText("Ready! Go pick up your order now!");
+                                                }
+                                                Log.d("FirestoreDebug", "Order ready, no countdown needed");
+                                            }
+                                            lastApprovalStatus = approvalStatus;
+                                        })
+                                        .addOnFailureListener(e2 -> {
+                                            Log.e("FirestoreError", "Failed to fetch server time: " + e2.getMessage());
+                                            orderCountdownTextView.setText("Error: Unable to fetch time");
+                                            lastApprovalStatus = approvalStatus;
+                                        });
+                            })
+                            .addOnFailureListener(e2 -> {
+                                Log.e("FirestoreError", "Failed to set server time: " + e2.getMessage());
+                                orderCountdownTextView.setText("Error: Unable to fetch time");
+                                lastApprovalStatus = approvalStatus;
+                            });
+                });
+    }
     private void fetchOrderDetails(String orderId) {
         db.collection("orders").document(orderId)
                 .get()
@@ -145,12 +251,9 @@ public class YourOrderFragment extends Fragment {
                     if (documentSnapshot.exists()) {
                         String restaurantId = documentSnapshot.getString("restaurantId");
                         List<Map<String, Object>> orderItems = (List<Map<String, Object>>) documentSnapshot.get("items");
-                        Timestamp endTime = documentSnapshot.getTimestamp("endTime");
-                        String status = documentSnapshot.getString("status");
                         String approvalStatus = documentSnapshot.getString("approvalStatus");
                         Double totalPrice = documentSnapshot.getDouble("totalPrice");
 
-                        // Set initial lastApprovalStatus if not set yet
                         if (lastApprovalStatus == null) {
                             lastApprovalStatus = approvalStatus;
                         }
@@ -158,20 +261,7 @@ public class YourOrderFragment extends Fragment {
                         if (restaurantId != null && orderItems != null) {
                             fetchMenuItemsForOrder(restaurantId, orderItems);
                             totalPriceTextView.setText(String.format("%.2f֏", totalPrice != null ? totalPrice : 0.0));
-
-                            if (endTime != null) {
-                                long endTimeMillis = endTime.toDate().getTime();
-                                long currentTimeMillis = System.currentTimeMillis();
-                                timeRemaining = endTimeMillis - currentTimeMillis;
-
-                                if ("done".equals(status)) {
-                                    orderCountdownTextView.setText("00:00");
-                                } else {
-                                    orderCountdownTextView.setText("Waiting for acceptance..."); // Default state
-                                }
-                            } else {
-                                orderCountdownTextView.setText("Time unavailable");
-                            }
+                            orderCountdownTextView.setText("Waiting for acceptance...");
                         } else {
                             Log.e("FirestoreDebug", "RestaurantId or items missing in order document");
                             if (cartItems == null) {
@@ -179,14 +269,18 @@ public class YourOrderFragment extends Fragment {
                             }
                             yourOrderAdapter = new YourOrderAdaptor(requireContext(), cartItems);
                             recyclerView.setAdapter(yourOrderAdapter);
+                            orderCountdownTextView.setText("Waiting for acceptance...");
                         }
                     } else {
                         Log.e("FirestoreDebug", "Order document does not exist");
+                        orderCountdownTextView.setText("Waiting for acceptance...");
                     }
                 })
-                .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to fetch order: " + e.getMessage()));
+                .addOnFailureListener(e -> {
+                    Log.e("FirestoreError", "Failed to fetch order: " + e.getMessage());
+                    orderCountdownTextView.setText("Waiting for acceptance...");
+                });
     }
-
     private void fetchMenuItemsForOrder(String restaurantId, List<Map<String, Object>> orderItems) {
         db.collection("FoodPlaces")
                 .document(restaurantId)
@@ -284,68 +378,19 @@ public class YourOrderFragment extends Fragment {
                 .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to fetch menu documents: " + e.getMessage()));
     }
 
-    private void listenForOrderAcceptance(String orderId) {
-        orderListener = db.collection("orders").document(orderId)
-                .addSnapshotListener((snapshot, e) -> {
-                    if (e != null) {
-                        Log.e("FirestoreError", "Listen failed: " + e.getMessage());
-                        return;
-                    }
-
-                    if (snapshot != null && snapshot.exists()) {
-                        String approvalStatus = snapshot.getString("approvalStatus");
-                        Timestamp endTime = snapshot.getTimestamp("endTime");
-                        Timestamp startTime = snapshot.getTimestamp("startTime");
-                        String status = snapshot.getString("status");
-                        Long totalPrepTime = snapshot.getLong("totalPrepTime");
-
-                        long snapshotTimeMillis = System.currentTimeMillis();
-                        Log.d("YourOrderFragment", "Snapshot received at: " + new java.util.Date(snapshotTimeMillis) +
-                                ", approvalStatus: " + approvalStatus +
-                                ", status: " + status +
-                                ", startTime: " + (startTime != null ? startTime.toDate() : "null") +
-                                ", endTime: " + (endTime != null ? endTime.toDate() : "null") +
-                                ", totalPrepTime: " + totalPrepTime + " minutes");
-
-                        if (endTime != null) {
-                            long endTimeMillis = endTime.toDate().getTime();
-                            long currentTimeMillis = System.currentTimeMillis();
-                            timeRemaining = endTimeMillis - currentTimeMillis;
-
-                            Log.d("YourOrderFragment", "Calculated - currentTime: " + new java.util.Date(currentTimeMillis) +
-                                    ", timeRemaining: " + (timeRemaining / 1000) + " seconds");
-
-                            if ("done".equals(status) || timeRemaining <= 0) {
-                                if (countDownTimer != null) {
-                                    countDownTimer.cancel();
-                                    countDownTimer = null;
-                                }
-                                orderCountdownTextView.setText("00:00");
-                            } else if ("accepted".equals(approvalStatus) && timeRemaining > 0) {
-                                if (countDownTimer == null) {
-                                    Log.d("YourOrderFragment", "Starting countdown with " + (timeRemaining / 1000) + " seconds");
-                                    orderCountdownTextView.setText("Order accepted, preparing...");
-                                    startCountdown(timeRemaining);
-                                }
-                            } else {
-                                if (countDownTimer != null) {
-                                    countDownTimer.cancel();
-                                    countDownTimer = null;
-                                }
-                                orderCountdownTextView.setText("Waiting for acceptance...");
-                            }
-                        } else {
-                            orderCountdownTextView.setText("Waiting for acceptance...");
-                            Log.w("YourOrderFragment", "endTime is null");
-                        }
-                    }
-                });
-    }
-
-
     private void startCountdown(long remainingTimeInMillis) {
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
+        if (!isAdded() || getView() == null) {
+            Log.w("YourOrderFragment", "Fragment not attached, skipping countdown");
+            return;
+        }
+
+        if (remainingTimeInMillis <= 0) {
+            orderCountdownTextView.setText("00:00");
+            TextView countdownLabel = getView().findViewById(R.id.countdownLabel);
+            if (countdownLabel != null) {
+                countdownLabel.setText("Ready! Go pick up your order now!");
+            }
+            return;
         }
 
         countDownTimer = new CountDownTimer(remainingTimeInMillis, 1000) {
@@ -355,10 +400,10 @@ public class YourOrderFragment extends Fragment {
                     cancel();
                     return;
                 }
-                timeRemaining = millisUntilFinished;
-                orderCountdownTextView.setText(String.format("%02d:%02d",
-                        TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished),
-                        TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) % 60));
+                long totalSeconds = millisUntilFinished / 1000;
+                long minutes = totalSeconds / 60;
+                long seconds = totalSeconds % 60;
+                orderCountdownTextView.setText(String.format("%02d:%02d", minutes, seconds));
             }
 
             @Override
@@ -381,14 +426,7 @@ public class YourOrderFragment extends Fragment {
             return;
         }
 
-        Log.d("FirestoreDebug", "confirmOrder() called");
         String userId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : "guest";
-        long currentTimeMillis = System.currentTimeMillis();
-        long totalPrepTimeMillis = order.getTotalPrepTime() * 60 * 1000;
-        long endTimeMillis = currentTimeMillis + totalPrepTimeMillis;
-
-        Timestamp startTime = new Timestamp(currentTimeMillis / 1000, (int) ((currentTimeMillis % 1000) * 1_000_000));
-        Timestamp endTime = new Timestamp(endTimeMillis / 1000, (int) ((endTimeMillis % 1000) * 1_000_000));
 
         Map<String, Object> orderData = new HashMap<>();
         orderData.put("orderId", order.getOrderId());
@@ -396,9 +434,9 @@ public class YourOrderFragment extends Fragment {
         orderData.put("restaurantId", order.getRestaurantId());
         orderData.put("totalPrice", order.getTotalPrice());
         orderData.put("totalPrepTime", order.getTotalPrepTime());
-        orderData.put("startTime", startTime);
-        orderData.put("endTime", endTime);
-        orderData.put("approvalStatus", "pending"); // Initial status
+        orderData.put("startTime", com.google.firebase.firestore.FieldValue.serverTimestamp());
+        orderData.put("endTime", null);
+        orderData.put("approvalStatus", "pendingApproval");
         orderData.put("status", "pending");
 
         List<Map<String, Object>> itemsList = new ArrayList<>();
@@ -409,23 +447,22 @@ public class YourOrderFragment extends Fragment {
             itemData.put("prepTime", item.getPrepTime());
             itemData.put("photo", item.getItemImg());
             itemData.put("description", item.getItemDescription());
+            itemData.put("item count", item.getItemCount());
             itemsList.add(itemData);
         }
         orderData.put("items", itemsList);
 
-        db.collection("orders").document(order.getOrderId())
-                .set(orderData)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("FirestoreDebug", "Order stored successfully with pending status");
-                    // Verify initial status
-                    db.collection("orders").document(order.getOrderId()).get()
-                            .addOnSuccessListener(doc -> Log.d("YourOrderFragment",
-                                    "Initial status after save: " + doc.getString("approvalStatus")));
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("FirestoreError", "Failed to store order: " + e.getMessage());
-                });
+        db.runTransaction(transaction -> {
+            transaction.set(db.collection("orders").document(order.getOrderId()), orderData);
+            return null;
+        }).addOnSuccessListener(aVoid -> {
+            Log.d("FirestoreDebug", "Order stored successfully with pendingApproval status");
+        }).addOnFailureListener(e -> {
+            Log.e("FirestoreError", "Failed to store order: " + e.getMessage());
+        });
     }
+
+
 
     @Override
     public void onDestroyView() {

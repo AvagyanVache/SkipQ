@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.skipq.Adaptor.OrderManagementAdapter;
 import com.example.skipq.R;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -94,49 +95,65 @@ public class OrderManagementFragment extends Fragment {
     }
 
     private void acceptOrder(String orderId) {
-        db.collection("orders").document(orderId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        Long totalPrepTimeMinutes = documentSnapshot.getLong("totalPrepTime"); // in minutes
+        db.runTransaction(transaction -> {
+            DocumentSnapshot snapshot = transaction.get(db.collection("orders").document(orderId));
+            if (!snapshot.exists()) {
+                throw new IllegalStateException("Order does not exist");
+            }
 
-                        if (totalPrepTimeMinutes != null) {
-                            // Set startTime to current time at acceptance
-                            long currentTimeMillis = System.currentTimeMillis();
-                            Timestamp startTime = new Timestamp(currentTimeMillis / 1000, (int) ((currentTimeMillis % 1000) * 1_000_000));
+            Long totalPrepTimeMinutes = snapshot.getLong("totalPrepTime");
+            if (totalPrepTimeMinutes == null) {
+                throw new IllegalStateException("Total prep time is missing");
+            }
 
-                            // Calculate endTime from new startTime
-                            long totalPrepTimeMillis = totalPrepTimeMinutes * 60 * 1000; // Convert minutes to milliseconds
-                            long endTimeMillis = currentTimeMillis + totalPrepTimeMillis;
-                            Timestamp endTime = new Timestamp(endTimeMillis / 1000, (int) ((endTimeMillis % 1000) * 1_000_000));
+            // Set approvalStatus and startTime in the transaction
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("approvalStatus", "accepted");
+            updates.put("startTime", com.google.firebase.firestore.FieldValue.serverTimestamp());
+            // Do not set endTime here, as startTime is not yet resolved
+            transaction.update(db.collection("orders").document(orderId), updates);
+            return totalPrepTimeMinutes; // Pass totalPrepTimeMinutes to the success handler
+        }).addOnSuccessListener(totalPrepTimeMinutes -> {
+            // Fetch the updated order document to get the resolved startTime
+            db.collection("orders").document(orderId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            Timestamp startTime = documentSnapshot.getTimestamp("startTime");
+                            if (startTime != null) {
+                                // Calculate endTime based on startTime + totalPrepTime
+                                long endTimeSeconds = startTime.getSeconds() + (totalPrepTimeMinutes * 60);
+                                Timestamp endTime = new Timestamp(endTimeSeconds, 0);
 
-                            Log.d("OrderManagement", "Accepting order - orderId: " + orderId +
-                                    ", totalPrepTime: " + totalPrepTimeMinutes + " minutes" +
-                                    ", startTime: " + startTime.toDate() +
-                                    ", endTime: " + endTime.toDate() +
-                                    ", currentTimeMillis: " + currentTimeMillis);
-
-                            Map<String, Object> updates = new HashMap<>();
-                            updates.put("approvalStatus", "accepted");
-                            updates.put("startTime", startTime);
-                            updates.put("endTime", endTime);
-
-                            db.collection("orders").document(orderId)
-                                    .update(updates)
-                                    .addOnSuccessListener(aVoid -> {
-                                        Log.d("OrderManagement", "Order accepted at: " + new java.util.Date(System.currentTimeMillis()));
-                                        Toast.makeText(getContext(), "Order accepted!", Toast.LENGTH_SHORT).show();
-                                    })
-                                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to accept order: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                                // Update the order with the calculated endTime
+                                db.collection("orders").document(orderId)
+                                        .update("endTime", endTime)
+                                        .addOnSuccessListener(aVoid -> {
+                                            Toast.makeText(getContext(), "Order accepted!", Toast.LENGTH_SHORT).show();
+                                            Log.d("OrderManagement", "Order " + orderId + " accepted and endTime set");
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Toast.makeText(getContext(), "Failed to set end time: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            Log.e("OrderManagement", "Failed to set end time: " + e.getMessage());
+                                        });
+                            } else {
+                                Toast.makeText(getContext(), "Failed to retrieve start time", Toast.LENGTH_SHORT).show();
+                                Log.e("OrderManagement", "startTime is null for order " + orderId);
+                            }
                         } else {
-                            Toast.makeText(getContext(), "Missing totalPrepTime", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), "Order not found", Toast.LENGTH_SHORT).show();
+                            Log.e("OrderManagement", "Order document does not exist for " + orderId);
                         }
-                    }
-                })
-                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to fetch order: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(getContext(), "Failed to fetch order: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("OrderManagement", "Failed to fetch order: " + e.getMessage());
+                    });
+        }).addOnFailureListener(e -> {
+            Toast.makeText(getContext(), "Failed to accept order: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("OrderManagement", "Failed to accept order: " + e.getMessage());
+        });
     }
-
-
 
     private void declineOrder(String orderId) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
@@ -153,7 +170,6 @@ public class OrderManagementFragment extends Fragment {
             String selectedReason = declineReasons[which];
             Log.d("OrderManagement", "Declining order " + orderId + " with reason: " + selectedReason);
 
-            // Update Firestore with decline reason and status
             Map<String, Object> updates = new HashMap<>();
             updates.put("approvalStatus", "declined");
             updates.put("declineReason", selectedReason);
@@ -162,7 +178,6 @@ public class OrderManagementFragment extends Fragment {
                     .update(updates)
                     .addOnSuccessListener(aVoid -> {
                         Log.d("OrderManagement", "Order " + orderId + " updated to declined with reason: " + selectedReason);
-                        // Delete the order after a delay to ensure client detects update
                         new Handler().postDelayed(() -> {
                             db.collection("orders").document(orderId)
                                     .delete()
@@ -174,7 +189,7 @@ public class OrderManagementFragment extends Fragment {
                                         Toast.makeText(getContext(), "Failed to delete order: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                         Log.e("OrderManagement", "Failed to delete order: " + e.getMessage());
                                     });
-                        }, 2000); // 2-second delay for robust sync
+                        }, 2000);
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(getContext(), "Failed to decline order: " + e.getMessage(), Toast.LENGTH_SHORT).show();

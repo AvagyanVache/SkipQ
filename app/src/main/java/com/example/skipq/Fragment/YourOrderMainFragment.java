@@ -39,6 +39,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -140,74 +141,96 @@ public class YourOrderMainFragment extends Fragment {
         }
         userId = user.getUid();
 
-        long currentTime = System.currentTimeMillis() / 1000;
-        Timestamp currentTimestamp = new Timestamp(currentTime, 0);
-
-        Query query = firestore.collection("orders")
-                .whereEqualTo("userId", userId)
-                .whereEqualTo("approvalStatus", "accepted"); // Only accepted orders
-
-        if (isCurrentOrders) {
-            query = query.whereGreaterThan("endTime", currentTimestamp); // Pending accepted orders
-        } else {
-            query = query.whereLessThanOrEqualTo("endTime", currentTimestamp); // Done accepted orders
-        }
-
-        query.orderBy("endTime", Query.Direction.DESCENDING)
-                .addSnapshotListener((snapshots, error) -> {
-                    if (error != null) {
-                        Log.e("FirestoreError", "Failed to load orders: " + error.getMessage());
-                        return;
-                    }
-
-                    groupedOrders.clear(); // Clear previous orders
-
-                    if (snapshots != null && !snapshots.isEmpty()) {
-                        Map<String, YourOrderMainDomain> uniqueOrders = new HashMap<>();
-                        int totalOrders = snapshots.size();
-                        final int[] fetchedCount = {0};
-
-                        for (QueryDocumentSnapshot document : snapshots) {
-                            String orderId = document.getId();
-                            if (uniqueOrders.containsKey(orderId)) continue;
-
-                            YourOrderMainDomain order = document.toObject(YourOrderMainDomain.class);
-                            order.setStartTime(document.getTimestamp("startTime"));
-                            order.setEndTime(document.getTimestamp("endTime"));
-                            order.setOrderId(document.getId());
-
-                            long endTimeSeconds = order.getEndTime() != null ? order.getEndTime().getSeconds() : 0;
-                            String status = (currentTime < endTimeSeconds) ? "pending" : "done";
-                            order.setStatus(status);
-
-                            uniqueOrders.put(orderId, order);
-
-                            String restaurantId = document.getString("restaurantId");
-                            if (restaurantId != null) {
-                                fetchRestaurantDetails(restaurantId, order, () -> {
-                                    fetchedCount[0]++;
-                                    if (fetchedCount[0] == totalOrders) {
-                                        groupedOrders.clear();
-                                        groupedOrders.addAll(uniqueOrders.values());
-                                        yourOrdersAdapter.notifyDataSetChanged();
-                                        updateEmptyStateVisibility();
-                                    }
-                                });
-                            } else {
-                                order.setRestaurant(new RestaurantDomain("Unknown", ""));
-                                fetchedCount[0]++;
-                                if (fetchedCount[0] == totalOrders) {
-                                    groupedOrders.clear();
-                                    groupedOrders.addAll(uniqueOrders.values());
-                                    yourOrdersAdapter.notifyDataSetChanged();
-                                    updateEmptyStateVisibility();
+        db.collection("serverTime").document("current")
+                .set(new HashMap<String, Object>() {{ put("timestamp", com.google.firebase.firestore.FieldValue.serverTimestamp()); }})
+                .addOnSuccessListener(aVoid -> {
+                    db.collection("serverTime").document("current")
+                            .get()
+                            .addOnSuccessListener(doc -> {
+                                Timestamp currentTimestamp = doc.getTimestamp("timestamp");
+                                if (currentTimestamp == null) {
+                                    Log.e("FirestoreError", "Failed to fetch server timestamp");
+                                    return;
                                 }
-                            }
-                        }
-                    } else {
-                        yourOrdersAdapter.notifyDataSetChanged();
-                        updateEmptyStateVisibility();
-                    }
+
+                                Query query = firestore.collection("orders")
+                                        .whereEqualTo("userId", userId)
+                                        .whereIn("approvalStatus", Arrays.asList("pendingApproval", "accepted"));
+
+                                if (isCurrentOrders) {
+                                    query = query.whereGreaterThan("endTime", currentTimestamp);
+                                } else {
+                                    query = query.whereLessThanOrEqualTo("endTime", currentTimestamp);
+                                }
+
+                                query.orderBy("endTime", Query.Direction.DESCENDING)
+                                        .addSnapshotListener((snapshots, error) -> {
+                                            if (error != null) {
+                                                Log.e("FirestoreError", "Failed to load orders: " + error.getMessage());
+                                                return;
+                                            }
+
+                                            groupedOrders.clear();
+
+                                            if (snapshots != null && !snapshots.isEmpty()) {
+                                                Map<String, YourOrderMainDomain> uniqueOrders = new HashMap<>();
+                                                int totalOrders = snapshots.size();
+                                                final int[] fetchedCount = {0};
+
+                                                for (QueryDocumentSnapshot document : snapshots) {
+                                                    String orderId = document.getId();
+                                                    if (uniqueOrders.containsKey(orderId)) continue;
+
+                                                    YourOrderMainDomain order = document.toObject(YourOrderMainDomain.class);
+                                                    order.setStartTime(document.getTimestamp("startTime"));
+                                                    order.setEndTime(document.getTimestamp("endTime"));
+                                                    order.setOrderId(document.getId());
+
+                                                    if (order.getEndTime() != null) {
+                                                        long endTimeSeconds = order.getEndTime().getSeconds();
+                                                        long currentTimeSeconds = currentTimestamp.getSeconds();
+                                                        String status = (currentTimeSeconds < endTimeSeconds) ? "pending" : "done";
+                                                        order.setStatus(status);
+                                                    } else {
+                                                        order.setStatus("pending");
+                                                    }
+
+                                                    uniqueOrders.put(orderId, order);
+
+                                                    String restaurantId = document.getString("restaurantId");
+                                                    if (restaurantId != null) {
+                                                        fetchRestaurantDetails(restaurantId, order, () -> {
+                                                            fetchedCount[0]++;
+                                                            if (fetchedCount[0] == totalOrders) {
+                                                                groupedOrders.clear();
+                                                                groupedOrders.addAll(uniqueOrders.values());
+                                                                yourOrdersAdapter.notifyDataSetChanged();
+                                                                updateEmptyStateVisibility();
+                                                            }
+                                                        });
+                                                    } else {
+                                                        order.setRestaurant(new RestaurantDomain("Unknown", ""));
+                                                        fetchedCount[0]++;
+                                                        if (fetchedCount[0] == totalOrders) {
+                                                            groupedOrders.clear();
+                                                            groupedOrders.addAll(uniqueOrders.values());
+                                                            yourOrdersAdapter.notifyDataSetChanged();
+                                                            updateEmptyStateVisibility();
+                                                        }
+                                                    }
+                                                }
+                                            } else {
+                                                yourOrdersAdapter.notifyDataSetChanged();
+                                                updateEmptyStateVisibility();
+                                            }
+                                        });
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e("FirestoreError", "Failed to fetch server timestamp: " + e.getMessage());
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirestoreError", "Failed to set server timestamp: " + e.getMessage());
                 });
     }
 
