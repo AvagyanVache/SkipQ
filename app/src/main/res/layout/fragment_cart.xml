@@ -119,16 +119,40 @@
                     android:inputType="textPersonName"/>
 
             </com.google.android.material.textfield.TextInputLayout>
+
             <TextView
                 android:id="@+id/selected_location"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Selected Adress"
                 android:layout_gravity="center"
                 android:gravity="center"
+                android:text="Selected Adress"
                 android:textColor="@color/white"
-                android:textStyle="bold"
-                android:textSize="20sp"/>
+                android:textSize="20sp"
+                android:textStyle="bold" />
+            <Spinner
+                android:id="@+id/orderTypeSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:entries="@array/order_types" />
+
+            <!-- New EditText for Customer Count, initially gone -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/customerCountLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Number of Customers"
+                android:visibility="gone">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/customerCountInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:min="1" />
+
+            </com.google.android.material.textfield.TextInputLayout>
             <LinearLayout
                 android:id="@+id/linearLayout"
                 android:layout_width="280dp"

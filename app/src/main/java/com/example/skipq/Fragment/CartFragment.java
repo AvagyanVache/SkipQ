@@ -12,8 +12,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +34,7 @@ import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.Domain.YourOrderMainDomain;
 import com.example.skipq.R;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -64,6 +67,10 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
  private View linearLayout;
  private FirebaseFirestore db;
  private ListenerRegistration profileListener;
+ private Spinner orderTypeSpinner; // New
+ private TextInputLayout customerCountLayout; // New
+ private TextInputEditText customerCountInput; // New
+ private String selectedOrderType = "Pick Up";
 
  @Override
  public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -82,12 +89,32 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   textInputName = view.findViewById(R.id.textInputName);
   linearLayout = view.findViewById(R.id.linearLayout);
   emptyCartImg = view.findViewById(R.id.emptyCartImg);
+  orderTypeSpinner = view.findViewById(R.id.orderTypeSpinner); // New
+  customerCountLayout = view.findViewById(R.id.customerCountLayout); // New
+  customerCountInput = view.findViewById(R.id.customerCountInput);
 
   cartList = new ArrayList<>(CartManager.getInstance().getCartList());
   db = FirebaseFirestore.getInstance();
 
   FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
+
+  orderTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+   @Override
+   public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+    selectedOrderType = parent.getItemAtPosition(position).toString();
+    customerCountLayout.setVisibility(selectedOrderType.equals("Eat In") ? View.VISIBLE : View.GONE);
+    if (!selectedOrderType.equals("Eat In")) {
+     customerCountInput.setText("1"); // Reset to default
+    }
+   }
+
+   @Override
+   public void onNothingSelected(AdapterView<?> parent) {
+    selectedOrderType = "Pick Up";
+    customerCountLayout.setVisibility(View.GONE);
+   }
+  });
   // Set up profile icon click listener
   profileIcon.setOnClickListener(v -> {
    Intent intent = new Intent(getActivity(), HomeActivity.class);
@@ -292,6 +319,28 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   }
   return true;
  }
+ private boolean validateCustomerCount() {
+  if (selectedOrderType.equals("Eat In")) {
+   String countStr = customerCountInput.getText().toString().trim();
+   if (countStr.isEmpty()) {
+    customerCountLayout.setError("Please enter the number of customers");
+    return false;
+   }
+   try {
+    int count = Integer.parseInt(countStr);
+    if (count < 1) {
+     customerCountLayout.setError("Number of customers must be at least 1");
+     return false;
+    }
+    customerCountLayout.setError(null);
+    return true;
+   } catch (NumberFormatException e) {
+    customerCountLayout.setError("Invalid number format");
+    return false;
+   }
+  }
+  return true;
+ }
 
  private void proceedToOrder() {
   if (!validateName() || !validatePhoneNumber() || !validateAddress()) {
@@ -344,6 +393,12 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
              YourOrderMainDomain order = new YourOrderMainDomain();
              order.setTotalPrepTime(totalPrepTime);
              order.setItems(new ArrayList<>(items));
+             if (selectedOrderType.equals("Eat In")) {
+              order.setCustomerCount(Integer.parseInt(customerCountInput.getText().toString().trim()));
+             } else {
+              order.setCustomerCount(1); // Default for Pick Up
+             }
+
              saveOrderToFirestore(new ArrayList<>(items), restaurantId, totalPrice, totalPrepTime, order);
             }
             CartManager.getInstance().clearCart();
@@ -374,11 +429,19 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    editor.putString("restaurantId", restaurantId);
    editor.putFloat("totalPrice", (float) totalPrice);
    editor.putInt("prepTime", totalPrepTime);
+   editor.putString("orderType", selectedOrderType);
+   editor.putInt("customerCount", selectedOrderType.equals("Eat In") ? Integer.parseInt(customerCountInput.getText().toString().trim()) : 1);
    editor.apply();
 
    YourOrderMainDomain order = new YourOrderMainDomain();
    order.setTotalPrepTime(totalPrepTime);
    order.setItems(new ArrayList<>(cartList));
+   order.setOrderType(selectedOrderType);
+   if (selectedOrderType.equals("Eat In")) {
+    order.setCustomerCount(Integer.parseInt(customerCountInput.getText().toString().trim()));
+   } else {
+    order.setCustomerCount(1); // Default for Pick Up
+   }
    saveOrderToFirestore(new ArrayList<>(cartList), restaurantId, totalPrice, totalPrepTime, order);
 
    CartManager.getInstance().clearCart();
@@ -426,6 +489,8 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    orderData.put("status", "pending");
    orderData.put("approvalStatus", "pendingApproval");
    orderData.put("selectedAddress", CartManager.getInstance().getSelectedAddress());
+   orderData.put("orderType", order.getOrderType());
+   orderData.put("customerCount", order.getCustomerCount());
    if (userDeviceToken != null) {
     orderData.put("userDeviceToken", userDeviceToken);
    }
@@ -474,6 +539,8 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    linearLayout.setVisibility(View.GONE);
    checkOutButton.setVisibility(View.GONE);
    selectedLocationTextView.setVisibility(View.GONE);
+   orderTypeSpinner.setVisibility(View.GONE);
+   customerCountLayout.setVisibility(View.GONE);
   } else {
    cartEmpty.setVisibility(View.GONE);
    emptyCartImg.setVisibility(View.GONE);
@@ -483,6 +550,8 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    linearLayout.setVisibility(View.VISIBLE);
    checkOutButton.setVisibility(View.VISIBLE);
    selectedLocationTextView.setVisibility(View.VISIBLE);
+   orderTypeSpinner.setVisibility(View.VISIBLE);
+   customerCountLayout.setVisibility(selectedOrderType.equals("Eat In") ? View.VISIBLE : View.GONE);
   }
  }
 

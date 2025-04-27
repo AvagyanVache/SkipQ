@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,18 +59,31 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
         holder.menuItemDescription.setText(menuItem.getItemDescription());
         holder.menuItemPrice.setText(MessageFormat.format("֏ {0}", menuItem.getItemPrice()));
 
-        String base64Image = menuItem.getItemImg();
-        if (base64Image != null && !base64Image.isEmpty()) {
-            try {
-                byte[] decodedBytes = Base64.decode(base64Image, Base64.DEFAULT);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-                holder.menuItemPhoto.setImageBitmap(bitmap);
+        String imageData = menuItem.getItemImg();
+        if (imageData != null && !imageData.isEmpty()) {
+            if (imageData.startsWith("http")) {
+                // Load image from URL using Glide (food place's provided URL)
+                Glide.with(context)
+                        .load(imageData)
+                        .into(holder.menuItemPhoto);
                 holder.menuItemPhoto.setVisibility(View.VISIBLE);
-            } catch (Exception e) {
-                holder.menuItemPhoto.setVisibility(View.GONE);
+            } else {
+                // Try decoding Base64 image (food place's provided Base64)
+                try {
+                    byte[] decodedBytes = Base64.decode(imageData, Base64.DEFAULT);
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                    holder.menuItemPhoto.setImageBitmap(bitmap);
+                    holder.menuItemPhoto.setVisibility(View.VISIBLE);
+                } catch (Exception e) {
+                    Log.e("MenuAdaptor", "Failed to decode Base64 image for item: " + menuItem.getItemName(), e);
+                    holder.menuItemPhoto.setImageResource(R.drawable.white); // Fallback to placeholder
+                    holder.menuItemPhoto.setVisibility(View.VISIBLE);
+                }
             }
         } else {
-            holder.menuItemPhoto.setVisibility(View.GONE);
+            // No image provided by food place, use placeholder
+            holder.menuItemPhoto.setImageResource(R.drawable.white);
+            holder.menuItemPhoto.setVisibility(View.VISIBLE);
         }
 
         holder.prepTime.setText(MessageFormat.format("{0} min", menuItem.getPrepTime()));

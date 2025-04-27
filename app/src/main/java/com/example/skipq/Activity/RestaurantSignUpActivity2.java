@@ -195,30 +195,36 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
         RequestQueue queue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, apiLink,
                 response -> {
+                    Log.d("RestaurantSignUp", "API Response: " + response);
                     try {
                         JSONArray menuItems = new JSONArray(response);
                         Map<String, Object> menuData = new HashMap<>();
                         for (int i = 0; i < menuItems.length(); i++) {
                             JSONObject item = menuItems.getJSONObject(i);
                             Map<String, Object> itemData = new HashMap<>();
-                            itemData.put("name", item.getString("name"));
-                            itemData.put("price", item.getInt("price"));
-                            itemData.put("prepTime", item.getInt("prepTime"));
-                            menuData.put(item.getString("name"), itemData);
+                            String itemName = item.optString("name", "Unnamed Item");
+                            itemData.put("Item Name", itemName);
+                            itemData.put("Item Price", String.valueOf(item.optDouble("price", 0.0)));
+                            itemData.put("Prep Time", item.optInt("prepTime", 0));
+                            itemData.put("Item Description", item.optString("description", "No description available"));
+                            String image = item.optString("image", "");
+                            itemData.put("Item Img", image);
+                            menuData.put(itemName.replaceAll("[^a-zA-Z0-9]", "_"), itemData); // Sanitize document ID
                         }
                         saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
                     } catch (JSONException e) {
-                        Toast.makeText(this, "Error parsing menu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("RestaurantSignUp", "Error parsing menu: " + e.getMessage(), e);
+                        Toast.makeText(this, "Error parsing menu", Toast.LENGTH_SHORT).show();
                         saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, null);
                     }
                 },
                 error -> {
-                    Toast.makeText(this, "Failed to fetch menu: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e("RestaurantSignUp", "Failed to fetch menu: " + error.getMessage(), error);
+                    Toast.makeText(this, "Failed to fetch menu", Toast.LENGTH_SHORT).show();
                     saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, null);
                 });
         queue.add(stringRequest);
     }
-
     private void saveRestaurantWithMenu(String name, String apiLink, String logoUrl, Map<String, Object> menuData) {
         db.collection("FoodPlaces").document(name).get()
                 .addOnCompleteListener(task -> {

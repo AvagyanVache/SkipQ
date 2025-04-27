@@ -290,7 +290,6 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
                     addressStrings.add("Select an address");
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         Boolean isAvailable = doc.getBoolean("isAvailable");
-                        // Only include addresses where isAvailable is true (or unset, default to true)
                         if (isAvailable == null || isAvailable) {
                             String address = doc.getString("address");
                             Double latitude = doc.getDouble("latitude");

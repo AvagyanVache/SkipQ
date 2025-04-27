@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.skipq.Domain.YourOrderMainDomain;
 import com.example.skipq.R;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 
@@ -47,13 +49,29 @@ public class YourOrderMainAdaptor extends RecyclerView.Adapter<YourOrderMainAdap
         YourOrderMainDomain order = orderList.get(position);
         holder.restaurantName.setText(order.getRestaurant().getName());
         holder.orderPrice.setText(String.format("%.2f֏", order.getTotalPrice()));
-        holder.totalprepTime.setText(order.getTotalPrepTime()+ " mins");
-        Log.d("YourOrderMainAdaptor", "Image URL: " + order.getRestaurant().getImageUrl());
+        holder.totalprepTime.setText(order.getTotalPrepTime() + " mins");
 
+        String restaurantName = order.getRestaurant().getName();
 
+        if (restaurantName != null && !restaurantName.isEmpty()) {
+            String imagePath = "restaurant_logos/" + restaurantName + "_logo.jpg";
 
-        Glide.with(context).load(order.getRestaurant().getImageUrl()).into(holder.restaurantImage);
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference().child(imagePath);
 
+            storageReference.getDownloadUrl()
+                    .addOnSuccessListener(uri -> {
+                        Glide.with(context)
+                                .load(uri.toString())
+                                .placeholder(R.drawable.white)
+                                .error(R.drawable.white)
+                                .into(holder.restaurantImage);
+                    })
+                    .addOnFailureListener(e -> {
+                        holder.restaurantImage.setImageResource(R.drawable.white);
+                    });
+        } else {
+            holder.restaurantImage.setImageResource(R.drawable.white);
+        }
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
@@ -61,6 +79,7 @@ public class YourOrderMainAdaptor extends RecyclerView.Adapter<YourOrderMainAdap
             }
         });
     }
+
 
     @Override
     public int getItemCount() {

@@ -25,6 +25,8 @@ public class YourOrderMainDomain implements Parcelable {
     @Exclude
     private RestaurantDomain restaurant;
     private Timestamp endTime;
+    private String orderType;
+    private int customerCount;
 
     public YourOrderMainDomain() {}
 
@@ -66,6 +68,22 @@ public class YourOrderMainDomain implements Parcelable {
             return new YourOrderMainDomain[size];
         }
     };
+
+    public String getOrderType() {
+        return orderType;
+    }
+
+    public void setOrderType(String orderType) {
+        this.orderType = orderType;
+    }
+
+    public int getCustomerCount() {
+        return customerCount;
+    }
+
+    public void setCustomerCount(int customerCount) {
+        this.customerCount = customerCount;
+    }
 
     public String getOrderId() {
         return orderId;
