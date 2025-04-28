@@ -7,11 +7,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,7 +58,9 @@ public class MenuManagementFragment extends Fragment {
     private String originalItemName; // Store original name for updating Firestore
     private String selectedImageBase64; // Store Base64 string for selected image
     private ActivityResultLauncher<String> pickImageLauncher; // Image picker
-    private ActivityResultLauncher<String> requestPermissionLauncher; // Permission handler
+    private ActivityResultLauncher<String> requestPermissionLauncher; // Permission handlerz
+    private Switch availabilitySwitch;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -72,6 +76,8 @@ public class MenuManagementFragment extends Fragment {
         addItemButton = view.findViewById(R.id.add_item_button);
         cardView = view.findViewById(R.id.cardView);
         backButton = view.findViewById(R.id.backButton);
+        availabilitySwitch = view.findViewById(R.id.availability_switch);
+
         selectedImageBase64 = null;
 
         db = FirebaseFirestore.getInstance();
@@ -159,20 +165,25 @@ public class MenuManagementFragment extends Fragment {
                         }
                         item.setItemDescription(doc.getString("Item Description"));
                         String itemImgBase64 = doc.getString("Item Img");
-                        item.setItemImg(itemImgBase64 != null ? itemImgBase64 : ""); // Ensure null safety
+                        item.setItemImg(itemImgBase64 != null ? itemImgBase64 : "");
+                        Boolean available = doc.getBoolean("Available");
+                        item.setAvailable(available != null ? available : true);
+
                         menuItems.add(item);
                     }
-                    menuAdapter.notifyDataSetChanged();
+                    menuAdapter.updateItems(menuItems); // Use updateItems instead of notifyDataSetChanged
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(getContext(), "Failed to load menu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
+
     private void addItem() {
         String name = itemName.getText().toString().trim();
         String price = itemPrice.getText().toString().trim();
         String prepTime = itemPrepTime.getText().toString().trim();
         String description = itemDescription.getText().toString().trim();
+        boolean isAvailable = availabilitySwitch.isChecked();
 
         if (name.isEmpty() || price.isEmpty() || prepTime.isEmpty()) {
             Toast.makeText(getContext(), "Name, price, and prep time are required", Toast.LENGTH_SHORT).show();
@@ -185,6 +196,7 @@ public class MenuManagementFragment extends Fragment {
         itemData.put("Prep Time", Integer.parseInt(prepTime));
         itemData.put("Item Description", description.isEmpty() ? "" : description);
         itemData.put("Item Img", selectedImageBase64 != null ? selectedImageBase64 : "");
+        itemData.put("Available", isAvailable);
 
         db.collection("FoodPlaces").document(restaurantId).collection("Menu")
                 .document("DefaultMenu").collection("Items").document(name)
@@ -198,6 +210,7 @@ public class MenuManagementFragment extends Fragment {
                     addItemButton.setText("Add Item");
                 })
                 .addOnFailureListener(e -> {
+                    Log.e("MenuManagementFragment", "Failed to add item", e);
                     Toast.makeText(getContext(), "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
@@ -206,8 +219,9 @@ public class MenuManagementFragment extends Fragment {
         itemPrice.setText(item.getItemPrice());
         itemPrepTime.setText(String.valueOf(item.getPrepTime()));
         itemDescription.setText(item.getItemDescription());
-        selectedImageBase64 = item.getItemImg(); // Load existing image
+        selectedImageBase64 = item.getItemImg();
         itemImg.setText(selectedImageBase64 != null && !selectedImageBase64.isEmpty() ? "Image selected" : "");
+        availabilitySwitch.setChecked(item.isAvailable()); // Set switch state
 
         cardView.setVisibility(View.VISIBLE);
         backButton.setVisibility(View.VISIBLE);
@@ -221,6 +235,7 @@ public class MenuManagementFragment extends Fragment {
         String price = itemPrice.getText().toString().trim();
         String prepTime = itemPrepTime.getText().toString().trim();
         String description = itemDescription.getText().toString().trim();
+        boolean isAvailable = availabilitySwitch.isChecked(); // Get switch state
 
         if (name.isEmpty() || price.isEmpty() || prepTime.isEmpty()) {
             Toast.makeText(getContext(), "Name, price, and prep time are required", Toast.LENGTH_SHORT).show();
@@ -233,6 +248,7 @@ public class MenuManagementFragment extends Fragment {
         itemData.put("Prep Time", Integer.parseInt(prepTime));
         itemData.put("Item Description", description.isEmpty() ? "" : description);
         itemData.put("Item Img", selectedImageBase64 != null ? selectedImageBase64 : "");
+        itemData.put("Available", isAvailable); // Use switch state
 
         WriteBatch batch = db.batch();
 
@@ -304,6 +320,7 @@ public class MenuManagementFragment extends Fragment {
         itemPrepTime.setText("");
         itemDescription.setText("");
         itemImg.setText("");
-        selectedImageBase64 = null; // Reset image
+        selectedImageBase64 = null;
+        availabilitySwitch.setChecked(true);
     }
 }

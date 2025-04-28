@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.R;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -22,7 +23,7 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
     private List<MenuDomain> items;
     private Consumer<MenuDomain> onUpdate;
     private Consumer<String> onDelete;
-    private int selectedPosition = -1; // Track the selected item position
+    private int selectedPosition = -1;
 
     public MenuManagementAdapter(List<MenuDomain> items, Consumer<MenuDomain> onUpdate, Consumer<String> onDelete) {
         this.items = items;
@@ -30,6 +31,11 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
         this.onDelete = onDelete;
     }
 
+
+    public void updateItems(List<MenuDomain> newItems) {
+        this.items = newItems;
+        notifyDataSetChanged();
+    }
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -46,9 +52,7 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
         if (holder.itemPrice != null) holder.itemPrice.setText(item.getItemPrice() != null ? item.getItemPrice() : "");
         if (holder.itemPrepTime != null) holder.itemPrepTime.setText(item.getPrepTime() >= 0 ? String.valueOf(item.getPrepTime()) : "");
         if (holder.itemDescription != null) holder.itemDescription.setText(item.getItemDescription() != null ? item.getItemDescription() : "");
-
-        // Decode and display Base64 image
-        String base64Image = item.getItemImg();
+        holder.itemAvailability.setText("Availability: " + (item.isAvailable() ? "Available" : "Unavailable"));        String base64Image = item.getItemImg();
         if (holder.itemImage != null) {
             if (base64Image != null && !base64Image.isEmpty()) {
                 try {
@@ -125,7 +129,7 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView itemName, itemPrice, itemPrepTime, itemDescription;
+        TextView itemName, itemPrice, itemPrepTime, itemDescription, itemAvailability;
         ImageView updateButton, deleteButton, itemImage;
 
         ViewHolder(View view) {
@@ -134,9 +138,10 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
             itemPrice = view.findViewById(R.id.item_price_text);
             itemPrepTime = view.findViewById(R.id.item_prep_time_text);
             itemDescription = view.findViewById(R.id.item_description_text);
+            itemAvailability = view.findViewById(R.id.item_availability_text);
             updateButton = view.findViewById(R.id.EditItem);
             deleteButton = view.findViewById(R.id.DeleteItem);
-            itemImage = view.findViewById(R.id.ItemPhoto); // Initialize ImageView
+            itemImage = view.findViewById(R.id.ItemPhoto);
         }
     }
 }

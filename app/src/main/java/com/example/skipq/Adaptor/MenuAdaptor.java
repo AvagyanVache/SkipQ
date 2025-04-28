@@ -22,26 +22,45 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 
 public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
-
     private Context context;
     private ArrayList<MenuDomain> menuList;
+    private ArrayList<MenuDomain> filteredMenuList;
     private OnAddToCartListener onAddToCartListener;
 
     public interface OnAddToCartListener {
         void onAddToCart(MenuDomain menuItem);
         void onItemAdded(MenuDomain item);
     }
-    public void updateList(ArrayList<MenuDomain> newList) {
-        this.menuList.clear();
-        this.menuList.addAll(newList);
-        notifyDataSetChanged();
-    }
-
 
     public MenuAdaptor(Context context, ArrayList<MenuDomain> menuList, OnAddToCartListener onAddToCartListener) {
         this.context = context;
-        this.menuList = menuList;
+        this.menuList = menuList != null ? new ArrayList<>(menuList) : new ArrayList<>();
         this.onAddToCartListener = onAddToCartListener;
+        this.filteredMenuList = new ArrayList<>();
+        filterItems();
+        Log.d("MenuAdaptor", "Initialized with " + this.menuList.size() + " items, " + filteredMenuList.size() + " filtered");
+    }
+
+    private void filterItems() {
+        filteredMenuList.clear();
+        for (MenuDomain item : menuList) {
+            if (item != null && item.isAvailable()) {
+                filteredMenuList.add(item);
+                Log.d("MenuAdaptor", "Added to filtered: " + item.getItemName());
+            } else {
+                Log.d("MenuAdaptor", "Skipped item: " + (item != null ? item.getItemName() : "null") + ", Available: " + (item != null ? item.isAvailable() : "null"));
+            }
+        }
+        if (filteredMenuList.isEmpty()) {
+            Log.w("MenuAdaptor", "Filtered list is empty");
+        }
+    }
+
+    public void updateList(ArrayList<MenuDomain> newList) {
+        this.menuList = newList != null ? new ArrayList<>(newList) : new ArrayList<>();
+        filterItems();
+        notifyDataSetChanged();
+        Log.d("MenuAdaptor", "Updated list: " + menuList.size() + " items, " + filteredMenuList.size() + " filtered");
     }
 
     @NonNull
@@ -53,22 +72,21 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        MenuDomain menuItem = menuList.get(position);
+        MenuDomain menuItem = filteredMenuList.get(position);
 
-        holder.menuItemTitle.setText(menuItem.getItemName());
-        holder.menuItemDescription.setText(menuItem.getItemDescription());
-        holder.menuItemPrice.setText(MessageFormat.format("֏ {0}", menuItem.getItemPrice()));
+        holder.menuItemTitle.setText(menuItem.getItemName() != null ? menuItem.getItemName() : "");
+        holder.menuItemDescription.setText(menuItem.getItemDescription() != null ? menuItem.getItemDescription() : "");
+        holder.menuItemPrice.setText(MessageFormat.format("֏ {0}", menuItem.getItemPrice() != null ? menuItem.getItemPrice() : "0"));
 
         String imageData = menuItem.getItemImg();
         if (imageData != null && !imageData.isEmpty()) {
             if (imageData.startsWith("http")) {
-                // Load image from URL using Glide (food place's provided URL)
                 Glide.with(context)
                         .load(imageData)
+                        .placeholder(R.drawable.white)
                         .into(holder.menuItemPhoto);
                 holder.menuItemPhoto.setVisibility(View.VISIBLE);
             } else {
-                // Try decoding Base64 image (food place's provided Base64)
                 try {
                     byte[] decodedBytes = Base64.decode(imageData, Base64.DEFAULT);
                     Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
@@ -76,12 +94,11 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
                     holder.menuItemPhoto.setVisibility(View.VISIBLE);
                 } catch (Exception e) {
                     Log.e("MenuAdaptor", "Failed to decode Base64 image for item: " + menuItem.getItemName(), e);
-                    holder.menuItemPhoto.setImageResource(R.drawable.white); // Fallback to placeholder
+                    holder.menuItemPhoto.setImageResource(R.drawable.white);
                     holder.menuItemPhoto.setVisibility(View.VISIBLE);
                 }
             }
         } else {
-            // No image provided by food place, use placeholder
             holder.menuItemPhoto.setImageResource(R.drawable.white);
             holder.menuItemPhoto.setVisibility(View.VISIBLE);
         }
@@ -113,22 +130,16 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
 
     @Override
     public int getItemCount() {
-        return menuList.size();
+        return filteredMenuList.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-
-        TextView menuItemTitle;
-        ImageView menuItemPhoto;
-        TextView menuItemDescription;
-        TextView menuItemPrice;
-        TextView itemCount, prepTime;
-        ImageView plusButton, minusButton;
+        TextView menuItemTitle, menuItemDescription, menuItemPrice, itemCount, prepTime;
+        ImageView menuItemPhoto, plusButton, minusButton;
         View addToCart;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-
             prepTime = itemView.findViewById(R.id.PrepTime);
             menuItemTitle = itemView.findViewById(R.id.MenuItemTitle);
             menuItemPhoto = itemView.findViewById(R.id.MenuItemPhoto);

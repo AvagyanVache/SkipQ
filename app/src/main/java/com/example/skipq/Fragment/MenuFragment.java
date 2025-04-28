@@ -188,13 +188,12 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
     private void filterList(String text) {
         ArrayList<MenuDomain> filteredList = new ArrayList<>();
         for (MenuDomain menuItem : menuList) {
-            if (menuItem.getItemName().toLowerCase().contains(text.toLowerCase())) {
+            if (menuItem.isAvailable() && menuItem.getItemName().toLowerCase().contains(text.toLowerCase())) {
                 filteredList.add(menuItem);
             }
         }
         menuAdaptor.updateList(filteredList);
     }
-
     private void fetchMenuItems() {
         if (restaurantId == null || restaurantId.isEmpty()) {
             Log.e("MenuFragment", "Restaurant ID is null or empty");
@@ -202,69 +201,52 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
             return;
         }
 
-        menuList.clear();
-
-        Log.d("MenuFragment", "Fetching menu for restaurant: " + restaurantId);
-
         db.collection("FoodPlaces")
                 .document(restaurantId)
                 .collection("Menu")
-                .get()
-                .addOnSuccessListener(menuSnapshots -> {
-                    if (menuSnapshots.isEmpty()) {
-                        Log.e("MenuFragment", "No menus found for restaurant: " + restaurantId);
-                        Toast.makeText(getContext(), "No menus available", Toast.LENGTH_SHORT).show();
+                .document("DefaultMenu")
+                .collection("Items")
+                .addSnapshotListener((snapshots, e) -> {
+                    if (e != null) {
+                        Log.e("Firestore", "Error listening for menu items", e);
+                        Toast.makeText(getContext(), "Failed to load items: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    Log.d("MenuFragment", "Found " + menuSnapshots.size() + " menus");
+                    menuList.clear();
+                    if (snapshots != null && !snapshots.isEmpty()) {
+                        for (QueryDocumentSnapshot itemDoc : snapshots) {
+                            Boolean isAvailable = itemDoc.getBoolean("Available");
+                            // Include items where Available is true or null (default to true)
+                            if (isAvailable == null || isAvailable) {
+                                MenuDomain menuItem = new MenuDomain();
+                                menuItem.setItemName(itemDoc.getString("Item Name"));
+                                menuItem.setItemDescription(itemDoc.getString("Item Description"));
+                                menuItem.setItemPrice(itemDoc.getString("Item Price"));
+                                menuItem.setItemImg(itemDoc.getString("Item Img"));
+                                menuItem.setRestaurantId(restaurantId);
+                                menuItem.setAvailable(true); // Explicitly set to true for display
 
-                    for (QueryDocumentSnapshot menuDoc : menuSnapshots) {
-                        String menuId = menuDoc.getId();
-                        Log.d("MenuFragment", "Fetching items for menu: " + menuId);
+                                if (itemDoc.contains("Prep Time")) {
+                                    menuItem.setPrepTime(itemDoc.getLong("Prep Time").intValue());
+                                } else {
+                                    menuItem.setPrepTime(0);
+                                }
 
-                        db.collection("FoodPlaces")
-                                .document(restaurantId)
-                                .collection("Menu")
-                                .document(menuId)
-                                .collection("Items")
-                                .get()
-                                .addOnSuccessListener(itemSnapshots -> {
-                                    if (itemSnapshots.isEmpty()) {
-                                        Log.e("MenuFragment", "No items found for menu: " + menuId);
-                                        return;
-                                    }
-
-                                    Log.d("MenuFragment", "Found " + itemSnapshots.size() + " items for menu: " + menuId);
-
-                                    for (QueryDocumentSnapshot itemDoc : itemSnapshots) {
-                                        MenuDomain menuItem = new MenuDomain();
-                                        menuItem.setItemName(itemDoc.getString("Item Name"));
-                                        menuItem.setItemDescription(itemDoc.getString("Item Description"));
-                                        menuItem.setItemPrice(itemDoc.getString("Item Price"));
-                                        menuItem.setItemImg(itemDoc.getString("Item Img"));
-                                        menuItem.setRestaurantId(restaurantId);
-
-                                        if (itemDoc.contains("Prep Time")) {
-                                            menuItem.setPrepTime(itemDoc.getLong("Prep Time").intValue());
-                                        } else {
-                                            menuItem.setPrepTime(0);
-                                        }
-
-                                        menuList.add(menuItem);
-                                    }
-
-                                    menuAdaptor.notifyDataSetChanged();
-                                })
-                                .addOnFailureListener(e -> {
-                                    Log.e("Firestore", "Error fetching menu items", e);
-                                    Toast.makeText(getContext(), "Failed to load items", Toast.LENGTH_SHORT).show();
-                                });
+                                menuList.add(menuItem);
+                                Log.d("MenuFragment", "Added item: " + menuItem.getItemName() + ", Available: " + isAvailable);
+                            } else {
+                                Log.d("MenuFragment", "Skipped item: " + itemDoc.getString("Item Name") + ", Available: " + isAvailable);
+                            }
+                        }
+                    } else {
+                        Log.w("MenuFragment", "No items found in snapshot");
+                        Toast.makeText(getContext(), "No available items", Toast.LENGTH_SHORT).show();
                     }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("Firestore", "Error fetching menu", e);
-                    Toast.makeText(getContext(), "Failed to load menu", Toast.LENGTH_SHORT).show();
+
+                    // Update adapter
+                    menuAdaptor.updateList(menuList);
+                    Log.d("MenuFragment", "Updated menu with " + menuList.size() + " items");
                 });
     }
 

@@ -14,6 +14,8 @@ public class MenuDomain implements Parcelable {
     private int prepTime;
     private RestaurantDomain restaurant;
     private String restaurantId;
+    private boolean available;
+
 
     public MenuDomain() {}
 
@@ -79,8 +81,13 @@ public class MenuDomain implements Parcelable {
     public void setItemPrice(String itemPrice) {
         this.itemPrice = (itemPrice != null && !itemPrice.trim().isEmpty()) ? itemPrice : "0.0";
     }
+    public boolean isAvailable() {
+        return available;
+    }
 
-
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
     public String getItemImg() {
         return itemImg;
     }
