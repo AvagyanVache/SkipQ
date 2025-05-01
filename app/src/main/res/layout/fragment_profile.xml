@@ -116,25 +116,234 @@
                     android:textColorHint="#B0FFFFFF"
                     android:backgroundTint="@color/white" />
 
-                <EditText
-                    android:id="@+id/restaurantOperatingHours"
+                <LinearLayout
+                    android:id="@+id/operatingHoursSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:hint="Operating Hours (e.g., Mon-Fri 9AM-9PM)"
-                    android:inputType="text"
-                    android:textColor="@color/white"
-                    android:textColorHint="#B0FFFFFF"
-                    android:backgroundTint="@color/white" />
+                    android:orientation="vertical">
 
-                <!-- Addresses Dropdown Section -->
+                   <LinearLayout
+                       android:layout_width="wrap_content"
+                       android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Operating Hours"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                    <ImageView
+                        android:id="@+id/dropdownOperatingHours"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/dropdown"
+                        app:tint="@color/white" />
+                   </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingVertical="4dp">
+
+                        <CheckBox
+                            android:id="@+id/mondayCheckbox"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Monday"
+                            android:textColor="@color/white" />
+
+                        <EditText
+                            android:id="@+id/mondayHours"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:hint="e.g., 09:00-17:00"
+                            android:inputType="text"
+                            android:textColor="@color/white"
+                            android:textColorHint="#B0FFFFFF"
+                            android:backgroundTint="@color/white"
+                            android:enabled="false" />
+                    </LinearLayout>
+
+                    <!-- Tuesday -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingVertical="4dp">
+
+                        <CheckBox
+                            android:id="@+id/tuesdayCheckbox"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tuesday"
+                            android:textColor="@color/white" />
+
+                        <EditText
+                            android:id="@+id/tuesdayHours"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:hint="e.g., 09:00-17:00"
+                            android:inputType="text"
+                            android:textColor="@color/white"
+                            android:textColorHint="#B0FFFFFF"
+                            android:backgroundTint="@color/white"
+                            android:enabled="false" />
+                    </LinearLayout>
+
+                    <!-- Wednesday -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingVertical="4dp">
+
+                        <CheckBox
+                            android:id="@+id/wednesdayCheckbox"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Wednesday"
+                            android:textColor="@color/white" />
+
+                        <EditText
+                            android:id="@+id/wednesdayHours"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:hint="e.g., 09:00-17:00"
+                            android:inputType="text"
+                            android:textColor="@color/white"
+                            android:textColorHint="#B0FFFFFF"
+                            android:backgroundTint="@color/white"
+                            android:enabled="false" />
+                    </LinearLayout>
+
+                    <!-- Thursday -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingVertical="4dp">
+
+                        <CheckBox
+                            android:id="@+id/thursdayCheckbox"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Thursday"
+                            android:textColor="@color/white" />
+
+                        <EditText
+                            android:id="@+id/thursdayHours"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:hint="e.g., 09:00-17:00"
+                            android:inputType="text"
+                            android:textColor="@color/white"
+                            android:textColorHint="#B0FFFFFF"
+                            android:backgroundTint="@color/white"
+                            android:enabled="false" />
+                    </LinearLayout>
+
+                    <!-- Friday -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingVertical="4dp">
+
+                        <CheckBox
+                            android:id="@+id/fridayCheckbox"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Friday"
+                            android:textColor="@color/white" />
+
+                        <EditText
+                            android:id="@+id/fridayHours"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:hint="e.g., 09:00-17:00"
+                            android:inputType="text"
+                            android:textColor="@color/white"
+                            android:textColorHint="#B0FFFFFF"
+                            android:backgroundTint="@color/white"
+                            android:enabled="false" />
+                    </LinearLayout>
+
+                    <!-- Saturday -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingVertical="4dp">
+
+                        <CheckBox
+                            android:id="@+id/saturdayCheckbox"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Saturday"
+                            android:textColor="@color/white" />
+
+                        <EditText
+                            android:id="@+id/saturdayHours"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:hint="e.g., 09:00-17:00"
+                            android:inputType="text"
+                            android:textColor="@color/white"
+                            android:textColorHint="#B0FFFFFF"
+                            android:backgroundTint="@color/white"
+                            android:enabled="false" />
+                    </LinearLayout>
+
+                    <!-- Sunday -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingVertical="4dp">
+
+                        <CheckBox
+                            android:id="@+id/sundayCheckbox"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sunday"
+                            android:textColor="@color/white" />
+
+                        <EditText
+                            android:id="@+id/sundayHours"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:hint="e.g., 09:00-17:00"
+                            android:inputType="text"
+                            android:textColor="@color/white"
+                            android:textColorHint="#B0FFFFFF"
+                            android:backgroundTint="@color/white"
+                            android:enabled="false" />
+                    </LinearLayout>
+                </LinearLayout>
                 <LinearLayout
                     android:id="@+id/addressesSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:layout_marginTop="20dp">
-
+                   <LinearLayout
+                       android:layout_width="wrap_content"
+                       android:layout_height="wrap_content">
                     <TextView
                         android:id="@+id/addressesTitle"
                         android:layout_width="wrap_content"
@@ -144,7 +353,13 @@
                         android:textColor="@color/white"
                         android:textSize="18sp"
                         android:textStyle="bold" />
-
+                    <ImageView
+                        android:id="@+id/dropdownAddresses"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/dropdown"
+                        app:tint="@color/white" />
+                    </LinearLayout>
                     <LinearLayout
                         android:id="@+id/addressesContainer"
                         android:layout_width="match_parent"

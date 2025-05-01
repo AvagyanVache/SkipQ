@@ -49,6 +49,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import android.content.pm.PackageManager;
 import androidx.core.app.ActivityCompat;
 import android.Manifest;
@@ -63,8 +65,10 @@ public class ProfileFragment extends Fragment {
     private TextView userNameSurname, userEmail, userPhoneNumber, profileTitle;
     private ImageView profilePicture;
     // Restaurant-specific views
-    private EditText restaurantName, restaurantContactPhone, restaurantOperatingHours;
+    private EditText restaurantName, restaurantContactPhone;
     private ImageView restaurantLogo;
+    private CheckBox mondayCheckbox, tuesdayCheckbox, wednesdayCheckbox, thursdayCheckbox, fridayCheckbox, saturdayCheckbox, sundayCheckbox;
+    private EditText mondayHours, tuesdayHours, wednesdayHours, thursdayHours, fridayHours, saturdayHours, sundayHours;
     private LinearLayout restaurantProfileSection, addressesContainer, addressesSection;
     private Button saveRestaurantChanges, addAddressButton;
     private Button btnLogout;
@@ -77,7 +81,7 @@ public class ProfileFragment extends Fragment {
     private ActivityResultLauncher<Intent> profilePicturePickerLauncher;
     private String originalName = "";
     private String originalContactPhone = "";
-    private String originalOperatingHours = "";
+    private Map<String, String> originalOperatingHours = new HashMap<>();
     private String originalLogoUrl = "";
     private List<Map<String, Object>> originalAddresses = new ArrayList<>();
 
@@ -141,13 +145,46 @@ public class ProfileFragment extends Fragment {
         restaurantProfileSection = view.findViewById(R.id.restaurantProfileSection);
         restaurantName = view.findViewById(R.id.restaurantName);
         restaurantContactPhone = view.findViewById(R.id.restaurantContactPhone);
-        restaurantOperatingHours = view.findViewById(R.id.restaurantOperatingHours);
         restaurantLogo = view.findViewById(R.id.restaurantLogo);
         addressesContainer = view.findViewById(R.id.addressesContainer);
         addressesSection = view.findViewById(R.id.addressesSection);
         saveRestaurantChanges = view.findViewById(R.id.saveRestaurantChanges);
         addAddressButton = view.findViewById(R.id.addAddressButton);
         btnLogout = view.findViewById(R.id.btnLogout);
+
+        mondayCheckbox = view.findViewById(R.id.mondayCheckbox);
+        tuesdayCheckbox = view.findViewById(R.id.tuesdayCheckbox);
+        wednesdayCheckbox = view.findViewById(R.id.wednesdayCheckbox);
+        thursdayCheckbox = view.findViewById(R.id.thursdayCheckbox);
+        fridayCheckbox = view.findViewById(R.id.fridayCheckbox);
+        saturdayCheckbox = view.findViewById(R.id.saturdayCheckbox);
+        sundayCheckbox = view.findViewById(R.id.sundayCheckbox);
+        mondayHours = view.findViewById(R.id.mondayHours);
+        tuesdayHours = view.findViewById(R.id.tuesdayHours);
+        wednesdayHours = view.findViewById(R.id.wednesdayHours);
+        thursdayHours = view.findViewById(R.id.thursdayHours);
+        fridayHours = view.findViewById(R.id.fridayHours);
+        saturdayHours = view.findViewById(R.id.saturdayHours);
+        sundayHours = view.findViewById(R.id.sundayHours);
+
+// Setup operating hours checkboxes
+        setupOperatingHoursCheckbox(mondayCheckbox, mondayHours);
+        setupOperatingHoursCheckbox(tuesdayCheckbox, tuesdayHours);
+        setupOperatingHoursCheckbox(wednesdayCheckbox, wednesdayHours);
+        setupOperatingHoursCheckbox(thursdayCheckbox, thursdayHours);
+        setupOperatingHoursCheckbox(fridayCheckbox, fridayHours);
+        setupOperatingHoursCheckbox(saturdayCheckbox, saturdayHours);
+        setupOperatingHoursCheckbox(sundayCheckbox, sundayHours);
+
+// Setup text watchers for operating hours
+        setupOperatingHoursTextWatcher(mondayHours);
+        setupOperatingHoursTextWatcher(tuesdayHours);
+        setupOperatingHoursTextWatcher(wednesdayHours);
+        setupOperatingHoursTextWatcher(thursdayHours);
+        setupOperatingHoursTextWatcher(fridayHours);
+        setupOperatingHoursTextWatcher(saturdayHours);
+        setupOperatingHoursTextWatcher(sundayHours);
+
 
         // Setup UI based on role
         if ("restaurant".equals(userRole)) {
@@ -242,7 +279,28 @@ public class ProfileFragment extends Fragment {
             requireActivity().finish();
         });
     }
+    private void setupOperatingHoursCheckbox(CheckBox checkBox, EditText hoursField) {
+        checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            hoursField.setEnabled(isChecked);
+            if (!isChecked) {
+                hoursField.setText("");
+            }
+            checkForChanges();
+        });
+    }
 
+    private void setupOperatingHoursTextWatcher(EditText hoursField) {
+        hoursField.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                checkForChanges();
+            }
+        });
+    }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -264,7 +322,6 @@ public class ProfileFragment extends Fragment {
         restaurantProfileSection.setVisibility(View.VISIBLE);
         restaurantName.setVisibility(View.VISIBLE);
         restaurantContactPhone.setVisibility(View.VISIBLE);
-        restaurantOperatingHours.setVisibility(View.VISIBLE);
         restaurantLogo.setVisibility(View.VISIBLE);
         addressesSection.setVisibility(View.VISIBLE);
         userNameSurname.setVisibility(View.GONE);
@@ -287,11 +344,31 @@ public class ProfileFragment extends Fragment {
         view.findViewById(R.id.divider5).setVisibility(View.GONE);
         view.findViewById(R.id.divider6).setVisibility(View.GONE);
 
+        LinearLayout operatingHoursSection = view.findViewById(R.id.operatingHoursSection);
+        ImageView dropdownOperatingHours = view.findViewById(R.id.dropdownOperatingHours);
+        ImageView dropdownAddresses = view.findViewById(R.id.dropdownAddresses);
+        for (int i = 1; i < operatingHoursSection.getChildCount(); i++) {
+            operatingHoursSection.getChildAt(i).setVisibility(View.GONE);
+        }
+
+        // Setup dropdown for operating hours
+        dropdownOperatingHours.setOnClickListener(v -> {
+            boolean isVisible = operatingHoursSection.getChildAt(1).getVisibility() == View.VISIBLE;
+            for (int i = 1; i < operatingHoursSection.getChildCount(); i++) {
+                operatingHoursSection.getChildAt(i).setVisibility(isVisible ? View.GONE : View.VISIBLE);
+            }
+            // Rotate dropdown icon
+            dropdownOperatingHours.animate().rotation(isVisible ? 0 : 180).setDuration(200).start();
+            Log.d(TAG, "Operating hours dropdown toggled: " + (isVisible ? "collapsed" : "expanded"));
+        });
+
         // Setup dropdown for addresses
-        addressesSection.setOnClickListener(v -> {
+        dropdownAddresses.setOnClickListener(v -> {
             boolean isVisible = addressesContainer.getVisibility() == View.VISIBLE;
             addressesContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
             addAddressButton.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+            // Rotate dropdown icon
+            dropdownAddresses.animate().rotation(isVisible ? 0 : 180).setDuration(200).start();
             Log.d(TAG, "Addresses dropdown toggled: " + (isVisible ? "collapsed" : "expanded"));
         });
 
@@ -317,19 +394,7 @@ public class ProfileFragment extends Fragment {
                 checkForChanges();
             }
         });
-
-        restaurantOperatingHours.addTextChangedListener(new android.text.TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override
-            public void afterTextChanged(android.text.Editable s) {
-                checkForChanges();
-            }
-        });
-
-        restaurantLogo.setOnClickListener(v -> {
+                restaurantLogo.setOnClickListener(v -> {
             Log.d(TAG, "Restaurant logo clicked");
             String permission;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -357,9 +422,9 @@ public class ProfileFragment extends Fragment {
         addAddressButton.setOnClickListener(v -> {
             Log.d(TAG, "Add address button clicked");
             addNewAddressField();
-            // Ensure dropdown is expanded
             addressesContainer.setVisibility(View.VISIBLE);
             addAddressButton.setVisibility(View.VISIBLE);
+            dropdownAddresses.setRotation(180);
         });
 
         saveRestaurantChanges.setOnClickListener(v -> {
@@ -473,17 +538,25 @@ public class ProfileFragment extends Fragment {
                         if (documentSnapshot.exists() && isAdded()) {
                             String name = documentSnapshot.getString("name");
                             String contactPhone = documentSnapshot.getString("contactPhone");
-                            String operatingHours = documentSnapshot.getString("operatingHours");
+                            Map<String, Object> operatingHoursMap = (Map<String, Object>) documentSnapshot.get("operatingHours");
 
                             // Store original values
                             originalName = name != null ? name : "";
                             originalContactPhone = contactPhone != null ? contactPhone : "";
-                            originalOperatingHours = operatingHours != null ? operatingHours : "";
-                            originalLogoUrl = documentSnapshot.getString("logoUrl") != null ? documentSnapshot.getString("logoUrl") : "";
+                            originalOperatingHours.clear();
+                            if (operatingHoursMap != null) {
+                                originalOperatingHours.putAll(
+                                        operatingHoursMap.entrySet().stream()
+                                                .filter(e -> e.getValue() instanceof String)
+                                                .collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()))
+                                );
+                            }
 
                             restaurantName.setText(originalName);
                             restaurantContactPhone.setText(originalContactPhone);
-                            restaurantOperatingHours.setText(originalOperatingHours);
+
+                            // Load operating hours
+                            loadOperatingHours(operatingHoursMap);
 
                             // Load logo
                             if (!isNetworkAvailable()) {
@@ -580,6 +653,68 @@ public class ProfileFragment extends Fragment {
         }
     }
 
+    private void loadOperatingHours(Map<String, Object> operatingHoursMap) {
+        // Reset all checkboxes and fields
+        mondayCheckbox.setChecked(false);
+        tuesdayCheckbox.setChecked(false);
+        wednesdayCheckbox.setChecked(false);
+        thursdayCheckbox.setChecked(false);
+        fridayCheckbox.setChecked(false);
+        saturdayCheckbox.setChecked(false);
+        sundayCheckbox.setChecked(false);
+        mondayHours.setText("");
+        tuesdayHours.setText("");
+        wednesdayHours.setText("");
+        thursdayHours.setText("");
+        fridayHours.setText("");
+        saturdayHours.setText("");
+        sundayHours.setText("");
+        mondayHours.setEnabled(false);
+        tuesdayHours.setEnabled(false);
+        wednesdayHours.setEnabled(false);
+        thursdayHours.setEnabled(false);
+        fridayHours.setEnabled(false);
+        saturdayHours.setEnabled(false);
+        sundayHours.setEnabled(false);
+
+        if (operatingHoursMap != null) {
+            if (operatingHoursMap.containsKey("Monday")) {
+                mondayCheckbox.setChecked(true);
+                mondayHours.setEnabled(true);
+                mondayHours.setText((String) operatingHoursMap.get("Monday"));
+            }
+            if (operatingHoursMap.containsKey("Tuesday")) {
+                tuesdayCheckbox.setChecked(true);
+                tuesdayHours.setEnabled(true);
+                tuesdayHours.setText((String) operatingHoursMap.get("Tuesday"));
+            }
+            if (operatingHoursMap.containsKey("Wednesday")) {
+                wednesdayCheckbox.setChecked(true);
+                wednesdayHours.setEnabled(true);
+                wednesdayHours.setText((String) operatingHoursMap.get("Wednesday"));
+            }
+            if (operatingHoursMap.containsKey("Thursday")) {
+                thursdayCheckbox.setChecked(true);
+                thursdayHours.setEnabled(true);
+                thursdayHours.setText((String) operatingHoursMap.get("Thursday"));
+            }
+            if (operatingHoursMap.containsKey("Friday")) {
+                fridayCheckbox.setChecked(true);
+                fridayHours.setEnabled(true);
+                fridayHours.setText((String) operatingHoursMap.get("Friday"));
+            }
+            if (operatingHoursMap.containsKey("Saturday")) {
+                saturdayCheckbox.setChecked(true);
+                saturdayHours.setEnabled(true);
+                saturdayHours.setText((String) operatingHoursMap.get("Saturday"));
+            }
+            if (operatingHoursMap.containsKey("Sunday")) {
+                sundayCheckbox.setChecked(true);
+                sundayHours.setEnabled(true);
+                sundayHours.setText((String) operatingHoursMap.get("Sunday"));
+            }
+        }
+    }
     private void loadLogoFromStorage(String sanitizedName) {
         StorageReference logoRef = storage.getReference().child("restaurant_logos/" + sanitizedName + "_logo.jpg");
         logoRef.getDownloadUrl()
@@ -777,13 +912,34 @@ public class ProfileFragment extends Fragment {
 
         String name = restaurantName.getText().toString().trim();
         String contactPhone = restaurantContactPhone.getText().toString().trim();
-        String operatingHours = restaurantOperatingHours.getText().toString().trim();
         String sanitizedName = restaurantId.replaceAll("[^a-zA-Z0-9]", "_"); // Sanitize restaurantId
 
         if (name.isEmpty()) {
             Log.w(TAG, "Restaurant name is empty");
             Toast.makeText(getContext(), "Restaurant name cannot be empty", Toast.LENGTH_SHORT).show();
             return;
+        }
+        Map<String, String> operatingHours = new HashMap<>();
+        if (mondayCheckbox.isChecked() && !mondayHours.getText().toString().trim().isEmpty()) {
+            operatingHours.put("Monday", mondayHours.getText().toString().trim());
+        }
+        if (tuesdayCheckbox.isChecked() && !tuesdayHours.getText().toString().trim().isEmpty()) {
+            operatingHours.put("Tuesday", tuesdayHours.getText().toString().trim());
+        }
+        if (wednesdayCheckbox.isChecked() && !wednesdayHours.getText().toString().trim().isEmpty()) {
+            operatingHours.put("Wednesday", wednesdayHours.getText().toString().trim());
+        }
+        if (thursdayCheckbox.isChecked() && !thursdayHours.getText().toString().trim().isEmpty()) {
+            operatingHours.put("Thursday", thursdayHours.getText().toString().trim());
+        }
+        if (fridayCheckbox.isChecked() && !fridayHours.getText().toString().trim().isEmpty()) {
+            operatingHours.put("Friday", fridayHours.getText().toString().trim());
+        }
+        if (saturdayCheckbox.isChecked() && !saturdayHours.getText().toString().trim().isEmpty()) {
+            operatingHours.put("Saturday", saturdayHours.getText().toString().trim());
+        }
+        if (sundayCheckbox.isChecked() && !sundayHours.getText().toString().trim().isEmpty()) {
+            operatingHours.put("Sunday", sundayHours.getText().toString().trim());
         }
 
         List<Map<String, Object>> updatedAddresses = new ArrayList<>();
@@ -905,9 +1061,16 @@ public class ProfileFragment extends Fragment {
             hasChanges = true;
         }
 
-        // Check operating hours
-        String currentHours = restaurantOperatingHours.getText().toString().trim();
-        if (!currentHours.equals(originalOperatingHours)) {
+        Map<String, String> currentOperatingHours = new HashMap<>();
+        if (mondayCheckbox.isChecked()) currentOperatingHours.put("Monday", mondayHours.getText().toString().trim());
+        if (tuesdayCheckbox.isChecked()) currentOperatingHours.put("Tuesday", tuesdayHours.getText().toString().trim());
+        if (wednesdayCheckbox.isChecked()) currentOperatingHours.put("Wednesday", wednesdayHours.getText().toString().trim());
+        if (thursdayCheckbox.isChecked()) currentOperatingHours.put("Thursday", thursdayHours.getText().toString().trim());
+        if (fridayCheckbox.isChecked()) currentOperatingHours.put("Friday", fridayHours.getText().toString().trim());
+        if (saturdayCheckbox.isChecked()) currentOperatingHours.put("Saturday", saturdayHours.getText().toString().trim());
+        if (sundayCheckbox.isChecked()) currentOperatingHours.put("Sunday", sundayHours.getText().toString().trim());
+
+        if (!currentOperatingHours.equals(originalOperatingHours)) {
             hasChanges = true;
         }
 

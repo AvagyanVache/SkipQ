@@ -40,6 +40,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class MenuFragment extends Fragment implements OnMapReadyCallback {
 
@@ -342,18 +343,30 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         String name = documentSnapshot.getString("name");
-                        String operatingHours = documentSnapshot.getString("operatingHours");
-                        String contactPhone = documentSnapshot.getString("contactPhone");
+                        Map<String, String> operatingHours = (Map<String, String>) documentSnapshot.get("operatingHours");                        String contactPhone = documentSnapshot.getString("contactPhone");
+                        StringBuilder hoursText = new StringBuilder();
+                        if (operatingHours == null || operatingHours.isEmpty()) {
+                            hoursText.append("Not specified");
+                        } else {
+                            String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+                            for (String day : days) {
+                                if (operatingHours.containsKey(day)) {
+                                    hoursText.append(day).append(": ").append(operatingHours.get(day)).append("\n");
+                                } else {
+                                    hoursText.append(day).append(": Closed\n");
+                                }
+                            }
+                        }
 
                         LayoutInflater inflater = LayoutInflater.from(getContext());
                         View dialogView = inflater.inflate(R.layout.dialog_restaurant_info, null);
 
                         TextView nameText = dialogView.findViewById(R.id.restaurant_name);
-                        TextView hoursText = dialogView.findViewById(R.id.operating_hours);
+                        TextView hoursTextView = dialogView.findViewById(R.id.operating_hours);
                         TextView phoneText = dialogView.findViewById(R.id.contact_phone);
 
                         nameText.setText(name != null ? name : "N/A");
-                        hoursText.setText(operatingHours != null ? operatingHours : "N/A");
+                        hoursTextView.setText(hoursText.toString());
                         phoneText.setText(contactPhone != null ? contactPhone : "N/A");
 
                         AlertDialog dialog = new AlertDialog.Builder(requireContext())
