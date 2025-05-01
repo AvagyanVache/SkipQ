@@ -21,6 +21,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
 import com.example.skipq.Activity.MainActivity;
 import com.example.skipq.Adaptor.MenuAdaptor;
 import com.example.skipq.CartManager;
@@ -172,7 +174,9 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
             }
         };
 
-        menuAdaptor = new MenuAdaptor(requireContext(), menuList, onAddToCartListener);
+        MenuAdaptor.OnItemClickListener onItemClickListener = item -> showItemDetailsDialog(item);
+
+        menuAdaptor = new MenuAdaptor(requireContext(), menuList, onAddToCartListener, onItemClickListener);
         recyclerViewMenu.setAdapter(menuAdaptor);
 
         setupAddressSpinner();
@@ -249,7 +253,41 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
                     Log.d("MenuFragment", "Updated menu with " + menuList.size() + " items");
                 });
     }
+    private void showItemDetailsDialog(MenuDomain item) {
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View dialogView = inflater.inflate(R.layout.dialog_menu_item_details, null);
 
+        ImageView itemImage = dialogView.findViewById(R.id.item_image);
+        TextView itemName = dialogView.findViewById(R.id.item_name);
+        TextView itemDescription = dialogView.findViewById(R.id.item_description);
+        TextView itemPrice = dialogView.findViewById(R.id.item_price);
+        TextView itemPrepTime = dialogView.findViewById(R.id.item_prep_time);
+
+        itemName.setText(item.getItemName() != null ? item.getItemName() : "N/A");
+        itemDescription.setText(item.getItemDescription() != null ? item.getItemDescription() : "No description"); // Full description
+        double price = 0.0;
+        try {
+            price = Double.parseDouble(item.getItemPrice() != null ? item.getItemPrice() : "0");
+        } catch (NumberFormatException e) {
+            Log.e("MenuFragment", "Invalid price format for item: " + item.getItemName(), e);
+        }
+        itemPrice.setText(String.format("֏ %.2f", price));
+        itemPrepTime.setText(String.format("%d min", item.getPrepTime()));
+
+        if (item.getItemImg() != null && !item.getItemImg().isEmpty() && item.getItemImg().startsWith("http")) {
+            Glide.with(getContext())
+                    .load(item.getItemImg())
+
+                    .into(itemImage);
+        }
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setTitle("Item Details")
+                .setView(dialogView)
+                .setPositiveButton("OK", (d, which) -> d.dismiss())
+                .create();
+        dialog.show();
+    }
     private void fetchRestaurantAddresses() {
         if (restaurantId == null || restaurantId.isEmpty()) {
             Log.e("MenuFragment", "Restaurant ID is null or empty for addresses");

@@ -2,6 +2,8 @@ package com.example.skipq.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
@@ -34,7 +36,6 @@ public class RestaurantSignUpActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        // Back button click listener
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -42,7 +43,6 @@ public class RestaurantSignUpActivity extends AppCompatActivity {
             }
         });
 
-        // Continue button click listener
         continueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -53,7 +53,9 @@ public class RestaurantSignUpActivity extends AppCompatActivity {
                 if (validateInput(email, password, confirmPassword)) {
                     signUpUser(email, password);
                 }
+
             }
+
         });
     }
 
@@ -82,21 +84,54 @@ public class RestaurantSignUpActivity extends AppCompatActivity {
                             user.sendEmailVerification()
                                     .addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
-                                            Toast.makeText(this, "Verification email sent!", Toast.LENGTH_SHORT).show();
-                                            // Pass email and password to the next activity
-                                            Intent intent = new Intent(RestaurantSignUpActivity.this, RestaurantSignUpActivity2.class);
-                                            intent.putExtra("email", email);
-                                            intent.putExtra("password", password);
-                                            intent.putExtra("uid", user.getUid()); // Pass UID for Firestore
-                                            startActivity(intent);
+                                            Toast.makeText(this, "Verification email sent! Please verify your email.", Toast.LENGTH_LONG).show();
+                                            // Periodically check email verification status
+                                            checkEmailVerification(user, email, password);
                                         } else {
-                                            Toast.makeText(this, "Failed to send verification email", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(this, "Failed to send verification email: " + task1.getException().getMessage(), Toast.LENGTH_SHORT).show();
                                         }
                                     });
+                        } else {
+                            Toast.makeText(this, "Sign-up failed: User not found", Toast.LENGTH_SHORT).show();
                         }
                     } else {
                         Toast.makeText(this, "Sign-up failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private void checkEmailVerification(FirebaseUser user, String email, String password) {
+        // Disable continue button to prevent multiple clicks
+        continueButton.setEnabled(false);
+        continueButton.setText("Verify Email...");
+
+        // Create a handler to periodically check verification
+        Handler handler = new Handler(Looper.getMainLooper());
+        Runnable checkVerification = new Runnable() {
+            @Override
+            public void run() {
+                user.reload().addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        if (user.isEmailVerified()) {
+                            // Email verified, proceed to next activity
+                            Intent intent = new Intent(RestaurantSignUpActivity.this, RestaurantSignUpActivity2.class);
+                            intent.putExtra("email", email);
+                            intent.putExtra("password", password);
+                            intent.putExtra("uid", user.getUid());
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            // Email not verified, check again after 3 seconds
+                            handler.postDelayed(this, 3000);
+                        }
+                    } else {
+                        Toast.makeText(RestaurantSignUpActivity.this, "Error checking verification: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                        continueButton.setEnabled(true);
+                        continueButton.setText("Continue");
+                    }
+                });
+            }
+        };
+        handler.post(checkVerification);
     }
 }

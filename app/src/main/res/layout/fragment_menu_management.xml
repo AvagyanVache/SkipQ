@@ -72,7 +72,7 @@
                         android:id="@+id/textInputLayout1"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="15dp">
+                        >
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/item_name"
                             android:layout_width="match_parent"
@@ -83,7 +83,7 @@
                         android:id="@+id/textInputLayout2"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="15dp">
+                        >
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/item_price"
                             android:layout_width="match_parent"
@@ -94,7 +94,7 @@
                         android:id="@+id/textInputLayout3"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="15dp">
+                        >
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/item_prep_time"
                             android:layout_width="match_parent"
@@ -105,19 +105,13 @@
                         android:id="@+id/textInputLayout4"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="15dp">
+                        >
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/item_description"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="Item Description" />
                     </com.google.android.material.textfield.TextInputLayout>
-                    <Switch
-                        android:id="@+id/availability_switch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Available"
-                        android:checked="true" />
                     <TextView
                         android:id="@+id/item_img"
                         android:layout_width="match_parent"
@@ -126,6 +120,13 @@
                         android:textSize="20sp"
                         android:textColor="@color/secondary_color"
                         android:hint="Upload Image" />
+                    <Switch
+                        android:id="@+id/availability_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Available"
+                        android:checked="true" />
+
 
 
                 </LinearLayout>

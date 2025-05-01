@@ -109,6 +109,7 @@ public class SignupActivity extends AppCompatActivity {
         Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("email", email);
         userInfo.put("password", password);
+        userInfo.put("role", "user");
         Log.d("Firestore", "Saving user data: " + userInfo);
 
         db.collection("users").document(user.getUid())

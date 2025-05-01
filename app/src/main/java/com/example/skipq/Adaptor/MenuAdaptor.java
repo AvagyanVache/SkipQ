@@ -26,17 +26,21 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
     private ArrayList<MenuDomain> menuList;
     private ArrayList<MenuDomain> filteredMenuList;
     private OnAddToCartListener onAddToCartListener;
-
+    private OnItemClickListener itemClickListener;
     public interface OnAddToCartListener {
         void onAddToCart(MenuDomain menuItem);
         void onItemAdded(MenuDomain item);
     }
+    public interface OnItemClickListener {
+        void onItemClick(MenuDomain item);
+    }
 
-    public MenuAdaptor(Context context, ArrayList<MenuDomain> menuList, OnAddToCartListener onAddToCartListener) {
+    public MenuAdaptor(Context context, ArrayList<MenuDomain> menuList, OnAddToCartListener onAddToCartListener,OnItemClickListener itemClickListener) {
         this.context = context;
         this.menuList = menuList != null ? new ArrayList<>(menuList) : new ArrayList<>();
         this.onAddToCartListener = onAddToCartListener;
         this.filteredMenuList = new ArrayList<>();
+        this.itemClickListener = itemClickListener;
         filterItems();
         Log.d("MenuAdaptor", "Initialized with " + this.menuList.size() + " items, " + filteredMenuList.size() + " filtered");
     }
@@ -75,36 +79,35 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
         MenuDomain menuItem = filteredMenuList.get(position);
 
         holder.menuItemTitle.setText(menuItem.getItemName() != null ? menuItem.getItemName() : "");
-        holder.menuItemDescription.setText(menuItem.getItemDescription() != null ? menuItem.getItemDescription() : "");
-        holder.menuItemPrice.setText(MessageFormat.format("֏ {0}", menuItem.getItemPrice() != null ? menuItem.getItemPrice() : "0"));
+        // Shorten description to 2-3 words
+        String fullDescription = menuItem.getItemDescription() != null ? menuItem.getItemDescription() : "";
+        String shortDescription = shortenDescription(fullDescription);
+        holder.menuItemDescription.setText(shortDescription);
 
-        String imageData = menuItem.getItemImg();
-        if (imageData != null && !imageData.isEmpty()) {
-            if (imageData.startsWith("http")) {
-                Glide.with(context)
-                        .load(imageData)
-                        .placeholder(R.drawable.white)
-                        .into(holder.menuItemPhoto);
-                holder.menuItemPhoto.setVisibility(View.VISIBLE);
-            } else {
-                try {
-                    byte[] decodedBytes = Base64.decode(imageData, Base64.DEFAULT);
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-                    holder.menuItemPhoto.setImageBitmap(bitmap);
-                    holder.menuItemPhoto.setVisibility(View.VISIBLE);
-                } catch (Exception e) {
-                    Log.e("MenuAdaptor", "Failed to decode Base64 image for item: " + menuItem.getItemName(), e);
-                    holder.menuItemPhoto.setImageResource(R.drawable.white);
-                    holder.menuItemPhoto.setVisibility(View.VISIBLE);
-                }
-            }
+        double price = 0.0;
+        try {
+            price = Double.parseDouble(menuItem.getItemPrice() != null ? menuItem.getItemPrice() : "0");
+        } catch (NumberFormatException e) {
+            Log.e("MenuAdaptor", "Invalid price format for item: " + menuItem.getItemName(), e);
+        }
+        holder.menuItemPrice.setText(String.format("֏ %.2f", price));
+        holder.prepTime.setText(MessageFormat.format("{0} min", menuItem.getPrepTime()));
+        holder.itemCount.setText(String.valueOf(menuItem.getItemCount()));
+
+        // Load image from Firebase Storage URL
+        if (menuItem.getItemImg() != null && !menuItem.getItemImg().isEmpty() && menuItem.getItemImg().startsWith("http")) {
+            Glide.with(context)
+                    .load(menuItem.getItemImg())
+                    .into(holder.menuItemPhoto);
+            holder.menuItemPhoto.setVisibility(View.VISIBLE);
         } else {
-            holder.menuItemPhoto.setImageResource(R.drawable.white);
             holder.menuItemPhoto.setVisibility(View.VISIBLE);
         }
 
-        holder.prepTime.setText(MessageFormat.format("{0} min", menuItem.getPrepTime()));
-        holder.itemCount.setText(String.valueOf(menuItem.getItemCount()));
+        // Ensure plus and minus buttons are visible
+        holder.plusButton.setVisibility(View.VISIBLE);
+        holder.minusButton.setVisibility(View.VISIBLE);
+
         holder.addToCart.setOnClickListener(v -> {
             if (menuItem.getItemCount() > 0) {
                 onAddToCartListener.onAddToCart(menuItem);
@@ -126,11 +129,36 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
                 onAddToCartListener.onItemAdded(menuItem);
             }
         });
+
+        // Handle item click
+        holder.itemView.setOnClickListener(v -> {
+            if (itemClickListener != null) {
+                itemClickListener.onItemClick(menuItem);
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
         return filteredMenuList.size();
+    }
+    private String shortenDescription(String description) {
+        if (description.isEmpty()) {
+            return "No description";
+        }
+        String[] words = description.split("\\s+");
+        int wordCount = Math.min(words.length, 3); // Take up to 3 words
+        StringBuilder shortDesc = new StringBuilder();
+        for (int i = 0; i < wordCount; i++) {
+            shortDesc.append(words[i]);
+            if (i < wordCount - 1) {
+                shortDesc.append(" ");
+            }
+        }
+        if (words.length > 3) {
+            shortDesc.append("...");
+        }
+        return shortDesc.toString();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

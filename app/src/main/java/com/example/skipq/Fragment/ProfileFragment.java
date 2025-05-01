@@ -40,6 +40,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import java.io.IOException;
@@ -466,6 +467,7 @@ public class ProfileFragment extends Fragment {
     private void loadRestaurantData() {
         if (restaurantId != null && isAdded()) {
             Log.d(TAG, "Loading restaurant data for ID: " + restaurantId);
+            String sanitizedName = restaurantId.replaceAll("[^a-zA-Z0-9]", "_"); // Sanitize restaurantId
             db.collection("FoodPlaces").document(restaurantId).get()
                     .addOnSuccessListener(documentSnapshot -> {
                         if (documentSnapshot.exists() && isAdded()) {
@@ -483,15 +485,12 @@ public class ProfileFragment extends Fragment {
                             restaurantContactPhone.setText(originalContactPhone);
                             restaurantOperatingHours.setText(originalOperatingHours);
 
-                            // Load logo from Firestore logoUrl
-                            Log.d(TAG, "Fetched logoUrl: " + originalLogoUrl);
-                            Log.d(TAG, "Network available: " + isNetworkAvailable());
-                            Log.d(TAG, "restaurantLogo visibility: " + (restaurantLogo.getVisibility() == View.VISIBLE ? "VISIBLE" : "GONE/INVISIBLE"));
+                            // Load logo
                             if (!isNetworkAvailable()) {
                                 Log.w(TAG, "No internet connection, loading default logo");
                                 Toast.makeText(getContext(), "No internet connection", Toast.LENGTH_SHORT).show();
                                 Glide.with(ProfileFragment.this)
-                                        .load(R.drawable.white) // Replace with your default image resource
+                                        .load(R.drawable.white)
                                         .apply(new RequestOptions()
                                                 .diskCacheStrategy(DiskCacheStrategy.NONE)
                                                 .skipMemoryCache(true))
@@ -503,13 +502,14 @@ public class ProfileFragment extends Fragment {
                                         .apply(new RequestOptions()
                                                 .diskCacheStrategy(DiskCacheStrategy.NONE)
                                                 .skipMemoryCache(true))
-                                        .error(R.drawable.white) // Fallback if URL fails to load
+                                        .error(R.drawable.white)
                                         .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {
                                             @Override
                                             public boolean onLoadFailed(@androidx.annotation.Nullable com.bumptech.glide.load.engine.GlideException e, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
                                                 Log.e(TAG, "Glide failed to load logo: " + originalLogoUrl, e);
-                                                Toast.makeText(getContext(), "Failed to load logo", Toast.LENGTH_SHORT).show();
-                                                return false; // Let Glide handle the error drawable
+                                                // Fallback to Storage
+                                                loadLogoFromStorage(sanitizedName);
+                                                return true;
                                             }
 
                                             @Override
@@ -520,14 +520,8 @@ public class ProfileFragment extends Fragment {
                                         })
                                         .into(restaurantLogo);
                             } else {
-                                Log.w(TAG, "logoUrl is null or empty, loading default logo");
-                                Toast.makeText(getContext(), "No logo available", Toast.LENGTH_SHORT).show();
-                                Glide.with(ProfileFragment.this)
-                                        .load(R.drawable.white) // Replace with your default image resource
-                                        .apply(new RequestOptions()
-                                                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                                                .skipMemoryCache(true))
-                                        .into(restaurantLogo);
+                                Log.w(TAG, "logoUrl is null or empty, attempting to load from Storage");
+                                loadLogoFromStorage(sanitizedName);
                             }
 
                             // Load addresses
@@ -586,6 +580,37 @@ public class ProfileFragment extends Fragment {
         }
     }
 
+    private void loadLogoFromStorage(String sanitizedName) {
+        StorageReference logoRef = storage.getReference().child("restaurant_logos/" + sanitizedName + "_logo.jpg");
+        logoRef.getDownloadUrl()
+                .addOnSuccessListener(uri -> {
+                    String logoUrl = uri.toString();
+                    Log.d(TAG, "Loaded logo from Storage: " + logoUrl);
+                    originalLogoUrl = logoUrl;
+                    Glide.with(ProfileFragment.this)
+                            .load(logoUrl)
+                            .apply(new RequestOptions()
+                                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                    .skipMemoryCache(true))
+                            .error(R.drawable.white)
+                            .into(restaurantLogo);
+                    // Update Firestore with the correct logoUrl
+                    db.collection("FoodPlaces").document(restaurantId)
+                            .update("logoUrl", logoUrl)
+                            .addOnSuccessListener(aVoid -> Log.d(TAG, "Updated logoUrl in Firestore"))
+                            .addOnFailureListener(e -> Log.e(TAG, "Failed to update logoUrl in Firestore", e));
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to load logo from Storage", e);
+                    Toast.makeText(getContext(), "No logo available", Toast.LENGTH_SHORT).show();
+                    Glide.with(ProfileFragment.this)
+                            .load(R.drawable.white)
+                            .apply(new RequestOptions()
+                                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                    .skipMemoryCache(true))
+                            .into(restaurantLogo);
+                });
+    }
     private void addNewAddressField() {
         Log.d(TAG, "Adding new address field");
         addAddressField("", 0.0, 0.0, true);
@@ -753,6 +778,7 @@ public class ProfileFragment extends Fragment {
         String name = restaurantName.getText().toString().trim();
         String contactPhone = restaurantContactPhone.getText().toString().trim();
         String operatingHours = restaurantOperatingHours.getText().toString().trim();
+        String sanitizedName = restaurantId.replaceAll("[^a-zA-Z0-9]", "_"); // Sanitize restaurantId
 
         if (name.isEmpty()) {
             Log.w(TAG, "Restaurant name is empty");
@@ -797,7 +823,7 @@ public class ProfileFragment extends Fragment {
         updates.put("uid", user != null ? user.getUid() : "");
 
         if (logoUri != null) {
-            StorageReference logoRef = storage.getReference().child("restaurant_logos/" + restaurantId + "_logo.jpg");
+            StorageReference logoRef = storage.getReference().child("restaurant_logos/" + sanitizedName + "_logo.jpg");
             logoRef.putFile(logoUri)
                     .addOnSuccessListener(taskSnapshot -> logoRef.getDownloadUrl().addOnSuccessListener(uri -> {
                         String logoUrl = uri.toString();
@@ -807,8 +833,10 @@ public class ProfileFragment extends Fragment {
                         if (user != null) {
                             Map<String, Object> userUpdates = new HashMap<>();
                             userUpdates.put("profilePictureUrl", logoUrl);
+                            userUpdates.put("role", "restaurant");
+                            userUpdates.put("restaurantId", restaurantId);
                             db.collection("users").document(user.getUid())
-                                    .update(userUpdates)
+                                    .set(userUpdates, SetOptions.merge())
                                     .addOnSuccessListener(aVoid -> Log.d(TAG, "User profile picture URL updated: " + logoUrl))
                                     .addOnFailureListener(e -> Log.e(TAG, "Failed to update user profile picture URL", e));
                         }
@@ -816,7 +844,7 @@ public class ProfileFragment extends Fragment {
                         updateFirestore(restaurantRef, updates, updatedAddresses);
                         if (isAdded()) {
                             Log.d(TAG, "Refreshing logo in ProfileFragment with URL: " + logoUrl);
-                            originalLogoUrl = logoUrl; // Update originalLogoUrl
+                            originalLogoUrl = logoUrl;
                             Glide.with(ProfileFragment.this)
                                     .load(logoUrl)
                                     .apply(new RequestOptions()
@@ -824,7 +852,7 @@ public class ProfileFragment extends Fragment {
                                             .skipMemoryCache(true))
                                     .error(R.drawable.white)
                                     .into(restaurantLogo);
-                            logoUri = null; // Clear local logoUri
+                            logoUri = null;
                         }
                     }))
                     .addOnFailureListener(e -> {

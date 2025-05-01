@@ -42,8 +42,17 @@ public class HomeActivity extends AppCompatActivity {
         if ("restaurant".equals(userRole)) {
             bottomNavigationView.getMenu().findItem(R.id.navigationbar_dashboard).setVisible(true);
             bottomNavigationView.getMenu().findItem(R.id.navigationbar_cart).setVisible(false); // Hide cart for restaurants
+            bottomNavigationView.getMenu().findItem(R.id.navigationbar_home).setVisible(false);
+            bottomNavigationView.getMenu().findItem(R.id.navigationbar_yourorder).setVisible(false);
+            bottomNavigationView.getMenu().findItem(R.id.navigationbar_profilepicture).setVisible(true);
+
         } else {
             bottomNavigationView.getMenu().findItem(R.id.navigationbar_dashboard).setVisible(false);
+            bottomNavigationView.getMenu().findItem(R.id.navigationbar_home).setVisible(true); // Hide home for users
+            bottomNavigationView.getMenu().findItem(R.id.navigationbar_yourorder).setVisible(true); // Hide your order for users
+            bottomNavigationView.getMenu().findItem(R.id.navigationbar_cart).setVisible(true);
+            bottomNavigationView.getMenu().findItem(R.id.navigationbar_profilepicture).setVisible(true);
+
         }
 
         handleIntent(intent);
@@ -65,13 +74,13 @@ public class HomeActivity extends AppCompatActivity {
         if ("PROFILE".equals(fragmentToLoad)) {
             selectedId = R.id.navigationbar_profilepicture;
             fragment = new ProfileFragment();
-        } else if ("HOME".equals(fragmentToLoad)) {
+        } else if ("HOME".equals(fragmentToLoad)&& "user".equals(userRole)) {
             selectedId = R.id.navigationbar_home;
             fragment = new HomeFragment();
         } else if ("CART".equals(fragmentToLoad) && "user".equals(userRole)) {
             selectedId = R.id.navigationbar_cart;
             fragment = new CartFragment();
-        } else if ("YOUR ORDER".equals(fragmentToLoad)) {
+        } else if ("YOUR ORDER".equals(fragmentToLoad) && "user".equals(userRole)) {
             selectedId = R.id.navigationbar_yourorder;
             fragment = new YourOrderMainFragment();
 
@@ -99,9 +108,9 @@ public class HomeActivity extends AppCompatActivity {
     private boolean selectFragment(int itemId) {
         Fragment fragment = null;
 
-        if (itemId == R.id.navigationbar_home) {
+        if (itemId == R.id.navigationbar_home && "user".equals(userRole)) {
             fragment = new HomeFragment();
-        } else if (itemId == R.id.navigationbar_yourorder) {
+        } else if (itemId == R.id.navigationbar_yourorder && "user".equals(userRole)) {
             fragment = new YourOrderMainFragment();
         } else if (itemId == R.id.navigationbar_cart && "user".equals(userRole)) {
             fragment = new CartFragment();

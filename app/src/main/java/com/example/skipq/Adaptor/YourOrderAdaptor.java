@@ -49,9 +49,13 @@ public class YourOrderAdaptor extends RecyclerView.Adapter<YourOrderAdaptor.View
         }
 
         holder.itemPrice.setText(String.format("%.2f֏", price));
-        Glide.with(context)
-                .load(item.getItemImg())
-                .into(holder.cartItemImage);
+        if (item.getItemImg() != null && !item.getItemImg().isEmpty()) {
+            Glide.with(context)
+                    .load(item.getItemImg())
+                    .into(holder.cartItemImage);
+        } else {
+            holder.cartItemImage.setImageResource(R.drawable.white);
+        }
     }
 
 

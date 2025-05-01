@@ -16,6 +16,8 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.media.ExifInterface;
+import android.graphics.Matrix;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -35,8 +37,12 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.WriteBatch;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +62,8 @@ public class MenuManagementFragment extends Fragment {
     private TextView itemImg, backButton; // Added backButton
     private boolean isUpdating = false; // Flag to track add vs update mode
     private String originalItemName; // Store original name for updating Firestore
-    private String selectedImageBase64; // Store Base64 string for selected image
+    private Uri selectedImageUri;
+    private FirebaseStorage storage;// Store Base64 string for selected image
     private ActivityResultLauncher<String> pickImageLauncher; // Image picker
     private ActivityResultLauncher<String> requestPermissionLauncher; // Permission handlerz
     private Switch availabilitySwitch;
@@ -78,9 +85,9 @@ public class MenuManagementFragment extends Fragment {
         backButton = view.findViewById(R.id.backButton);
         availabilitySwitch = view.findViewById(R.id.availability_switch);
 
-        selectedImageBase64 = null;
-
+        selectedImageUri = null;
         db = FirebaseFirestore.getInstance();
+        storage = FirebaseStorage.getInstance();
         restaurantId = getArguments().getString("restaurantId");
 
         menuItems = new ArrayList<>();
@@ -118,19 +125,9 @@ public class MenuManagementFragment extends Fragment {
         });
         pickImageLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri != null) {
-                try {
-                    // Convert image to Base64
-                    Bitmap bitmap = loadBitmapFromUri(uri);
-                    if (bitmap != null) {
-                        selectedImageBase64 = bitmapToBase64(bitmap);
-                        itemImg.setText("Image selected"); // Visual feedback
-                        Toast.makeText(getContext(), "Image selected", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "Failed to load image", Toast.LENGTH_SHORT).show();
-                    }
-                } catch (Exception e) {
-                    Toast.makeText(getContext(), "Error processing image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
+                selectedImageUri = uri;
+                itemImg.setText("Image selected");
+                Toast.makeText(getContext(), "Image selected", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -147,7 +144,52 @@ public class MenuManagementFragment extends Fragment {
         itemImg.setOnClickListener(v -> checkAndRequestPermission());
         return view;
     }
+    private Uri compressImage(Uri uri) throws Exception {
+        InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
+        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+        inputStream.close();
 
+        // Correct orientation using EXIF data
+        ExifInterface exif = new ExifInterface(requireContext().getContentResolver().openInputStream(uri));
+        int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        Matrix matrix = new Matrix();
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.postRotate(90);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.postRotate(180);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                matrix.postRotate(270);
+                break;
+        }
+        bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+
+        // Resize to max 1024x1024
+        int maxSize = 1024;
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        float scale = Math.min((float) maxSize / width, (float) maxSize / height);
+        if (scale < 1) {
+            width = (int) (width * scale);
+            height = (int) (height * scale);
+            bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
+        }
+
+        // Compress to JPEG
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+        byte[] data = baos.toByteArray();
+
+        // Save to temporary file
+        File tempFile = File.createTempFile("compressed", ".jpg", requireContext().getCacheDir());
+        FileOutputStream fos = new FileOutputStream(tempFile);
+        fos.write(data);
+        fos.close();
+
+        return Uri.fromFile(tempFile);
+    }
     private void loadMenuItems() {
         db.collection("FoodPlaces").document(restaurantId).collection("Menu")
                 .document("DefaultMenu").collection("Items")
@@ -190,12 +232,40 @@ public class MenuManagementFragment extends Fragment {
             return;
         }
 
+        if (selectedImageUri != null) {
+            try {
+                Uri compressedUri = compressImage(selectedImageUri); // Compress image
+                uploadImageAndSaveItem(name, price, prepTime, description, compressedUri, isAvailable);
+            } catch (Exception e) {
+                Toast.makeText(getContext(), "Failed to compress image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } else {
+            saveItemToFirestore(name, price, prepTime, description, "", isAvailable);
+        }
+    }
+    private void uploadImageAndSaveItem(String name, String price, String prepTime, String description, Uri imageUri, boolean isAvailable) {
+        String sanitizedName = name.replaceAll("[^a-zA-Z0-9]", "_");
+        StorageReference imageRef = storage.getReference().child("menu_images/" + restaurantId + "/" + sanitizedName + ".jpg");
+
+        imageRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    String imageUrl = uri.toString();
+                    saveItemToFirestore(name, price, prepTime, description, imageUrl, isAvailable);
+                }))
+                .addOnFailureListener(e -> {
+                    Log.e("MenuManagementFragment", "Failed to upload image", e);
+                    Toast.makeText(getContext(), "Failed to upload image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void saveItemToFirestore(String name, String price, String prepTime, String description, String imageUrl, boolean isAvailable) {
         Map<String, Object> itemData = new HashMap<>();
         itemData.put("Item Name", name);
         itemData.put("Item Price", price);
         itemData.put("Prep Time", Integer.parseInt(prepTime));
         itemData.put("Item Description", description.isEmpty() ? "" : description);
-        itemData.put("Item Img", selectedImageBase64 != null ? selectedImageBase64 : "");
+        itemData.put("Item Img", imageUrl);
         itemData.put("Available", isAvailable);
 
         db.collection("FoodPlaces").document(restaurantId).collection("Menu")
@@ -219,9 +289,9 @@ public class MenuManagementFragment extends Fragment {
         itemPrice.setText(item.getItemPrice());
         itemPrepTime.setText(String.valueOf(item.getPrepTime()));
         itemDescription.setText(item.getItemDescription());
-        selectedImageBase64 = item.getItemImg();
-        itemImg.setText(selectedImageBase64 != null && !selectedImageBase64.isEmpty() ? "Image selected" : "");
-        availabilitySwitch.setChecked(item.isAvailable()); // Set switch state
+        selectedImageUri = null; // Reset URI
+        itemImg.setText(item.getItemImg() != null && !item.getItemImg().isEmpty() ? "Image selected" : "");
+        availabilitySwitch.setChecked(item.isAvailable());
 
         cardView.setVisibility(View.VISIBLE);
         backButton.setVisibility(View.VISIBLE);
@@ -235,20 +305,52 @@ public class MenuManagementFragment extends Fragment {
         String price = itemPrice.getText().toString().trim();
         String prepTime = itemPrepTime.getText().toString().trim();
         String description = itemDescription.getText().toString().trim();
-        boolean isAvailable = availabilitySwitch.isChecked(); // Get switch state
+        boolean isAvailable = availabilitySwitch.isChecked();
 
         if (name.isEmpty() || price.isEmpty() || prepTime.isEmpty()) {
             Toast.makeText(getContext(), "Name, price, and prep time are required", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        if (selectedImageUri != null) {
+            try {
+                Uri compressedUri = compressImage(selectedImageUri);
+                uploadImageAndUpdateItem(name, price, prepTime, description, compressedUri, isAvailable);
+            } catch (Exception e) {
+                Toast.makeText(getContext(), "Failed to compress image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } else {
+            String existingImageUrl = menuItems.stream()
+                    .filter(item -> item.getItemName().equals(originalItemName))
+                    .findFirst()
+                    .map(MenuDomain::getItemImg)
+                    .orElse("");
+            updateItemInFirestore(name, price, prepTime, description, existingImageUrl, isAvailable);
+        }
+    }
+    private void uploadImageAndUpdateItem(String name, String price, String prepTime, String description, Uri imageUri, boolean isAvailable) {
+        String sanitizedName = name.replaceAll("[^a-zA-Z0-9]", "_");
+        StorageReference imageRef = storage.getReference().child("menu_images/" + restaurantId + "/" + sanitizedName + ".jpg");
+
+        imageRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    String imageUrl = uri.toString();
+                    updateItemInFirestore(name, price, prepTime, description, imageUrl, isAvailable);
+                }))
+                .addOnFailureListener(e -> {
+                    Log.e("MenuManagementFragment", "Failed to upload image", e);
+                    Toast.makeText(getContext(), "Failed to upload image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+    private void updateItemInFirestore(String name, String price, String prepTime, String description, String imageUrl, boolean isAvailable) {
         Map<String, Object> itemData = new HashMap<>();
         itemData.put("Item Name", name);
         itemData.put("Item Price", price);
         itemData.put("Prep Time", Integer.parseInt(prepTime));
         itemData.put("Item Description", description.isEmpty() ? "" : description);
-        itemData.put("Item Img", selectedImageBase64 != null ? selectedImageBase64 : "");
-        itemData.put("Available", isAvailable); // Use switch state
+        itemData.put("Item Img", imageUrl);
+        itemData.put("Available", isAvailable);
 
         WriteBatch batch = db.batch();
 
@@ -273,10 +375,18 @@ public class MenuManagementFragment extends Fragment {
                     isUpdating = false;
                 })
                 .addOnFailureListener(e -> {
+                    Log.e("MenuManagementFragment", "Failed to update item", e);
                     Toast.makeText(getContext(), "Failed to update item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
     private void deleteItem(String itemName) {
+        String sanitizedName = itemName.replaceAll("[^a-zA-Z0-9]", "_");
+        StorageReference imageRef = storage.getReference().child("menu_images/" + restaurantId + "/" + sanitizedName + ".jpg");
+
+        imageRef.delete()
+                .addOnSuccessListener(aVoid -> Log.d("MenuManagementFragment", "Image deleted for item: " + itemName))
+                .addOnFailureListener(e -> Log.e("MenuManagementFragment", "Failed to delete image: " + e.getMessage()));
+
         db.collection("FoodPlaces").document(restaurantId).collection("Menu")
                 .document("DefaultMenu").collection("Items").document(itemName)
                 .delete()
@@ -285,6 +395,7 @@ public class MenuManagementFragment extends Fragment {
                     loadMenuItems();
                 })
                 .addOnFailureListener(e -> {
+                    Log.e("MenuManagementFragment", "Failed to delete item", e);
                     Toast.makeText(getContext(), "Failed to delete item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
@@ -299,28 +410,15 @@ public class MenuManagementFragment extends Fragment {
         }
     }
 
-    private Bitmap loadBitmapFromUri(Uri uri) throws Exception {
-        InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
-        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-        if (inputStream != null) {
-            inputStream.close();
-        }
-        return bitmap;
-    }
 
-    private String bitmapToBase64(Bitmap bitmap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos); // 80% quality to reduce size
-        byte[] bytes = baos.toByteArray();
-        return Base64.encodeToString(bytes, Base64.DEFAULT);
-    }
+
     private void clearInputs() {
         itemName.setText("");
         itemPrice.setText("");
         itemPrepTime.setText("");
         itemDescription.setText("");
         itemImg.setText("");
-        selectedImageBase64 = null;
+        selectedImageUri = null; // Changed from selectedImageBase64
         availabilitySwitch.setChecked(true);
     }
 }

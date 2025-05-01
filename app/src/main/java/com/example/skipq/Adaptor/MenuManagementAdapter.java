@@ -1,8 +1,6 @@
 package com.example.skipq.Adaptor;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Base64;
+import com.bumptech.glide.Glide;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,18 +52,12 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
         if (holder.itemDescription != null) holder.itemDescription.setText(item.getItemDescription() != null ? item.getItemDescription() : "");
         holder.itemAvailability.setText("Availability: " + (item.isAvailable() ? "Available" : "Unavailable"));        String base64Image = item.getItemImg();
         if (holder.itemImage != null) {
-            if (base64Image != null && !base64Image.isEmpty()) {
-                try {
-                    byte[] decodedBytes = Base64.decode(base64Image, Base64.DEFAULT);
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-                    holder.itemImage.setImageBitmap(bitmap);
-                    holder.itemImage.setVisibility(View.VISIBLE);
-                } catch (Exception e) {
-                    holder.itemImage.setVisibility(View.GONE);
-                    // Optional: Log.e("MenuManagementAdapter", "Failed to decode image: " + e.getMessage());
-                }
+            if (item.getItemImg() != null && !item.getItemImg().isEmpty()) {
+                Glide.with(holder.itemView.getContext())
+                        .load(item.getItemImg())
+                        .into(holder.itemImage);
             } else {
-                holder.itemImage.setVisibility(View.GONE);
+                holder.itemImage.setImageDrawable(null); // Or set a placeholder
             }
         }
 

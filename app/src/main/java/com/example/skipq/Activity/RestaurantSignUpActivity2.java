@@ -10,8 +10,11 @@ import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,7 +28,10 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.skipq.R;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -39,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import com.google.firebase.firestore.SetOptions;
 
 public class RestaurantSignUpActivity2 extends AppCompatActivity {
 
@@ -48,6 +55,8 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
     private List<RestaurantAddress> addressList = new ArrayList<>();
     private Button uploadLogoButton, signUpButton, addAddressButton;
     private TextView backButton;
+    private Spinner categorySpinner;
+    private String selectedCategory = "Restaurant/Cafe";
     private FirebaseFirestore db;
     private FirebaseStorage storage;
     private Uri logoUri;
@@ -67,6 +76,7 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
         addAddressButton = findViewById(R.id.add_address_button);
         uploadLogoButton = findViewById(R.id.uploadLogoButton);
         signUpButton = findViewById(R.id.SignUpButton);
+        categorySpinner = findViewById(R.id.category_spinner);
 
         db = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
@@ -79,6 +89,30 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
         recyclerViewAddresses.setLayoutManager(new LinearLayoutManager(this));
         addressAdapter = new AddressAdapter(addressList);
         recyclerViewAddresses.setAdapter(addressAdapter);
+        if (uid == null || uid.isEmpty()) {
+            Log.e("RestaurantSignUp", "UID is null or empty");
+            Toast.makeText(this, "Error: Invalid user ID", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.restaurant_categories, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        categorySpinner.setAdapter(adapter);
+        // Set default selection to "Restaurant/Cafe"
+        categorySpinner.setSelection(adapter.getPosition("Restaurant/Cafe"));
+        categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedCategory = parent.getItemAtPosition(position).toString();
+                Log.d("RestaurantSignUp", "Selected category: " + selectedCategory);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedCategory = "Restaurant/Cafe"; // Default if nothing selected
+            }
+        });
 
         backButton.setOnClickListener(v -> finish());
 
@@ -160,36 +194,6 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
         return true;
     }
 
-    private void uploadLogoAndSaveData(String name, String apiLink) {
-        StorageReference logoRef = storage.getReference().child("restaurant_logos/" + uid + "_logo.jpg");
-        logoRef.putFile(logoUri)
-                .addOnSuccessListener(taskSnapshot -> logoRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                    String logoUrl = uri.toString();
-                    // Update users collection with logoUrl as profilePictureUrl
-                    Map<String, Object> userUpdates = new HashMap<>();
-                    userUpdates.put("profilePictureUrl", logoUrl);
-                    db.collection("users").document(uid)
-                            .update(userUpdates)
-                            .addOnSuccessListener(aVoid -> Log.d("RestaurantSignUp", "User profile picture URL updated: " + logoUrl))
-                            .addOnFailureListener(e -> Log.e("RestaurantSignUp", "Failed to update user profile picture URL", e));
-                    // Proceed with restaurant data
-                    if (!apiLink.isEmpty()) {
-                        fetchMenuFromApiAndSave(apiLink, name, logoUrl);
-                    } else {
-                        saveRestaurantWithMenu(name, apiLink, logoUrl, null);
-                    }
-                }))
-                .addOnFailureListener(e -> {
-                    Log.e("RestaurantSignUp", "Failed to upload logo", e);
-                    Toast.makeText(this, "Failed to upload logo: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    // Proceed without logo if upload fails
-                    if (!apiLink.isEmpty()) {
-                        fetchMenuFromApiAndSave(apiLink, name, null);
-                    } else {
-                        saveRestaurantWithMenu(name, apiLink, null, null);
-                    }
-                });
-    }
 
     private void fetchMenuFromApiAndSave(String apiLink, String restaurantName, String logoUrl) {
         RequestQueue queue = Volley.newRequestQueue(this);
@@ -209,6 +213,7 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                             itemData.put("Item Description", item.optString("description", "No description available"));
                             String image = item.optString("image", "");
                             itemData.put("Item Img", image);
+                            itemData.put("Available", true);
                             menuData.put(itemName.replaceAll("[^a-zA-Z0-9]", "_"), itemData); // Sanitize document ID
                         }
                         saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
@@ -225,7 +230,40 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                 });
         queue.add(stringRequest);
     }
+    private void uploadLogoAndSaveData(String name, String apiLink) {
+        String sanitizedName = name.replaceAll("[^a-zA-Z0-9]", "_");
+        StorageReference logoRef = storage.getReference().child("restaurant_logos/" + sanitizedName + "_logo.jpg");
+        logoRef.putFile(logoUri)
+                .addOnSuccessListener(taskSnapshot -> logoRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    String logoUrl = uri.toString();
+                    // Proceed with restaurant data (no users collection update)
+                    if (!apiLink.isEmpty()) {
+                        fetchMenuFromApiAndSave(apiLink, name, logoUrl);
+                    } else {
+                        saveRestaurantWithMenu(name, apiLink, logoUrl, null);
+                    }
+                }))
+                .addOnFailureListener(e -> {
+                    Log.e("RestaurantSignUp", "Failed to upload logo: " + e.getMessage(), e);
+                    Toast.makeText(this, "Failed to upload logo: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    // Proceed without logo if upload fails
+                    if (!apiLink.isEmpty()) {
+                        fetchMenuFromApiAndSave(apiLink, name, null);
+                    } else {
+                        saveRestaurantWithMenu(name, apiLink, null, null);
+                    }
+                });
+    }
     private void saveRestaurantWithMenu(String name, String apiLink, String logoUrl, Map<String, Object> menuData) {
+        // Verify authenticated user
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null || !uid.equals(currentUser.getUid())) {
+            Log.e("RestaurantSignUp", "User not authenticated or UID mismatch. Provided UID: " + uid + ", Current User UID: " + (currentUser != null ? currentUser.getUid() : "null"));
+            Toast.makeText(this, "Authentication error. Please try again.", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         db.collection("FoodPlaces").document(name).get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult().exists()) {
@@ -236,6 +274,7 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                         restaurantInfo.put("email", email);
                         restaurantInfo.put("uid", uid);
                         restaurantInfo.put("role", "restaurant");
+                        restaurantInfo.put("category", selectedCategory);
                         if (!apiLink.isEmpty()) {
                             restaurantInfo.put("apiLink", apiLink);
                         }
@@ -270,24 +309,19 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                                                 .document(menuDocName).set(new HashMap<>());
                                     }
 
-                                    // Update user document with role and restaurantId
-                                    Map<String, Object> userUpdates = new HashMap<>();
-                                    userUpdates.put("role", "restaurant");
-                                    userUpdates.put("restaurantId", name);
-                                    db.collection("users").document(uid)
-                                            .update(userUpdates)
-                                            .addOnSuccessListener(aVoid2 -> {
-                                                Toast.makeText(this, "Restaurant registered successfully!", Toast.LENGTH_SHORT).show();
-                                                Intent intent = new Intent(RestaurantSignUpActivity2.this, HomeActivity.class);
-                                                intent.putExtra("userRole", "restaurant");
-                                                intent.putExtra("restaurantId", name);
-                                                intent.putExtra("FRAGMENT_TO_LOAD", "RESTAURANT_DASHBOARD");
-                                                startActivity(intent);
-                                                finish();
-                                            })
-                                            .addOnFailureListener(e -> Toast.makeText(this, "Failed to update user role: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                                    // Navigate to HomeActivity without updating users collection
+                                    Toast.makeText(this, "Restaurant registered successfully!", Toast.LENGTH_SHORT).show();
+                                    Intent intent = new Intent(RestaurantSignUpActivity2.this, HomeActivity.class);
+                                    intent.putExtra("userRole", "restaurant");
+                                    intent.putExtra("restaurantId", name);
+                                    intent.putExtra("FRAGMENT_TO_LOAD", "RESTAURANT_DASHBOARD");
+                                    startActivity(intent);
+                                    finish();
                                 })
-                                .addOnFailureListener(e -> Toast.makeText(this, "Failed to save restaurant: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                                .addOnFailureListener(e -> {
+                                    Log.e("RestaurantSignUp", "Failed to save restaurant: " + e.getMessage(), e);
+                                    Toast.makeText(this, "Failed to save restaurant: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                });
                     }
                 });
     }

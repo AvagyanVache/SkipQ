@@ -46,12 +46,15 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
         holder.cartItemName.setText(cartItem.getItemName());
         holder.cartItemCount.setText(String.valueOf(cartItem.getItemCount()));
         holder.cartItemPrice.setText(String.format("%.2f֏", Double.parseDouble(cartItem.getItemPrice())));
-
         holder.cartItemPrepTime.setText(MessageFormat.format("{0} min", cartItem.getPrepTime()));
 
-        Glide.with(context)
-                .load(cartItem.getItemImg())
-                .into(holder.cartItemImage);
+        if (cartItem.getItemImg() != null && !cartItem.getItemImg().isEmpty()) {
+            Glide.with(context)
+                    .load(cartItem.getItemImg())
+                    .into(holder.cartItemImage);
+        } else {
+            holder.cartItemImage.setImageResource(R.drawable.white); // Fallback
+        }
 
         holder.addButton.setOnClickListener(v -> {
             cartItem.setItemCount(cartItem.getItemCount() + 1);
