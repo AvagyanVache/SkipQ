@@ -1,5 +1,6 @@
 package com.example.skipq.Adaptor;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,7 +43,9 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         MenuDomain cartItem = cartList.get(position);
 
-        holder.cartItemDescription.setText(cartItem.getItemDescription());
+        String fullDescription = cartItem.getItemDescription() != null ? cartItem.getItemDescription() : "";
+        String shortDescription = shortenDescription(fullDescription);
+        holder.cartItemDescription.setText(shortDescription);
         holder.cartItemName.setText(cartItem.getItemName());
         holder.cartItemCount.setText(String.valueOf(cartItem.getItemCount()));
         holder.cartItemPrice.setText(String.format("%.2f֏", Double.parseDouble(cartItem.getItemPrice())));
@@ -55,7 +58,8 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
         } else {
             holder.cartItemImage.setImageResource(R.drawable.white); // Fallback
         }
-
+        holder.addButton.setVisibility(View.VISIBLE);
+        holder.minusButton.setVisibility(View.VISIBLE);
         holder.addButton.setOnClickListener(v -> {
             cartItem.setItemCount(cartItem.getItemCount() + 1);
             CartManager.getInstance().updateItem(cartItem);
@@ -73,6 +77,7 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
             }
             updateTotal();
         });
+        holder.itemView.setOnClickListener(v -> showItemDetailsDialog(cartItem));
     }
 
     @Override
@@ -109,6 +114,61 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
     int averagePrepTime = (cartList.size() > 0) ? totalPrepTime / cartList.size() : 0;
         listener.onCartUpdated(total,averagePrepTime);
 
+    }
+    private String shortenDescription(String description) {
+        if (description.isEmpty()) {
+            return "No description";
+        }
+        String[] words = description.split("\\s+");
+        int wordCount = Math.min(words.length, 3); // Take up to 3 words
+        StringBuilder shortDesc = new StringBuilder();
+        for (int i = 0; i < wordCount; i++) {
+            shortDesc.append(words[i]);
+            if (i < wordCount - 1) {
+                shortDesc.append(" ");
+            }
+        }
+        if (words.length > 3) {
+            shortDesc.append("...");
+        }
+        return shortDesc.toString();
+    }
+
+    private void showItemDetailsDialog(MenuDomain item) {
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View dialogView = inflater.inflate(R.layout.dialog_menu_item_details, null);
+
+        ImageView itemImage = dialogView.findViewById(R.id.item_image);
+        TextView itemName = dialogView.findViewById(R.id.item_name);
+        TextView itemDescription = dialogView.findViewById(R.id.item_description);
+        TextView itemPrice = dialogView.findViewById(R.id.item_price);
+        TextView itemPrepTime = dialogView.findViewById(R.id.item_prep_time);
+
+        itemName.setText(item.getItemName() != null ? item.getItemName() : "N/A");
+        itemDescription.setText(item.getItemDescription() != null ? item.getItemDescription() : "No description"); // Full description
+        double price = 0.0;
+        try {
+            price = Double.parseDouble(item.getItemPrice() != null ? item.getItemPrice() : "0");
+        } catch (NumberFormatException e) {
+            Log.e("CartAdaptor", "Invalid price format for item: " + item.getItemName(), e);
+        }
+        itemPrice.setText(String.format("֏ %.2f", price));
+        itemPrepTime.setText(String.format("%d min", item.getPrepTime()));
+
+        if (item.getItemImg() != null && !item.getItemImg().isEmpty() && item.getItemImg().startsWith("http")) {
+            Glide.with(context)
+                    .load(item.getItemImg())
+                    .into(itemImage);
+        } else {
+            itemImage.setImageResource(R.drawable.white); // Fallback
+        }
+
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle("Item Details")
+                .setView(dialogView)
+                .setPositiveButton("OK", (d, which) -> d.dismiss())
+                .create();
+        dialog.show();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
