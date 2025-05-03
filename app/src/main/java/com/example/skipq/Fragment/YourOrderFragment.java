@@ -282,97 +282,99 @@ public class YourOrderFragment extends Fragment {
         db.collection("FoodPlaces")
                 .document(restaurantId)
                 .collection("Menu")
+                .document("DefaultMenu")
+                .collection("Items")
                 .get()
-                .addOnSuccessListener(menuSnapshots -> {
-                    if (menuSnapshots.isEmpty()) {
-                        Log.w("FirestoreDebug", "No menu found for restaurant: " + restaurantId);
-                        return;
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    ArrayList<MenuDomain> menuList = new ArrayList<>();
+                    Map<String, DocumentSnapshot> menuItemsMap = new HashMap<>();
+
+                    // Build a map of menu items for efficient lookup
+                    for (DocumentSnapshot document : queryDocumentSnapshots) {
+                        Boolean isAvailable = document.getBoolean("Available");
+                        // Include only available items (or where Available is null)
+                        if (isAvailable == null || isAvailable) {
+                            String menuItemName = document.getString("Item Name");
+                            if (menuItemName != null) {
+                                menuItemsMap.put(menuItemName.trim().toLowerCase(), document);
+                                Log.d("FirestoreDebug", "Menu item cached: " + menuItemName);
+                            }
+                        } else {
+                            Log.d("FirestoreDebug", "Skipped unavailable item: " + document.getString("Item Name"));
+                        }
                     }
 
-                    QueryDocumentSnapshot menuDoc = null;
-                    for (QueryDocumentSnapshot doc : menuSnapshots) {
-                        menuDoc = doc;
-                        break;
+                    // Process each order item
+                    for (Map<String, Object> orderItem : orderItems) {
+                        String orderItemName = (String) orderItem.get("name");
+                        if (orderItemName == null || orderItemName.trim().isEmpty()) {
+                            Log.w("FirestoreDebug", "Skipping order item with null or empty name");
+                            continue;
+                        }
+
+                        String normalizedOrderItemName = orderItemName.trim().toLowerCase();
+                        DocumentSnapshot menuDocSnapshot = menuItemsMap.get(normalizedOrderItemName);
+
+                        MenuDomain menuItem = new MenuDomain();
+                        int itemCount = 1;
+
+                        // Set item count from order data
+                        if (orderItem.containsKey("item count")) {
+                            try {
+                                itemCount = ((Long) orderItem.get("item count")).intValue();
+                            } catch (ClassCastException e) {
+                                Log.w("FirestoreDebug", "Invalid item count format for: " + orderItemName);
+                            }
+                        }
+
+                        if (menuDocSnapshot != null && menuDocSnapshot.exists()) {
+                            // Populate MenuDomain with Firestore data
+                            menuItem.setItemName(menuDocSnapshot.getString("Item Name"));
+                            menuItem.setItemDescription(menuDocSnapshot.getString("Item Description") != null ?
+                                    menuDocSnapshot.getString("Item Description") : "No description");
+                            menuItem.setItemPrice(menuDocSnapshot.getString("Item Price") != null ?
+                                    menuDocSnapshot.getString("Item Price") : "0");
+                            menuItem.setItemImg(menuDocSnapshot.getString("Item Img") != null ?
+                                    menuDocSnapshot.getString("Item Img") : "");
+                            menuItem.setPrepTime(menuDocSnapshot.contains("Prep Time") ?
+                                    menuDocSnapshot.getLong("Prep Time").intValue() : 0);
+                            menuItem.setRestaurantId(restaurantId);
+                            menuItem.setAvailable(true); // Explicitly set as available
+                        } else {
+                            // Fallback if no matching menu item is found
+                            Log.w("FirestoreDebug", "No menu match for: " + orderItemName);
+                            menuItem.setItemName(orderItemName);
+                            menuItem.setItemDescription("No description available");
+                            menuItem.setItemPrice(orderItem.containsKey("price") ?
+                                    String.valueOf(orderItem.get("price")) : "0");
+                            menuItem.setItemImg(orderItem.containsKey("photo") ?
+                                    (String) orderItem.get("photo") : "");
+                            menuItem.setPrepTime(orderItem.containsKey("prepTime") ?
+                                    ((Long) orderItem.get("prepTime")).intValue() : 0);
+                            menuItem.setRestaurantId(restaurantId);
+                            menuItem.setAvailable(true);
+                        }
+
+                        menuItem.setItemCount(itemCount);
+                        menuList.add(menuItem);
+                        Log.d("FirestoreDebug", "Added item to order: " + orderItemName + ", Count: " + itemCount);
                     }
 
-                    if (menuDoc == null) {
-                        Log.w("FirestoreDebug", "No valid menu document found for restaurant: " + restaurantId);
-                        return;
+                    if (!menuList.isEmpty()) {
+                        cartItems = menuList;
+                        yourOrderAdapter = new YourOrderAdaptor(requireContext(), cartItems);
+                        recyclerView.setAdapter(yourOrderAdapter);
+                        yourOrderAdapter.notifyDataSetChanged();
+                        Log.d("FirestoreDebug", "Updated UI with " + menuList.size() + " items");
+                    } else {
+                        Log.w("FirestoreDebug", "No items to display");
+                        orderCountdownTextView.setText("No items found in order");
                     }
-
-                    Log.d("FirestoreDebug", "Fetching menu from: FoodPlaces/" + restaurantId + "/Menu/" + menuDoc.getId());
-
-                    db.collection("FoodPlaces")
-                            .document(restaurantId)
-                            .collection("Menu")
-                            .document(menuDoc.getId())
-                            .collection("Items")
-                            .get()
-                            .addOnSuccessListener(queryDocumentSnapshots -> {
-                                ArrayList<MenuDomain> menuList = new ArrayList<>();
-                                Map<String, DocumentSnapshot> menuItemsMap = new HashMap<>();
-
-                                for (DocumentSnapshot document : queryDocumentSnapshots) {
-                                    String menuItemName = document.getString("Item Name");
-                                    if (menuItemName != null) {
-                                        menuItemsMap.put(menuItemName.trim().toLowerCase(), document);
-                                        Log.d("FirestoreDebug", "Menu item: " + menuItemName);
-                                    }
-                                }
-
-                                for (Map<String, Object> orderItem : orderItems) {
-                                    String orderItemName = (String) orderItem.get("name");
-                                    if (orderItemName == null || orderItemName.trim().isEmpty()) {
-                                        Log.w("FirestoreDebug", "Skipping order item with null or empty name");
-                                        continue;
-                                    }
-
-                                    String normalizedOrderItemName = orderItemName.trim().toLowerCase();
-                                    DocumentSnapshot menuDocSnapshot = menuItemsMap.get(normalizedOrderItemName);
-
-                                    String itemDescription = "No description available";
-                                    String itemImg = "";
-                                    String itemPrice = "0";
-                                    int prepTime = 0;
-                                    int itemCount = 1;
-
-                                    if (orderItem.containsKey("item count")) {
-                                        itemCount = ((Long) orderItem.get("item count")).intValue();
-                                        Log.d("FirestoreDebug", "Item: " + orderItemName + ", Count: " + itemCount);
-                                    } else {
-                                        Log.w("FirestoreDebug", "No item count found for: " + orderItemName);
-                                    }
-
-                                    if (menuDocSnapshot != null && menuDocSnapshot.exists()) {
-                                        itemDescription = menuDocSnapshot.getString("Item Description") != null ?
-                                                menuDocSnapshot.getString("Item Description") : itemDescription;
-                                        itemImg = menuDocSnapshot.getString("Item Img") != null ?
-                                                menuDocSnapshot.getString("Item Img") : itemImg;
-                                        itemPrice = menuDocSnapshot.getString("Item Price") != null ?
-                                                menuDocSnapshot.getString("Item Price") : itemPrice;
-                                        prepTime = menuDocSnapshot.contains("Prep Time") ?
-                                                menuDocSnapshot.getLong("Prep Time").intValue() : 0;
-                                        Log.d("FirestoreDebug", "Matched: " + orderItemName);
-                                    } else {
-                                        Log.w("FirestoreDebug", "No menu match for: " + orderItemName);
-                                    }
-
-                                    menuList.add(new MenuDomain(orderItemName, itemDescription, itemImg, itemPrice, prepTime, itemCount));
-                                }
-
-                                if (!menuList.isEmpty()) {
-                                    cartItems = menuList;
-                                    yourOrderAdapter = new YourOrderAdaptor(requireContext(), cartItems);
-                                    recyclerView.setAdapter(yourOrderAdapter);
-                                    yourOrderAdapter.notifyDataSetChanged();
-                                    Log.d("FirestoreDebug", "Updated UI with " + menuList.size() + " items");
-                                } else {
-                                    Log.w("FirestoreDebug", "No items to display");
-                                }
-                            })
-                            .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to fetch menu items: " + e.getMessage()));
                 })
-                .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to fetch menu documents: " + e.getMessage()));
+                .addOnFailureListener(e -> {
+                    Log.e("FirestoreError", "Failed to fetch menu items: " + e.getMessage());
+                    orderCountdownTextView.setText("Error loading order items");
+                });
     }
 
     private void startCountdown(long remainingTimeInMillis) {

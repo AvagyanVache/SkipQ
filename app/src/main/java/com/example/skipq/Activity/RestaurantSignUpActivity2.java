@@ -40,12 +40,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
+
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.storage.UploadTask;
 
 public class RestaurantSignUpActivity2 extends AppCompatActivity {
 
@@ -187,48 +192,146 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
             Toast.makeText(this, "At least one restaurant address is required", Toast.LENGTH_SHORT).show();
             return false;
         }
-        if (!apiLink.isEmpty() && !Patterns.WEB_URL.matcher(apiLink).matches()) {
-            Toast.makeText(this, "Please enter a valid API URL (optional)", Toast.LENGTH_SHORT).show();
-            return false;
-        }
+        if (!apiLink.isEmpty()) {
+            if (!Patterns.WEB_URL.matcher(apiLink).matches()) {
+                Toast.makeText(this, "Please enter a valid API URL", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            }
         return true;
     }
 
 
     private void fetchMenuFromApiAndSave(String apiLink, String restaurantName, String logoUrl) {
-        RequestQueue queue = Volley.newRequestQueue(this);
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, apiLink,
-                response -> {
-                    Log.d("RestaurantSignUp", "API Response: " + response);
-                    try {
-                        JSONArray menuItems = new JSONArray(response);
-                        Map<String, Object> menuData = new HashMap<>();
-                        for (int i = 0; i < menuItems.length(); i++) {
-                            JSONObject item = menuItems.getJSONObject(i);
-                            Map<String, Object> itemData = new HashMap<>();
-                            String itemName = item.optString("name", "Unnamed Item");
-                            itemData.put("Item Name", itemName);
-                            itemData.put("Item Price", String.valueOf(item.optDouble("price", 0.0)));
-                            itemData.put("Prep Time", item.optInt("prepTime", 0));
-                            itemData.put("Item Description", item.optString("description", "No description available"));
-                            String image = item.optString("image", "");
-                            itemData.put("Item Img", image);
-                            itemData.put("Available", true);
-                            menuData.put(itemName.replaceAll("[^a-zA-Z0-9]", "_"), itemData); // Sanitize document ID
-                        }
-                        saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
-                    } catch (JSONException e) {
-                        Log.e("RestaurantSignUp", "Error parsing menu: " + e.getMessage(), e);
-                        Toast.makeText(this, "Error parsing menu", Toast.LENGTH_SHORT).show();
+        // Check if menu already exists in Firestore
+        db.collection("FoodPlaces").document(restaurantName).collection("Menu")
+                .document("DefaultMenu").collection("Items")
+                .limit(1) // Check for any items
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (!querySnapshot.isEmpty()) {
+                        // Menu already exists, skip API fetch and proceed to save restaurant
+                        Log.d("RestaurantSignUp", "Menu already exists in Firestore, skipping API fetch");
                         saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, null);
+                    } else {
+                        // Menu does not exist, fetch from API
+                        RequestQueue queue = Volley.newRequestQueue(this);
+                        StringRequest stringRequest = new StringRequest(Request.Method.GET, apiLink,
+                                response -> {
+                                    Log.d("RestaurantSignUp", "API Response: " + response);
+                                    try {
+                                        JSONArray menuItems = new JSONArray(response);
+                                        Map<String, Object> menuData = new HashMap<>();
+                                        Map<String, String> imageUrls = new HashMap<>();
+                                        int totalItems = menuItems.length();
+
+                                        for (int i = 0; i < totalItems; i++) {
+                                            JSONObject item = menuItems.getJSONObject(i);
+                                            Map<String, Object> itemData = new HashMap<>();
+                                            String tempItemName = item.optString("name", "Unnamed Item_" + i);
+                                            if (tempItemName.isEmpty()) {
+                                                tempItemName = "Unnamed Item_" + i;
+                                            }
+                                            final String itemName = tempItemName; // Create a final copy
+                                            itemData.put("Item Name", itemName);
+                                            itemData.put("Item Price", String.valueOf(item.optDouble("price", 0.0)));
+                                            int prepTime = item.optInt("prepTime", -1);
+                                            itemData.put("Prep Time", prepTime == -1 ? 10 : prepTime);
+                                            itemData.put("Item Description", item.optString("description", "No description available"));
+                                            itemData.put("Available", true);
+
+                                            String imageUrl = item.optString("image", "");
+                                            if (!imageUrl.isEmpty() && imageUrl.startsWith("http")) {
+                                                String imageId = UUID.randomUUID().toString();
+                                                StorageReference imageRef = storage.getReference().child("menu_images/" + restaurantName + "/" + imageId + ".jpg");
+                                                try {
+                                                    URL url = new URL(imageUrl);
+                                                    new Thread(() -> {
+                                                        try {
+                                                            InputStream inputStream = url.openStream();
+                                                            UploadTask uploadTask = imageRef.putStream(inputStream);
+                                                            uploadTask.addOnSuccessListener(taskSnapshot -> {
+                                                                imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                                                                    synchronized (imageUrls) {
+                                                                        imageUrls.put(itemName, uri.toString());
+                                                                        if (imageUrls.size() == totalItems) {
+                                                                            updateMenuDataWithImages(menuData, imageUrls);
+                                                                            saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
+                                                                        }
+                                                                    }
+                                                                });
+                                                            }).addOnFailureListener(e -> {
+                                                                Log.e("RestaurantSignUp", "Failed to upload image for " + itemName + ": " + e.getMessage());
+                                                                synchronized (imageUrls) {
+                                                                    imageUrls.put(itemName, "");
+                                                                    if (imageUrls.size() == totalItems) {
+                                                                        updateMenuDataWithImages(menuData, imageUrls);
+                                                                        saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
+                                                                    }
+                                                                }
+                                                            });
+                                                        } catch (Exception e) {
+                                                            Log.e("RestaurantSignUp", "Error downloading image for " + itemName + ": " + e.getMessage());
+                                                            synchronized (imageUrls) {
+                                                                imageUrls.put(itemName, "");
+                                                                if (imageUrls.size() == totalItems) {
+                                                                    updateMenuDataWithImages(menuData, imageUrls);
+                                                                    saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
+                                                                }
+                                                            }
+                                                        }
+                                                    }).start();
+                                                } catch (Exception e) {
+                                                    Log.e("RestaurantSignUp", "Invalid image URL for " + itemName + ": " + imageUrl);
+                                                    synchronized (imageUrls) {
+                                                        imageUrls.put(itemName, "");
+                                                        if (imageUrls.size() == totalItems) {
+                                                            updateMenuDataWithImages(menuData, imageUrls);
+                                                            saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
+                                                        }
+                                                    }
+                                                }
+                                            } else {
+                                                synchronized (imageUrls) {
+                                                    imageUrls.put(itemName, "");
+                                                    if (imageUrls.size() == totalItems) {
+                                                        updateMenuDataWithImages(menuData, imageUrls);
+                                                        saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
+                                                    }
+                                                }
+                                            }
+
+                                            // Use sanitized itemName as document ID
+                                            String sanitizedItemName = itemName.replaceAll("[^a-zA-Z0-9]", "_");
+                                            menuData.put(sanitizedItemName, itemData);
+                                        }
+                                    } catch (JSONException e) {
+                                        Log.e("RestaurantSignUp", "Error parsing menu: " + e.getMessage(), e);
+                                        Toast.makeText(this, "Error parsing menu", Toast.LENGTH_SHORT).show();
+                                        saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, null);
+                                    }
+                                },
+                                error -> {
+                                    Log.e("RestaurantSignUp", "Failed to fetch menu: " + error.getMessage(), error);
+                                    Toast.makeText(this, "Failed to fetch menu", Toast.LENGTH_SHORT).show();
+                                    saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, null);
+                                });
+                        queue.add(stringRequest);
                     }
-                },
-                error -> {
-                    Log.e("RestaurantSignUp", "Failed to fetch menu: " + error.getMessage(), error);
-                    Toast.makeText(this, "Failed to fetch menu", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("RestaurantSignUp", "Failed to check Firestore for existing menu: " + e.getMessage(), e);
+                    Toast.makeText(this, "Error checking existing menu", Toast.LENGTH_SHORT).show();
                     saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, null);
                 });
-        queue.add(stringRequest);
+    }
+    private void updateMenuDataWithImages(Map<String, Object> menuData, Map<String, String> imageUrls) {
+        for (Map.Entry<String, String> entry : imageUrls.entrySet()) {
+            String itemName = entry.getKey().replaceAll("[^a-zA-Z0-9]", "_");
+            if (menuData.containsKey(itemName)) {
+                ((Map<String, Object>) menuData.get(itemName)).put("Item Img", entry.getValue());
+            }
+        }
     }
     private void uploadLogoAndSaveData(String name, String apiLink) {
         String sanitizedName = name.replaceAll("[^a-zA-Z0-9]", "_");

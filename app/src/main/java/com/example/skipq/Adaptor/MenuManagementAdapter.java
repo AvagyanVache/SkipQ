@@ -1,6 +1,7 @@
 package com.example.skipq.Adaptor;
 
-import com.bumptech.glide.Glide;
+import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,32 +9,35 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.R;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAdapter.ViewHolder> {
+    private Context context;
     private List<MenuDomain> items;
     private Consumer<MenuDomain> onUpdate;
     private Consumer<String> onDelete;
     private int selectedPosition = -1;
 
-    public MenuManagementAdapter(List<MenuDomain> items, Consumer<MenuDomain> onUpdate, Consumer<String> onDelete) {
+    public MenuManagementAdapter(Context context, List<MenuDomain> items, Consumer<MenuDomain> onUpdate, Consumer<String> onDelete) {
+        this.context = context;
         this.items = items;
         this.onUpdate = onUpdate;
         this.onDelete = onDelete;
     }
 
-
     public void updateItems(List<MenuDomain> newItems) {
         this.items = newItems;
         notifyDataSetChanged();
     }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -45,65 +49,60 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         MenuDomain item = items.get(position);
 
-        // Safely set text with null checks
-        if (holder.itemName != null) holder.itemName.setText(item.getItemName() != null ? item.getItemName() : "");
-        if (holder.itemPrice != null) holder.itemPrice.setText(item.getItemPrice() != null ? item.getItemPrice() : "");
-        if (holder.itemPrepTime != null) holder.itemPrepTime.setText(item.getPrepTime() >= 0 ? String.valueOf(item.getPrepTime()) : "");
-        if (holder.itemDescription != null) holder.itemDescription.setText(item.getItemDescription() != null ? item.getItemDescription() : "");
-        holder.itemAvailability.setText("Availability: " + (item.isAvailable() ? "Available" : "Unavailable"));        String base64Image = item.getItemImg();
-        if (holder.itemImage != null) {
-            if (item.getItemImg() != null && !item.getItemImg().isEmpty()) {
-                Glide.with(holder.itemView.getContext())
-                        .load(item.getItemImg())
-                        .into(holder.itemImage);
-            } else {
-                holder.itemImage.setImageDrawable(null); // Or set a placeholder
-            }
+        String fullDescription = item.getItemDescription() != null ? item.getItemDescription() : "";
+        String shortDescription = shortenDescription(fullDescription);
+        holder.itemDescription.setText(shortDescription);
+        holder.itemName.setText(item.getItemName() != null ? item.getItemName() : "N/A");
+        double price = 0.0;
+        try {
+            price = Double.parseDouble(item.getItemPrice() != null ? item.getItemPrice() : "0");
+        } catch (NumberFormatException e) {
+            Log.e("MenuManagementAdapter", "Invalid price format for item: " + item.getItemName(), e);
         }
+        holder.itemPrice.setText(String.format("֏ %.2f", price));
+        holder.itemPrepTime.setText(item.getPrepTime() >= 0 ? String.format("%d min", item.getPrepTime()) : "N/A");
+        holder.itemAvailability.setText("Availability: " + (item.isAvailable() ? "Available" : "Unavailable"));
 
-        // Set visibility of Edit and Delete buttons based on selected position
-        if (position == selectedPosition) {
-            if (holder.updateButton != null) holder.updateButton.setVisibility(View.VISIBLE);
-            if (holder.deleteButton != null) holder.deleteButton.setVisibility(View.VISIBLE);
+        if (item.getItemImg() != null && !item.getItemImg().isEmpty() && item.getItemImg().startsWith("http")) {
+            Glide.with(context)
+                    .load(item.getItemImg())
+                    .placeholder(R.drawable.white)
+                    .error(R.drawable.white)
+                    .into(holder.itemImage);
         } else {
-            if (holder.updateButton != null) holder.updateButton.setVisibility(View.GONE);
-            if (holder.deleteButton != null) holder.deleteButton.setVisibility(View.GONE);
+            holder.itemImage.setImageResource(R.drawable.white);
         }
 
-        // Handle item click to toggle visibility
+        if (position == selectedPosition) {
+            holder.updateButton.setVisibility(View.VISIBLE);
+            holder.deleteButton.setVisibility(View.VISIBLE);
+        } else {
+            holder.updateButton.setVisibility(View.GONE);
+            holder.deleteButton.setVisibility(View.GONE);
+        }
+
         holder.itemView.setOnClickListener(v -> {
             int previousPosition = selectedPosition;
-            int currentPosition = holder.getAdapterPosition();
-
-            if (currentPosition == selectedPosition) {
-                selectedPosition = -1;
-            } else {
-                selectedPosition = currentPosition;
-            }
-
+            selectedPosition = position == selectedPosition ? -1 : position;
             if (previousPosition != -1) {
                 notifyItemChanged(previousPosition);
             }
             if (selectedPosition != -1) {
                 notifyItemChanged(selectedPosition);
+            } else {
+                showItemDetailsDialog(item);
             }
         });
 
-        // Update button click listener
-        if (holder.updateButton != null) {
-            holder.updateButton.setOnClickListener(v -> {
-                onUpdate.accept(item);
-                resetSelection();
-            });
-        }
+        holder.updateButton.setOnClickListener(v -> {
+            onUpdate.accept(item);
+            resetSelection();
+        });
 
-        // Delete button click listener
-        if (holder.deleteButton != null) {
-            holder.deleteButton.setOnClickListener(v -> {
-                onDelete.accept(item.getItemName());
-                resetSelection();
-            });
-        }
+        holder.deleteButton.setOnClickListener(v -> {
+            onDelete.accept(item.getItemName());
+            resetSelection();
+        });
     }
 
     @Override
@@ -111,13 +110,70 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
         return items.size();
     }
 
-    // Reset selected position and refresh the adapter
     public void resetSelection() {
         int previousPosition = selectedPosition;
         selectedPosition = -1;
         if (previousPosition != -1) {
             notifyItemChanged(previousPosition);
         }
+    }
+
+    private String shortenDescription(String description) {
+        if (description.isEmpty()) {
+            return "No description";
+        }
+        String[] words = description.split("\\s+");
+        int wordCount = Math.min(words.length, 3);
+        StringBuilder shortDesc = new StringBuilder();
+        for (int i = 0; i < wordCount; i++) {
+            shortDesc.append(words[i]);
+            if (i < wordCount - 1) {
+                shortDesc.append(" ");
+            }
+        }
+        if (words.length > 3) {
+            shortDesc.append("...");
+        }
+        return shortDesc.toString();
+    }
+
+    private void showItemDetailsDialog(MenuDomain item) {
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View dialogView = inflater.inflate(R.layout.dialog_menu_item_details, null);
+
+        ImageView itemImage = dialogView.findViewById(R.id.item_image);
+        TextView itemName = dialogView.findViewById(R.id.item_name);
+        TextView itemDescription = dialogView.findViewById(R.id.item_description);
+        TextView itemPrice = dialogView.findViewById(R.id.item_price);
+        TextView itemPrepTime = dialogView.findViewById(R.id.item_prep_time);
+
+        itemName.setText(item.getItemName() != null ? item.getItemName() : "N/A");
+        itemDescription.setText(item.getItemDescription() != null ? item.getItemDescription() : "No description");
+        double price = 0.0;
+        try {
+            price = Double.parseDouble(item.getItemPrice() != null ? item.getItemPrice() : "0");
+        } catch (NumberFormatException e) {
+            Log.e("MenuManagementAdapter", "Invalid price format for item: " + item.getItemName(), e);
+        }
+        itemPrice.setText(String.format("֏ %.2f", price));
+        itemPrepTime.setText(item.getPrepTime() >= 0 ? String.format("%d min", item.getPrepTime()) : "N/A");
+
+        if (item.getItemImg() != null && !item.getItemImg().isEmpty() && item.getItemImg().startsWith("http")) {
+            Glide.with(context)
+                    .load(item.getItemImg())
+                    .placeholder(R.drawable.white)
+                    .error(R.drawable.white)
+                    .into(itemImage);
+        } else {
+            itemImage.setImageResource(R.drawable.white);
+        }
+
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle("Item Details")
+                .setView(dialogView)
+                .setPositiveButton("OK", (d, which) -> d.dismiss())
+                .create();
+        dialog.show();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

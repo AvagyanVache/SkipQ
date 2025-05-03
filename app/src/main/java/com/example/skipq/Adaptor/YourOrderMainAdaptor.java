@@ -47,17 +47,14 @@ public class YourOrderMainAdaptor extends RecyclerView.Adapter<YourOrderMainAdap
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         YourOrderMainDomain order = orderList.get(position);
-        holder.restaurantName.setText(order.getRestaurant().getName());
-        holder.orderPrice.setText(String.format("%.2f֏", order.getTotalPrice()));
-        holder.totalprepTime.setText(order.getTotalPrepTime() + " mins");
+        holder.restaurantName.setText(order.getRestaurant().getName() != null ? order.getRestaurant().getName() : "N/A");
+        holder.orderPrice.setText(String.format("֏ %.2f", order.getTotalPrice()));
+        holder.totalPrepTime.setText(order.getTotalPrepTime() >= 0 ? String.format("%d min", order.getTotalPrepTime()) : "N/A");
 
         String restaurantName = order.getRestaurant().getName();
-
         if (restaurantName != null && !restaurantName.isEmpty()) {
-            String imagePath = "restaurant_logos/" + restaurantName + "_logo.jpg";
-
+            String imagePath = "restaurant_logos/" + restaurantName.replaceAll("[^a-zA-Z0-9]", "_") + "_logo.jpg";
             StorageReference storageReference = FirebaseStorage.getInstance().getReference().child(imagePath);
-
             storageReference.getDownloadUrl()
                     .addOnSuccessListener(uri -> {
                         Glide.with(context)
@@ -67,6 +64,7 @@ public class YourOrderMainAdaptor extends RecyclerView.Adapter<YourOrderMainAdap
                                 .into(holder.restaurantImage);
                     })
                     .addOnFailureListener(e -> {
+                        Log.e("YourOrderMainAdaptor", "Failed to load restaurant logo: " + e.getMessage());
                         holder.restaurantImage.setImageResource(R.drawable.white);
                     });
         } else {
@@ -80,14 +78,13 @@ public class YourOrderMainAdaptor extends RecyclerView.Adapter<YourOrderMainAdap
         });
     }
 
-
     @Override
     public int getItemCount() {
         return orderList.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView restaurantName, orderPrice, totalprepTime;
+        TextView restaurantName, orderPrice, totalPrepTime;
         ImageView restaurantImage;
 
         public ViewHolder(@NonNull View itemView) {
@@ -95,7 +92,7 @@ public class YourOrderMainAdaptor extends RecyclerView.Adapter<YourOrderMainAdap
             restaurantName = itemView.findViewById(R.id.YourOrderRestaurantTitle);
             orderPrice = itemView.findViewById(R.id.RestaurantOrderPrice);
             restaurantImage = itemView.findViewById(R.id.YourOrderRestaurantPhoto);
-            totalprepTime =itemView.findViewById(R.id.PrepTime);
+            totalPrepTime = itemView.findViewById(R.id.PrepTime);
         }
     }
 }

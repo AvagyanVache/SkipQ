@@ -67,7 +67,6 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Restaurant Profile Section -->
             <LinearLayout
                 android:id="@+id/restaurantProfileSection"
                 android:layout_width="match_parent"

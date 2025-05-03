@@ -15,6 +15,7 @@ public class MenuDomain implements Parcelable {
     private RestaurantDomain restaurant;
     private String restaurantId;
     private boolean available;
+    private String documentId;
 
 
     public MenuDomain() {}
@@ -28,13 +29,14 @@ public class MenuDomain implements Parcelable {
         prepTime = in.readInt();
         restaurant = in.readParcelable(RestaurantDomain.class.getClassLoader());
     }
-    public MenuDomain(String itemName, String itemDescription, String itemImg, String itemPrice, int prepTime, int itemCount) {
+    public MenuDomain(String itemName, String itemDescription, String itemImg, String itemPrice, int prepTime, int itemCount, String documentId) {
         this.itemName = itemName;
         this.itemDescription = itemDescription;
         this.itemImg = itemImg;
         this.itemPrice = itemPrice;
         this.prepTime = prepTime;
         this.itemCount= itemCount;
+        this.documentId = documentId;
     }
 
 
@@ -49,6 +51,14 @@ public class MenuDomain implements Parcelable {
             return new MenuDomain[size];
         }
     };
+
+    public String getDocumentId() {
+        return documentId;
+    }
+
+    public void setDocumentId(String documentId) {
+        this.documentId = documentId;
+    }
 
     public String getRestaurantId() {
         return restaurantId;

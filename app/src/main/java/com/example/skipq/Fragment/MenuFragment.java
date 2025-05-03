@@ -265,7 +265,7 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
         TextView itemPrepTime = dialogView.findViewById(R.id.item_prep_time);
 
         itemName.setText(item.getItemName() != null ? item.getItemName() : "N/A");
-        itemDescription.setText(item.getItemDescription() != null ? item.getItemDescription() : "No description"); // Full description
+        itemDescription.setText(item.getItemDescription() != null ? item.getItemDescription() : "No description");
         double price = 0.0;
         try {
             price = Double.parseDouble(item.getItemPrice() != null ? item.getItemPrice() : "0");
@@ -273,7 +273,7 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
             Log.e("MenuFragment", "Invalid price format for item: " + item.getItemName(), e);
         }
         itemPrice.setText(String.format("֏ %.2f", price));
-        itemPrepTime.setText(String.format("%d min", item.getPrepTime()));
+        itemPrepTime.setText(item.getPrepTime() > 0 ? String.format("%d min", item.getPrepTime()) : "Not specified");
 
         if (item.getItemImg() != null && !item.getItemImg().isEmpty() && item.getItemImg().startsWith("http")) {
             Glide.with(getContext())
