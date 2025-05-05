@@ -110,7 +110,7 @@ public class YourOrderFragment extends Fragment {
                 yourOrderAdapter = new YourOrderAdaptor(requireContext(), cartItems);
                 recyclerView.setAdapter(yourOrderAdapter);
                 totalPriceTextView.setText(String.format("%.2f֏", order.getTotalPrice()));
-                orderCountdownTextView.setText("Waiting for acceptance...");
+                orderCountdownTextView.setText("00:00");
 
                 boolean isNewOrder = args.getBoolean("isNewOrder", false);
                 if (isNewOrder) {
@@ -166,7 +166,7 @@ public class YourOrderFragment extends Fragment {
                         orderCountdownTextView.setText("00:00");
                         TextView countdownLabel = getView().findViewById(R.id.countdownLabel);
                         if (countdownLabel != null) {
-                            countdownLabel.setText("Ready! Go pick up your order now!");
+                            countdownLabel.setText("Ready!\nGo pick up your order now!");
                         }
                         lastApprovalStatus = approvalStatus;
                         return;
@@ -174,7 +174,7 @@ public class YourOrderFragment extends Fragment {
 
                     // If not accepted, show waiting message
                     if (!"accepted".equals(approvalStatus)) {
-                        orderCountdownTextView.setText("Waiting for acceptance...");
+                        orderCountdownTextView.setText("00:00");
                         lastApprovalStatus = approvalStatus;
                         return;
                     }
@@ -198,7 +198,7 @@ public class YourOrderFragment extends Fragment {
                                         .addOnSuccessListener(doc -> {
                                             Timestamp serverTime = doc.getTimestamp("timestamp");
                                             if (serverTime == null || !"accepted".equals(approvalStatus)) {
-                                                orderCountdownTextView.setText("Waiting for acceptance...");
+                                                orderCountdownTextView.setText("00:00");
                                                 Log.d("FirestoreDebug", "Server time null or status changed");
                                                 return;
                                             }
@@ -222,7 +222,7 @@ public class YourOrderFragment extends Fragment {
                                                 orderCountdownTextView.setText("00:00");
                                                 TextView countdownLabel = getView().findViewById(R.id.countdownLabel);
                                                 if (countdownLabel != null) {
-                                                    countdownLabel.setText("Ready! Go pick up your order now!");
+                                                    countdownLabel.setText("Ready!\nGo pick up your order now!");
                                                 }
                                                 Log.d("FirestoreDebug", "Order ready, no countdown needed");
                                             }
@@ -258,7 +258,7 @@ public class YourOrderFragment extends Fragment {
                         if (restaurantId != null && orderItems != null) {
                             fetchMenuItemsForOrder(restaurantId, orderItems);
                             totalPriceTextView.setText(String.format("%.2f֏", totalPrice != null ? totalPrice : 0.0));
-                            orderCountdownTextView.setText("Waiting for acceptance...");
+                            orderCountdownTextView.setText("00:00");
                         } else {
                             Log.e("FirestoreDebug", "RestaurantId or items missing in order document");
                             if (cartItems == null) {
@@ -266,16 +266,16 @@ public class YourOrderFragment extends Fragment {
                             }
                             yourOrderAdapter = new YourOrderAdaptor(requireContext(), cartItems);
                             recyclerView.setAdapter(yourOrderAdapter);
-                            orderCountdownTextView.setText("Waiting for acceptance...");
+                            orderCountdownTextView.setText("00:00");
                         }
                     } else {
                         Log.e("FirestoreDebug", "Order document does not exist");
-                        orderCountdownTextView.setText("Waiting for acceptance...");
+                        orderCountdownTextView.setText("00:00");
                     }
                 })
                 .addOnFailureListener(e -> {
                     Log.e("FirestoreError", "Failed to fetch order: " + e.getMessage());
-                    orderCountdownTextView.setText("Waiting for acceptance...");
+                    orderCountdownTextView.setText("00:00");
                 });
     }
     private void fetchMenuItemsForOrder(String restaurantId, List<Map<String, Object>> orderItems) {
@@ -387,7 +387,7 @@ public class YourOrderFragment extends Fragment {
             orderCountdownTextView.setText("00:00");
             TextView countdownLabel = getView().findViewById(R.id.countdownLabel);
             if (countdownLabel != null) {
-                countdownLabel.setText("Ready! Go pick up your order now!");
+                countdownLabel.setText("Ready!\nGo pick up your order now!");
             }
             return;
         }
@@ -413,7 +413,7 @@ public class YourOrderFragment extends Fragment {
                 orderCountdownTextView.setText("00:00");
                 TextView countdownLabel = getView().findViewById(R.id.countdownLabel);
                 if (countdownLabel != null) {
-                    countdownLabel.setText("Ready! Go pick up your order now!");
+                    countdownLabel.setText("Ready!\nGo pick up your order now!");
                 }
             }
         }.start();

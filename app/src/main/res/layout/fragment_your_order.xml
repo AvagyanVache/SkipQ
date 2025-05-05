@@ -45,6 +45,7 @@
         android:layout_gravity="center_horizontal"
         android:text="Your order will be \n ready in"
         android:textSize="35dp"
+        android:paddingLeft="20dp"
         android:textColor="@color/white"
         android:layout_marginTop="110dp"
         android:textStyle="bold" />
