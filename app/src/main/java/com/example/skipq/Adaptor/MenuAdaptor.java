@@ -92,19 +92,21 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
         }
         holder.menuItemPrice.setText(String.format("֏ %.2f", price));
         holder.prepTime.setText(MessageFormat.format("{0} min", menuItem.getPrepTime()));
-        holder.itemCount.setText(String.valueOf(menuItem.getItemCount()));
-
+        holder.itemCount.setText(String.format("%02d", menuItem.getItemCount()));
         // Load image from Firebase Storage URL
         if (menuItem.getItemImg() != null && !menuItem.getItemImg().isEmpty() && menuItem.getItemImg().startsWith("http")) {
             Glide.with(context)
                     .load(menuItem.getItemImg())
+                    .centerCrop()
                     .into(holder.menuItemPhoto);
             holder.menuItemPhoto.setVisibility(View.VISIBLE);
         } else {
             holder.menuItemPhoto.setVisibility(View.VISIBLE);
         }
 
-        // Ensure plus and minus buttons are visible
+        holder.menuItemPhoto.setClipToOutline(true);
+        holder.menuItemPhoto.setBackgroundResource(R.drawable.rounded_corners);
+
         holder.plusButton.setVisibility(View.VISIBLE);
         holder.minusButton.setVisibility(View.VISIBLE);
 
@@ -143,22 +145,13 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
         return filteredMenuList.size();
     }
     private String shortenDescription(String description) {
-        if (description.isEmpty()) {
+        if (description == null || description.isEmpty()) {
             return "No description";
         }
-        String[] words = description.split("\\s+");
-        int wordCount = Math.min(words.length, 3); // Take up to 3 words
-        StringBuilder shortDesc = new StringBuilder();
-        for (int i = 0; i < wordCount; i++) {
-            shortDesc.append(words[i]);
-            if (i < wordCount - 1) {
-                shortDesc.append(" ");
-            }
+        if (description.length() <= 15) {
+            return description;
         }
-        if (words.length > 3) {
-            shortDesc.append("...");
-        }
-        return shortDesc.toString();
+        return description.substring(0, 15) + "...";
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

@@ -93,6 +93,10 @@ android:layout_marginRight="10dp"
             android:background="@drawable/back_background"
             android:backgroundTint="@color/primary_color"
             android:gravity="center"
+            android:paddingTop="1dp"
+            android:paddingLeft="2dp"
+            android:paddingRight="2dp"
+            android:paddingBottom="1dp"
             android:layout_marginRight="10dp"
             android:text="Add to Cart"
             android:textColor="@color/white"
@@ -117,31 +121,39 @@ android:layout_marginRight="10dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="30dp"
-            android:gravity="center_vertical"
+            android:layout_marginRight="10dp"
+            android:gravity="center"
             android:text="Item Description"
             tools:layout_editor_absoluteX="246dp"
             tools:layout_editor_absoluteY="44dp" />
 
-
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:background="@drawable/back_background"
+        android:paddingTop="1dp"
+        android:paddingLeft="2dp"
+        android:paddingRight="2dp"
+        android:paddingBottom="1dp"
+        android:backgroundTint="@color/primary_color"
+        >
         <ImageView
             android:id="@+id/ItemPlus"
             android:layout_width="19dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="15dp"
-            app:layout_constraintBottom_toBottomOf="@+id/imageView"
-            app:layout_constraintStart_toStartOf="@+id/imageView"
-            app:layout_constraintTop_toTopOf="@+id/imageView"
+
             app:layout_constraintVertical_bias="0.567"
-            android:visibility="visible"
-            app:srcCompat="@drawable/plus" />
+            app:srcCompat="@drawable/plus"
+            app:tint="@color/white" />
 
         <TextView
             android:id="@+id/ItemCount"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center_vertical"
+            android:layout_height="wrap_content"
+            android:gravity="center"
             android:text="00"
-            android:visibility="visible"
+            android:textColor="@color/white"
             tools:layout_editor_absoluteX="300dp"
             tools:layout_editor_absoluteY="50dp" />
 
@@ -149,15 +161,11 @@ android:layout_marginRight="10dp"
             android:id="@+id/ItemMinus"
             android:layout_width="19dp"
             android:layout_height="wrap_content"
-            android:layout_marginRight="30dp"
-            app:layout_constraintBottom_toBottomOf="@+id/imageView"
-            app:layout_constraintEnd_toEndOf="@+id/imageView"
-            app:layout_constraintTop_toTopOf="@+id/imageView"
+
             app:layout_constraintVertical_bias="0.567"
-            android:visibility="visible"
-            app:srcCompat="@drawable/minus" />
-
-
+            app:srcCompat="@drawable/minus"
+            app:tint="@color/white" />
+    </LinearLayout>
     </LinearLayout>
 
 

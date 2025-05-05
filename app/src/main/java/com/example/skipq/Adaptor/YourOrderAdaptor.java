@@ -44,8 +44,7 @@ public class YourOrderAdaptor extends RecyclerView.Adapter<YourOrderAdaptor.View
         holder.itemDescription.setText(shortDescription);
 
         holder.itemPrepTime.setText(MessageFormat.format("{0} min", item.getPrepTime()));
-        holder.itemCount.setText(String.valueOf(item.getItemCount()));
-
+        holder.itemCount.setText(String.format("%02d", item.getItemCount()));
         double price = 0.0;
         try {
             price = Double.parseDouble(item.getItemPrice() != null ? item.getItemPrice() : "0");
@@ -57,12 +56,14 @@ public class YourOrderAdaptor extends RecyclerView.Adapter<YourOrderAdaptor.View
         if (item.getItemImg() != null && !item.getItemImg().isEmpty() && item.getItemImg().startsWith("http")) {
             Glide.with(context)
                     .load(item.getItemImg())
+                    .centerCrop()
                     .into(holder.cartItemImage);
         } else {
             holder.cartItemImage.setImageResource(R.drawable.white);
         }
 
-        // Set item click listener to show dialog
+        holder.cartItemImage.setClipToOutline(true);
+        holder.cartItemImage.setBackgroundResource(R.drawable.rounded_corners);
         holder.itemView.setOnClickListener(v -> showItemDetailsDialog(item));
     }
 
@@ -72,22 +73,13 @@ public class YourOrderAdaptor extends RecyclerView.Adapter<YourOrderAdaptor.View
     }
 
     private String shortenDescription(String description) {
-        if (description.isEmpty()) {
+        if (description == null || description.isEmpty()) {
             return "No description";
         }
-        String[] words = description.split("\\s+");
-        int wordCount = Math.min(words.length, 3); // Take up to 3 words
-        StringBuilder shortDesc = new StringBuilder();
-        for (int i = 0; i < wordCount; i++) {
-            shortDesc.append(words[i]);
-            if (i < wordCount - 1) {
-                shortDesc.append(" ");
-            }
+        if (description.length() <= 15) {
+            return description;
         }
-        if (words.length > 3) {
-            shortDesc.append("...");
-        }
-        return shortDesc.toString();
+        return description.substring(0, 15) + "...";
     }
 
     private void showItemDetailsDialog(MenuDomain item) {
@@ -114,10 +106,13 @@ public class YourOrderAdaptor extends RecyclerView.Adapter<YourOrderAdaptor.View
         if (item.getItemImg() != null && !item.getItemImg().isEmpty() && item.getItemImg().startsWith("http")) {
             Glide.with(context)
                     .load(item.getItemImg())
+                    .centerCrop()
                     .into(itemImage);
         } else {
             itemImage.setImageResource(R.drawable.white);
         }
+        itemImage.setClipToOutline(true);
+        itemImage.setBackgroundResource(R.drawable.rounded_corners);
 
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setTitle("Item Details")

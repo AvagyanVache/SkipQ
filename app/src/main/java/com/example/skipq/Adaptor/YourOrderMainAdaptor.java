@@ -60,6 +60,7 @@ public class YourOrderMainAdaptor extends RecyclerView.Adapter<YourOrderMainAdap
                         Glide.with(context)
                                 .load(uri.toString())
                                 .placeholder(R.drawable.white)
+                                .centerCrop()
                                 .error(R.drawable.white)
                                 .into(holder.restaurantImage);
                     })
@@ -70,7 +71,8 @@ public class YourOrderMainAdaptor extends RecyclerView.Adapter<YourOrderMainAdap
         } else {
             holder.restaurantImage.setImageResource(R.drawable.white);
         }
-
+        holder.restaurantImage.setClipToOutline(true);
+        holder.restaurantImage.setBackgroundResource(R.drawable.rounded_corners);
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemClick(position);

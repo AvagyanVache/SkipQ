@@ -67,6 +67,7 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
             Glide.with(context)
                     .load(item.getItemImg())
                     .placeholder(R.drawable.white)
+                    .centerCrop()
                     .error(R.drawable.white)
                     .into(holder.itemImage);
         } else {
@@ -162,12 +163,14 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
             Glide.with(context)
                     .load(item.getItemImg())
                     .placeholder(R.drawable.white)
+                    .centerCrop()
                     .error(R.drawable.white)
                     .into(itemImage);
         } else {
             itemImage.setImageResource(R.drawable.white);
         }
-
+        itemImage.setClipToOutline(true);
+        itemImage.setBackgroundResource(R.drawable.rounded_corners);
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setTitle("Item Details")
                 .setView(dialogView)

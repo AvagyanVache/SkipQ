@@ -57,6 +57,7 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
         if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(context)
                     .load(imageUrl)
+                    .centerCrop()
                     .error(R.drawable.white)
                     .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {
                         @Override
@@ -77,7 +78,8 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
             Log.w("RestaurantAdaptor", "imageUrl is null or empty for restaurant: " + restaurant.getName());
             loadLogoFromStorage(sanitizedName, holder.restaurantImage, restaurant.getName());
         }
-
+        holder.restaurantImage.setClipToOutline(true);
+        holder.restaurantImage.setBackgroundResource(R.drawable.rounded_corners);
         holder.itemView.setOnClickListener(v -> listener.onItemClick(restaurant));
     }
 
@@ -89,9 +91,10 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
                     String logoUrl = uri.toString();
                     Glide.with(context)
                             .load(logoUrl)
+                            .centerCrop()
                             .error(R.drawable.white)
                             .into(imageView);
-                    // Update Firestore
+
                     FirebaseFirestore.getInstance()
                             .collection("FoodPlaces").document(restaurantName)
                             .update("logoUrl", logoUrl)
@@ -102,6 +105,7 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
                     Log.e("RestaurantAdaptor", "Failed to load logo from Storage: " + sanitizedName, e);
                     Glide.with(context)
                             .load(R.drawable.white)
+                            .centerCrop()
                             .into(imageView);
                 });
     }

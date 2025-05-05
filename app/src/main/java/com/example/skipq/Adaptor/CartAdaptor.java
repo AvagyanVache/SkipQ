@@ -47,17 +47,22 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
         String shortDescription = shortenDescription(fullDescription);
         holder.cartItemDescription.setText(shortDescription);
         holder.cartItemName.setText(cartItem.getItemName());
-        holder.cartItemCount.setText(String.valueOf(cartItem.getItemCount()));
+        holder.cartItemCount.setText(String.format("%02d", cartItem.getItemCount()));
         holder.cartItemPrice.setText(String.format("%.2f֏", Double.parseDouble(cartItem.getItemPrice())));
         holder.cartItemPrepTime.setText(MessageFormat.format("{0} min", cartItem.getPrepTime()));
 
         if (cartItem.getItemImg() != null && !cartItem.getItemImg().isEmpty()) {
             Glide.with(context)
                     .load(cartItem.getItemImg())
+                    .centerCrop()
                     .into(holder.cartItemImage);
         } else {
             holder.cartItemImage.setImageResource(R.drawable.white); // Fallback
         }
+        holder.cartItemImage.setClipToOutline(true);
+        holder.cartItemImage.setBackgroundResource(R.drawable.rounded_corners);
+
+
         holder.addButton.setVisibility(View.VISIBLE);
         holder.minusButton.setVisibility(View.VISIBLE);
         holder.addButton.setOnClickListener(v -> {
@@ -116,22 +121,13 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
 
     }
     private String shortenDescription(String description) {
-        if (description.isEmpty()) {
+        if (description == null || description.isEmpty()) {
             return "No description";
         }
-        String[] words = description.split("\\s+");
-        int wordCount = Math.min(words.length, 3); // Take up to 3 words
-        StringBuilder shortDesc = new StringBuilder();
-        for (int i = 0; i < wordCount; i++) {
-            shortDesc.append(words[i]);
-            if (i < wordCount - 1) {
-                shortDesc.append(" ");
-            }
+        if (description.length() <= 15) {
+            return description;
         }
-        if (words.length > 3) {
-            shortDesc.append("...");
-        }
-        return shortDesc.toString();
+        return description.substring(0, 15) + "...";
     }
 
     private void showItemDetailsDialog(MenuDomain item) {
@@ -158,10 +154,13 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
         if (item.getItemImg() != null && !item.getItemImg().isEmpty() && item.getItemImg().startsWith("http")) {
             Glide.with(context)
                     .load(item.getItemImg())
+                    .centerCrop()
                     .into(itemImage);
         } else {
-            itemImage.setImageResource(R.drawable.white); // Fallback
+            itemImage.setImageResource(R.drawable.white);
         }
+        itemImage.setClipToOutline(true);
+        itemImage.setBackgroundResource(R.drawable.rounded_corners);
 
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setTitle("Item Details")

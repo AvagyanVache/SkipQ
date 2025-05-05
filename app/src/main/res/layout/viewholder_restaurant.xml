@@ -19,22 +19,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
     <ImageView
         android:id="@+id/RestaurantImageView"
-        android:layout_width="80dp"
-        android:layout_height="70dp"
+        android:layout_width="115dp"
+        android:layout_height="77dp"
         android:layout_margin="5dp"
+        android:paddingRight="10dp"
+        android:paddingLeft="10dp"
         android:background="@drawable/white"
+        android:foregroundGravity="center"
         app:layout_constraintBottom_toBottomOf="@+id/imageView"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintHorizontal_bias="0.56"
+        app:layout_constraintHorizontal_bias="0.723"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.2" />
+        app:layout_constraintVertical_bias="0.264" />
 
-
-
-        <TextView
+    <TextView
             android:id="@+id/RestaurantTextView"
             android:layout_width="123dp"
             android:layout_height="21dp"
