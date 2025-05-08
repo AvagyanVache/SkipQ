@@ -127,6 +127,7 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
 
     private void fetchRestaurants(@Nullable String category) {
         db.collection("FoodPlaces")
+                .whereEqualTo("isApproved", true)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     restaurantList.clear();

@@ -61,7 +61,7 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
         }
         holder.itemPrice.setText(String.format("֏ %.2f", price));
         holder.itemPrepTime.setText(item.getPrepTime() >= 0 ? String.format("%d min", item.getPrepTime()) : "N/A");
-        holder.itemAvailability.setText("Availability: " + (item.isAvailable() ? "Available" : "Unavailable"));
+        holder.itemAvailability.setText((item.isAvailable() ? "Available" : "Unavailable"));
 
         if (item.getItemImg() != null && !item.getItemImg().isEmpty() && item.getItemImg().startsWith("http")) {
             Glide.with(context)

@@ -1,5 +1,7 @@
 package com.example.skipq.Activity;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
@@ -14,6 +16,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,6 +33,7 @@ import com.android.volley.toolbox.Volley;
 import com.example.skipq.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.storage.FirebaseStorage;
@@ -48,13 +52,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.storage.UploadTask;
 
 public class RestaurantSignUpActivity2 extends AppCompatActivity {
 
-    private EditText restaurantName, restaurantApiLink, addressInput;
+    private EditText restaurantName, restaurantApiLink, addressInput, phoneInput;
     private RecyclerView recyclerViewAddresses;
     private AddressAdapter addressAdapter;
     private List<RestaurantAddress> addressList = new ArrayList<>();
@@ -77,6 +82,7 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
         restaurantName = findViewById(R.id.restaurant_name);
         restaurantApiLink = findViewById(R.id.restaurant_api_link);
         addressInput = findViewById(R.id.address_input);
+        phoneInput = findViewById(R.id.phone_input);
         recyclerViewAddresses = findViewById(R.id.recycler_view_addresses);
         addAddressButton = findViewById(R.id.add_address_button);
         uploadLogoButton = findViewById(R.id.uploadLogoButton);
@@ -142,22 +148,26 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                 Toast.makeText(this, "Please enter an address", Toast.LENGTH_SHORT).show();
             }
         });
-
         signUpButton.setOnClickListener(v -> {
             String name = restaurantName.getText().toString().trim();
             String apiLink = restaurantApiLink.getText().toString().trim();
 
+            ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setMessage("Creating...");
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+
             if (validateInput(name, apiLink)) {
                 if (logoUri != null) {
-                    uploadLogoAndSaveData(name, apiLink);
-                } else if (!apiLink.isEmpty()) {
-                    fetchMenuFromApiAndSave(apiLink, name, null);
+                    uploadLogoAndSaveData(name, apiLink, progressDialog);
                 } else {
-                    saveRestaurantWithMenu(name, apiLink, null, null);
+                    saveRestaurantWithMenu(name, apiLink, null, progressDialog);
                 }
+            } else {
+                progressDialog.dismiss();
             }
         });
-    }
+        }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -192,138 +202,165 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
             Toast.makeText(this, "At least one restaurant address is required", Toast.LENGTH_SHORT).show();
             return false;
         }
+        String phone = phoneInput.getText().toString().trim();
+        if (phone.isEmpty()) {
+            Toast.makeText(this, "Contact phone number is required", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (!Patterns.PHONE.matcher(phone).matches()) {
+            Toast.makeText(this, "Please enter a valid phone number", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
         if (!apiLink.isEmpty()) {
             if (!Patterns.WEB_URL.matcher(apiLink).matches()) {
                 Toast.makeText(this, "Please enter a valid API URL", Toast.LENGTH_SHORT).show();
                 return false;
             }
-            }
+        }
         return true;
     }
 
 
-    private void fetchMenuFromApiAndSave(String apiLink, String restaurantName, String logoUrl) {
-        // Check if menu already exists in Firestore
+    private void fetchMenuFromApiAndSave(String restaurantName, String apiLink, Runnable onComplete) {
         db.collection("FoodPlaces").document(restaurantName).collection("Menu")
                 .document("DefaultMenu").collection("Items")
-                .limit(1) // Check for any items
+                .limit(1)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     if (!querySnapshot.isEmpty()) {
-                        // Menu already exists, skip API fetch and proceed to save restaurant
                         Log.d("RestaurantSignUp", "Menu already exists in Firestore, skipping API fetch");
-                        saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, null);
-                    } else {
-                        // Menu does not exist, fetch from API
-                        RequestQueue queue = Volley.newRequestQueue(this);
-                        StringRequest stringRequest = new StringRequest(Request.Method.GET, apiLink,
-                                response -> {
-                                    Log.d("RestaurantSignUp", "API Response: " + response);
-                                    try {
-                                        JSONArray menuItems = new JSONArray(response);
-                                        Map<String, Object> menuData = new HashMap<>();
-                                        Map<String, String> imageUrls = new HashMap<>();
-                                        int totalItems = menuItems.length();
+                        onComplete.run();
+                        return;
+                    }
+                    RequestQueue queue = Volley.newRequestQueue(this);
+                    StringRequest stringRequest = new StringRequest(Request.Method.GET, apiLink,
+                            response -> {
+                                Log.d("RestaurantSignUp", "API Response: " + response);
+                                try {
+                                    JSONArray menuItems = new JSONArray(response);
+                                    Map<String, Object> menuData = new HashMap<>();
+                                    Map<String, String> imageUrls = new HashMap<>();
+                                    int totalItems = menuItems.length();
 
-                                        for (int i = 0; i < totalItems; i++) {
-                                            JSONObject item = menuItems.getJSONObject(i);
-                                            Map<String, Object> itemData = new HashMap<>();
-                                            String tempItemName = item.optString("name", "Unnamed Item_" + i);
-                                            if (tempItemName.isEmpty()) {
-                                                tempItemName = "Unnamed Item_" + i;
-                                            }
-                                            final String itemName = tempItemName; // Create a final copy
-                                            itemData.put("Item Name", itemName);
-                                            itemData.put("Item Price", String.valueOf(item.optDouble("price", 0.0)));
-                                            int prepTime = item.optInt("prepTime", -1);
-                                            itemData.put("Prep Time", prepTime == -1 ? 10 : prepTime);
-                                            itemData.put("Item Description", item.optString("description", "No description available"));
-                                            itemData.put("Available", true);
+                                    if (totalItems == 0) {
+                                        Log.d("RestaurantSignUp", "No menu items in API response");
+                                        onComplete.run();
+                                        return;
+                                    }
 
-                                            String imageUrl = item.optString("image", "");
-                                            if (!imageUrl.isEmpty() && imageUrl.startsWith("http")) {
-                                                String imageId = UUID.randomUUID().toString();
-                                                StorageReference imageRef = storage.getReference().child("menu_images/" + restaurantName + "/" + imageId + ".jpg");
-                                                try {
-                                                    URL url = new URL(imageUrl);
-                                                    new Thread(() -> {
-                                                        try {
-                                                            InputStream inputStream = url.openStream();
-                                                            UploadTask uploadTask = imageRef.putStream(inputStream);
-                                                            uploadTask.addOnSuccessListener(taskSnapshot -> {
-                                                                imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                                                                    synchronized (imageUrls) {
-                                                                        imageUrls.put(itemName, uri.toString());
-                                                                        if (imageUrls.size() == totalItems) {
-                                                                            updateMenuDataWithImages(menuData, imageUrls);
-                                                                            saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
-                                                                        }
-                                                                    }
-                                                                });
-                                                            }).addOnFailureListener(e -> {
-                                                                Log.e("RestaurantSignUp", "Failed to upload image for " + itemName + ": " + e.getMessage());
+                                    for (int i = 0; i < totalItems; i++) {
+                                        JSONObject item = menuItems.getJSONObject(i);
+                                        Map<String, Object> itemData = new HashMap<>();
+                                        String tempItemName = item.optString("name", null);
+                                        if (tempItemName == null || tempItemName.trim().isEmpty()) {
+                                            tempItemName = "Item_" + UUID.randomUUID().toString();
+                                        }
+                                        final String itemName = tempItemName;
+                                        itemData.put("Item Name", itemName);
+                                        itemData.put("Item Price", String.valueOf(item.optDouble("price", 0.0)));
+                                        int prepTime = item.optInt("prepTime", -1);
+                                        itemData.put("Prep Time", prepTime == -1 ? 10 : prepTime);
+                                        itemData.put("Item Description", item.optString("description", "No description available"));
+                                        itemData.put("Available", true);
+
+                                        String imageUrl = item.optString("image", "");
+                                        if (!imageUrl.isEmpty() && imageUrl.startsWith("http")) {
+                                            String imageId = UUID.randomUUID().toString();
+                                            StorageReference imageRef = storage.getReference().child("menu_images/" + restaurantName + "/" + imageId + ".jpg");
+                                            try {
+                                                URL url = new URL(imageUrl);
+                                                new Thread(() -> {
+                                                    try {
+                                                        InputStream inputStream = url.openStream();
+                                                        UploadTask uploadTask = imageRef.putStream(inputStream);
+                                                        uploadTask.addOnSuccessListener(taskSnapshot -> {
+                                                            imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
                                                                 synchronized (imageUrls) {
-                                                                    imageUrls.put(itemName, "");
+                                                                    imageUrls.put(itemName, uri.toString());
                                                                     if (imageUrls.size() == totalItems) {
                                                                         updateMenuDataWithImages(menuData, imageUrls);
-                                                                        saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
+                                                                        saveMenuToFirestore(restaurantName, menuData, onComplete);
                                                                     }
                                                                 }
                                                             });
-                                                        } catch (Exception e) {
-                                                            Log.e("RestaurantSignUp", "Error downloading image for " + itemName + ": " + e.getMessage());
+                                                        }).addOnFailureListener(e -> {
+                                                            Log.e("RestaurantSignUp", "Failed to upload image for " + itemName + ": " + e.getMessage());
                                                             synchronized (imageUrls) {
                                                                 imageUrls.put(itemName, "");
                                                                 if (imageUrls.size() == totalItems) {
                                                                     updateMenuDataWithImages(menuData, imageUrls);
-                                                                    saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
+                                                                    saveMenuToFirestore(restaurantName, menuData, onComplete);
                                                                 }
                                                             }
-                                                        }
-                                                    }).start();
-                                                } catch (Exception e) {
-                                                    Log.e("RestaurantSignUp", "Invalid image URL for " + itemName + ": " + imageUrl);
-                                                    synchronized (imageUrls) {
-                                                        imageUrls.put(itemName, "");
-                                                        if (imageUrls.size() == totalItems) {
-                                                            updateMenuDataWithImages(menuData, imageUrls);
-                                                            saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
+                                                        });
+                                                    } catch (Exception e) {
+                                                        Log.e("RestaurantSignUp", "Error downloading image for " + itemName + ": " + e.getMessage());
+                                                        synchronized (imageUrls) {
+                                                            imageUrls.put(itemName, "");
+                                                            if (imageUrls.size() == totalItems) {
+                                                                updateMenuDataWithImages(menuData, imageUrls);
+                                                                saveMenuToFirestore(restaurantName, menuData, onComplete);
+                                                            }
                                                         }
                                                     }
-                                                }
-                                            } else {
+                                                }).start();
+                                            } catch (Exception e) {
+                                                Log.e("RestaurantSignUp", "Invalid image URL for " + itemName + ": " + imageUrl);
                                                 synchronized (imageUrls) {
                                                     imageUrls.put(itemName, "");
                                                     if (imageUrls.size() == totalItems) {
                                                         updateMenuDataWithImages(menuData, imageUrls);
-                                                        saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, menuData);
+                                                        saveMenuToFirestore(restaurantName, menuData, onComplete);
                                                     }
                                                 }
                                             }
-
-                                            // Use sanitized itemName as document ID
-                                            String sanitizedItemName = itemName.replaceAll("[^a-zA-Z0-9]", "_");
-                                            menuData.put(sanitizedItemName, itemData);
+                                        } else {
+                                            synchronized (imageUrls) {
+                                                imageUrls.put(itemName, "");
+                                                if (imageUrls.size() == totalItems) {
+                                                    updateMenuDataWithImages(menuData, imageUrls);
+                                                    saveMenuToFirestore(restaurantName, menuData, onComplete);
+                                                }
+                                            }
                                         }
-                                    } catch (JSONException e) {
-                                        Log.e("RestaurantSignUp", "Error parsing menu: " + e.getMessage(), e);
-                                        Toast.makeText(this, "Error parsing menu", Toast.LENGTH_SHORT).show();
-                                        saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, null);
+
+                                        String sanitizedItemName = itemName.replaceAll("[^a-zA-Z0-9]", "_");
+                                        menuData.put(sanitizedItemName, itemData);
                                     }
-                                },
-                                error -> {
-                                    Log.e("RestaurantSignUp", "Failed to fetch menu: " + error.getMessage(), error);
-                                    Toast.makeText(this, "Failed to fetch menu", Toast.LENGTH_SHORT).show();
-                                    saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, null);
-                                });
-                        queue.add(stringRequest);
-                    }
+                                } catch (JSONException e) {
+                                    Log.e("RestaurantSignUp", "Error parsing menu: " + e.getMessage(), e);
+                                    Toast.makeText(this, "Error parsing menu", Toast.LENGTH_SHORT).show();
+                                    onComplete.run();
+                                }
+                            },
+                            error -> {
+                                Log.e("RestaurantSignUp", "Failed to fetch menu: " + error.getMessage(), error);
+                                Toast.makeText(this, "Failed to fetch menu", Toast.LENGTH_SHORT).show();
+                                onComplete.run();
+                            });
+                    queue.add(stringRequest);
                 })
                 .addOnFailureListener(e -> {
                     Log.e("RestaurantSignUp", "Failed to check Firestore for existing menu: " + e.getMessage(), e);
                     Toast.makeText(this, "Error checking existing menu", Toast.LENGTH_SHORT).show();
-                    saveRestaurantWithMenu(restaurantName, apiLink, logoUrl, null);
+                    onComplete.run();
                 });
+    }
+    private void saveMenuToFirestore(String restaurantName, Map<String, Object> menuData, Runnable onComplete) {
+        String menuDocName = "DefaultMenu";
+        for (Map.Entry<String, Object> entry : menuData.entrySet()) {
+            db.collection("FoodPlaces").document(restaurantName).collection("Menu")
+                    .document(menuDocName).collection("Items")
+                    .document(entry.getKey()).set(entry.getValue())
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d("RestaurantSignUp", "Menu item saved: " + entry.getKey());
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("RestaurantSignUp", "Failed to save menu item " + entry.getKey() + ": " + e.getMessage(), e);
+                    });
+        }
+        onComplete.run();
     }
     private void updateMenuDataWithImages(Map<String, Object> menuData, Map<String, String> imageUrls) {
         for (Map.Entry<String, String> entry : imageUrls.entrySet()) {
@@ -333,62 +370,114 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
             }
         }
     }
-    private void uploadLogoAndSaveData(String name, String apiLink) {
+    private void uploadLogoAndSaveData(String name, String apiLink, ProgressDialog progressDialog) {
         String sanitizedName = name.replaceAll("[^a-zA-Z0-9]", "_");
         StorageReference logoRef = storage.getReference().child("restaurant_logos/" + sanitizedName + "_logo.jpg");
         logoRef.putFile(logoUri)
                 .addOnSuccessListener(taskSnapshot -> logoRef.getDownloadUrl().addOnSuccessListener(uri -> {
                     String logoUrl = uri.toString();
-                    // Proceed with restaurant data (no users collection update)
-                    if (!apiLink.isEmpty()) {
-                        fetchMenuFromApiAndSave(apiLink, name, logoUrl);
-                    } else {
-                        saveRestaurantWithMenu(name, apiLink, logoUrl, null);
-                    }
+                    saveRestaurantWithMenu(name, apiLink, logoUrl, progressDialog);
                 }))
                 .addOnFailureListener(e -> {
                     Log.e("RestaurantSignUp", "Failed to upload logo: " + e.getMessage(), e);
+                    progressDialog.dismiss();
                     Toast.makeText(this, "Failed to upload logo: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    // Proceed without logo if upload fails
-                    if (!apiLink.isEmpty()) {
-                        fetchMenuFromApiAndSave(apiLink, name, null);
-                    } else {
-                        saveRestaurantWithMenu(name, apiLink, null, null);
-                    }
+                    saveRestaurantWithMenu(name, apiLink, null, progressDialog);
                 });
     }
-    private void saveRestaurantWithMenu(String name, String apiLink, String logoUrl, Map<String, Object> menuData) {
-        // Verify authenticated user
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser == null || !uid.equals(currentUser.getUid())) {
-            Log.e("RestaurantSignUp", "User not authenticated or UID mismatch. Provided UID: " + uid + ", Current User UID: " + (currentUser != null ? currentUser.getUid() : "null"));
-            Toast.makeText(this, "Authentication error. Please try again.", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-
-        db.collection("FoodPlaces").document(name).get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult().exists()) {
-                        Toast.makeText(this, "A restaurant with this name already exists.", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Map<String, Object> restaurantInfo = new HashMap<>();
-                        restaurantInfo.put("name", name);
-                        restaurantInfo.put("email", email);
-                        restaurantInfo.put("uid", uid);
-                        restaurantInfo.put("role", "restaurant");
-                        restaurantInfo.put("category", selectedCategory);
-                        if (!apiLink.isEmpty()) {
-                            restaurantInfo.put("apiLink", apiLink);
+    private void saveRestaurantWithMenu(String name, String apiLink, String logoUrl, ProgressDialog progressDialog) {
+        db.collection("System").document("DeletedRestaurants")
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        List<String> deletedRestaurantNames = (List<String>) documentSnapshot.get("deletedRestaurantNames");
+                        if (deletedRestaurantNames != null && deletedRestaurantNames.contains(name)) {
+                            Log.d("RestaurantSignUp", "Restaurant " + name + " was previously deleted. Aborting save.");
+                            progressDialog.dismiss();
+                            Toast.makeText(this, "This restaurant was previously deleted. Please use a different name.", Toast.LENGTH_SHORT).show();
+                            return;
                         }
-                        if (logoUrl != null) {
-                            restaurantInfo.put("logoUrl", logoUrl);
-                        }
+                    }
+                    FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                    if (currentUser == null || !uid.equals(currentUser.getUid())) {
+                        Log.e("RestaurantSignUp", "User not authenticated or UID mismatch. Provided UID: " + uid + ", Current User UID: " + (currentUser != null ? currentUser.getUid() : "null"));
+                        progressDialog.dismiss();
+                        Toast.makeText(this, "Authentication error. Please try again.", Toast.LENGTH_SHORT).show();
+                        finish();
+                        return;
+                    }
 
-                        db.collection("FoodPlaces").document(name)
-                                .set(restaurantInfo)
-                                .addOnSuccessListener(aVoid -> {
-                                    // Save addresses to subcollection
+                    db.collection("FoodPlaces").document(name).get()
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful() && task.getResult().exists()) {
+                                    progressDialog.dismiss();
+                                    Toast.makeText(this, "A restaurant with this name already exists.", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Map<String, Object> restaurantInfo = new HashMap<>();
+                                    restaurantInfo.put("name", name);
+                                    restaurantInfo.put("email", email);
+                                    restaurantInfo.put("uid", uid);
+                                    restaurantInfo.put("role", "restaurant");
+                                    restaurantInfo.put("category", selectedCategory);
+                                    restaurantInfo.put("isApproved", false);
+                                    restaurantInfo.put("contactPhone", phoneInput.getText().toString().trim());
+                                    if (!apiLink.isEmpty()) {
+                                        restaurantInfo.put("apiLink", apiLink);
+                                    }
+                                    if (logoUrl != null) {
+                                        restaurantInfo.put("logoUrl", logoUrl);
+                                    }
+
+                                    Map<String, Object> userInfo = new HashMap<>();
+                                    userInfo.put("name", name);
+                                    userInfo.put("email", email);
+                                    userInfo.put("role", "restaurant");
+                                    userInfo.put("restaurantId", name);
+                                    userInfo.put("phoneNumber", phoneInput.getText().toString().trim());
+                                    if (logoUrl != null) {
+                                        userInfo.put("profilePictureUrl", logoUrl);
+                                    }
+
+                                    AtomicInteger pendingTasks = new AtomicInteger(addressList.size() + 2);
+                                    List<Exception> errors = new ArrayList<>();
+
+                                    db.collection("users").document(uid)
+                                            .set(userInfo, SetOptions.merge())
+                                            .addOnSuccessListener(aVoid -> {
+                                                Log.d("RestaurantSignUp", "User document created for UID: " + uid);
+                                                if (pendingTasks.decrementAndGet() == 0 && errors.isEmpty()) {
+                                                    setupApprovalListener(name, apiLink);
+                                                    progressDialog.dismiss();
+                                                    proceedToPendingActivity(name);
+                                                }
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                errors.add(e);
+                                                Log.e("RestaurantSignUp", "Failed to save user document: " + e.getMessage(), e);
+                                                if (pendingTasks.decrementAndGet() == 0) {
+                                                    progressDialog.dismiss();
+                                                    Toast.makeText(this, "Failed to save user data: " + errors.get(0).getMessage(), Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+
+                                    db.collection("FoodPlaces").document(name)
+                                            .set(restaurantInfo)
+                                            .addOnSuccessListener(aVoid -> {
+                                                if (pendingTasks.decrementAndGet() == 0 && errors.isEmpty()) {
+                                                    setupApprovalListener(name, apiLink);
+                                                    progressDialog.dismiss();
+                                                    proceedToPendingActivity(name);
+                                                }
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                errors.add(e);
+                                                Log.e("RestaurantSignUp", "Failed to save restaurant: " + e.getMessage(), e);
+                                                if (pendingTasks.decrementAndGet() == 0) {
+                                                    progressDialog.dismiss();
+                                                    Toast.makeText(this, "Failed to save restaurant: " + errors.get(0).getMessage(), Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+
                                     for (RestaurantAddress address : addressList) {
                                         Map<String, Object> addressData = new HashMap<>();
                                         addressData.put("address", address.getAddress());
@@ -396,39 +485,59 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                                         addressData.put("longitude", address.getLongitude());
                                         addressData.put("isAvailable", true);
                                         db.collection("FoodPlaces").document(name)
-                                                .collection("Addresses").add(addressData);
+                                                .collection("Addresses").document(UUID.randomUUID().toString())
+                                                .set(addressData)
+                                                .addOnSuccessListener(aVoid -> {
+                                                    if (pendingTasks.decrementAndGet() == 0 && errors.isEmpty()) {
+                                                        setupApprovalListener(name, apiLink);
+                                                        progressDialog.dismiss();
+                                                        proceedToPendingActivity(name);
+                                                    }
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    errors.add(e);
+                                                    Log.e("RestaurantSignUp", "Failed to save address: " + e.getMessage(), e);
+                                                    if (pendingTasks.decrementAndGet() == 0) {
+                                                        progressDialog.dismiss();
+                                                        Toast.makeText(this, "Failed to save address: " + errors.get(0).getMessage(), Toast.LENGTH_SHORT).show();
+                                                    }
+                                                });
                                     }
-
-                                    // Save menu if provided
-                                    String menuDocName = "DefaultMenu";
-                                    if (menuData != null) {
-                                        for (Map.Entry<String, Object> entry : menuData.entrySet()) {
-                                            db.collection("FoodPlaces").document(name).collection("Menu")
-                                                    .document(menuDocName).collection("Items")
-                                                    .document(entry.getKey()).set(entry.getValue());
-                                        }
-                                    } else {
-                                        db.collection("FoodPlaces").document(name).collection("Menu")
-                                                .document(menuDocName).set(new HashMap<>());
-                                    }
-
-                                    // Navigate to HomeActivity without updating users collection
-                                    Toast.makeText(this, "Restaurant registered successfully!", Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(RestaurantSignUpActivity2.this, HomeActivity.class);
-                                    intent.putExtra("userRole", "restaurant");
-                                    intent.putExtra("restaurantId", name);
-                                    intent.putExtra("FRAGMENT_TO_LOAD", "RESTAURANT_DASHBOARD");
-                                    startActivity(intent);
-                                    finish();
-                                })
-                                .addOnFailureListener(e -> {
-                                    Log.e("RestaurantSignUp", "Failed to save restaurant: " + e.getMessage(), e);
-                                    Toast.makeText(this, "Failed to save restaurant: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                });
-                    }
+                                }
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("RestaurantSignUp", "Failed to check deleted restaurants: " + e.getMessage(), e);
+                    progressDialog.dismiss();
+                    Toast.makeText(this, "Error checking deleted restaurants, cannot proceed", Toast.LENGTH_SHORT).show();
                 });
     }
-
+    private void setupApprovalListener(String restaurantName, String apiLink) {
+        DocumentReference restaurantRef = db.collection("FoodPlaces").document(restaurantName);
+        restaurantRef.addSnapshotListener((snapshot, e) -> {
+            if (e != null) {
+                Log.e("RestaurantSignUp", "Listen failed: " + e.getMessage(), e);
+                return;
+            }
+            if (snapshot != null && snapshot.exists()) {
+                Boolean isApproved = snapshot.getBoolean("isApproved");
+                if (isApproved != null && isApproved) {
+                    Log.d("RestaurantSignUp", "Restaurant " + restaurantName + " approved, fetching menu");
+                    fetchMenuFromApiAndSave(restaurantName, apiLink, () -> {
+                        Log.d("RestaurantSignUp", "Menu fetch and save completed for " + restaurantName);
+                        runOnUiThread(() -> Toast.makeText(this, "Menu loaded for " + restaurantName, Toast.LENGTH_SHORT).show());
+                    });
+                    restaurantRef.addSnapshotListener((s, ex) -> {}).remove();
+                }
+            }
+        });
+    }
+    private void proceedToPendingActivity(String restaurantName) {
+        Intent intent = new Intent(RestaurantSignUpActivity2.this, RestaurantPendingActivity.class);
+        intent.putExtra("restaurantId", restaurantName);
+        startActivity(intent);
+        finish();
+    }
     private static class RestaurantAddress {
         private String address;
         private double latitude;

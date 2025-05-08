@@ -343,7 +343,8 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         String name = documentSnapshot.getString("name");
-                        Map<String, String> operatingHours = (Map<String, String>) documentSnapshot.get("operatingHours");                        String contactPhone = documentSnapshot.getString("contactPhone");
+                        String contactPhone = documentSnapshot.getString("contactPhone");
+                        Map<String, String> operatingHours = (Map<String, String>) documentSnapshot.get("operatingHours");
                         StringBuilder hoursText = new StringBuilder();
                         if (operatingHours == null || operatingHours.isEmpty()) {
                             hoursText.append("Not specified");

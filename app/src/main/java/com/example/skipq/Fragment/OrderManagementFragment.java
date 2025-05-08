@@ -166,36 +166,60 @@ private void acceptOrder(String orderId) {
 
         builder.setItems(declineReasons, (dialog, which) -> {
             String selectedReason = declineReasons[which];
-            Log.d("OrderManagement", "Declining order " + orderId + " with reason: " + selectedReason);
+            if ("Other".equals(selectedReason)) {
+                View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_decline_reason, null);
+                com.google.android.material.textfield.TextInputLayout textInputLayout = dialogView.findViewById(R.id.textInputDeclineReason);
+                com.google.android.material.textfield.TextInputEditText reasonInput = dialogView.findViewById(R.id.decline_reason_input);
+                reasonInput.setHint("Enter reason for decline");
 
-            Map<String, Object> updates = new HashMap<>();
-            updates.put("approvalStatus", "declined");
-            updates.put("declineReason", selectedReason);
-
-            db.collection("orders").document(orderId)
-                    .update(updates)
-                    .addOnSuccessListener(aVoid -> {
-                        Log.d("OrderManagement", "Order " + orderId + " updated to declined with reason: " + selectedReason);
-                        new Handler().postDelayed(() -> {
-                            db.collection("orders").document(orderId)
-                                    .delete()
-                                    .addOnSuccessListener(aVoid2 -> {
-                                        Toast.makeText(getContext(), "Order declined and removed!", Toast.LENGTH_SHORT).show();
-                                        Log.d("OrderManagement", "Order " + orderId + " deleted successfully");
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        Toast.makeText(getContext(), "Failed to delete order: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                        Log.e("OrderManagement", "Failed to delete order: " + e.getMessage());
-                                    });
-                        }, 2000);
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(getContext(), "Failed to decline order: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        Log.e("OrderManagement", "Failed to decline order: " + e.getMessage());
-                    });
+                AlertDialog inputDialog = new AlertDialog.Builder(requireContext())
+                        .setTitle("Specify Decline Reason")
+                        .setView(dialogView)
+                        .setPositiveButton("Submit", (d, w) -> {
+                            String customReason = reasonInput.getText().toString().trim();
+                            if (customReason.isEmpty()) {
+                                Toast.makeText(getContext(), "Please enter a reason", Toast.LENGTH_SHORT).show();
+                            } else {
+                                updateOrderDeclineStatus(orderId, customReason);
+                            }
+                        })
+                        .setNegativeButton("Cancel", (d, w) -> d.dismiss())
+                        .create();
+                inputDialog.show();
+            } else {
+                updateOrderDeclineStatus(orderId, selectedReason);
+            }
         });
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.create().show();
+    }
+
+    private void updateOrderDeclineStatus(String orderId, String reason) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("approvalStatus", "declined");
+        updates.put("declineReason", reason);
+
+        db.collection("orders").document(orderId)
+                .update(updates)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("OrderManagement", "Order " + orderId + " updated to declined with reason: " + reason);
+                    new Handler().postDelayed(() -> {
+                        db.collection("orders").document(orderId)
+                                .delete()
+                                .addOnSuccessListener(aVoid2 -> {
+                                    Toast.makeText(getContext(), "Order declined and removed!", Toast.LENGTH_SHORT).show();
+                                    Log.d("OrderManagement", "Order " + orderId + " deleted successfully");
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(getContext(), "Failed to delete order: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    Log.e("OrderManagement", "Failed to delete order: " + e.getMessage());
+                                });
+                    }, 2000);
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Failed to decline order: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e("OrderManagement", "Failed to decline order: " + e.getMessage());
+                });
     }
 }

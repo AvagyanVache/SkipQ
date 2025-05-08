@@ -205,52 +205,72 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkUserRole(FirebaseUser user) {
-        // First, check if the user is a restaurant in FoodPlaces
-        db.collection("FoodPlaces").whereEqualTo("uid", user.getUid()).get()
-                .addOnSuccessListener(querySnapshot -> {
-                    if (!querySnapshot.isEmpty()) {
-                        // User is a restaurant
-                        String restaurantId = querySnapshot.getDocuments().get(0).getId();
-                        Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                        intent.putExtra("userRole", "restaurant");
-                        intent.putExtra("restaurantId", restaurantId);
-                        intent.putExtra("FRAGMENT_TO_LOAD", "RESTAURANT_DASHBOARD");
-                        if (CheckBox.isChecked()) {
-                            DocumentReference restaurantRef = db.collection("FoodPlaces").document(restaurantId);
-                            restaurantRef.update("rememberMe", true, "email", user.getEmail());
-                        }
-                        startActivity(intent);
-                        finish();
-                    } else {
-                        // Check users collection for "user" role
-                        db.collection("users").document(user.getUid()).get()
-                                .addOnSuccessListener(documentSnapshot -> {
-                                    if (documentSnapshot.exists()) {
-                                        String role = documentSnapshot.getString("role");
-                                        if ("user".equals(role)) {
-                                            // Confirmed user account
-                                            Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                                            intent.putExtra("userRole", "user");
-                                            if (CheckBox.isChecked()) {
-                                                DocumentReference userRef = db.collection("users").document(user.getUid());
-                                                userRef.update("rememberMe", true, "email", user.getEmail());
+        db.collection("users").document(user.getUid()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String role = documentSnapshot.getString("role");
+                        if ("admin".equals(role)) {
+                            Intent intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+                            intent.putExtra("userRole", "admin");
+                            if (CheckBox.isChecked()) {
+                                DocumentReference userRef = db.collection("users").document(user.getUid());
+                                userRef.update("rememberMe", true, "email", user.getEmail());
+                            }
+                            startActivity(intent);
+                            finish();
+                        } else if ("restaurant".equals(role)) {
+                            String restaurantId = documentSnapshot.getString("restaurantId");
+                            if (restaurantId != null) {
+                                db.collection("FoodPlaces").document(restaurantId).get()
+                                        .addOnSuccessListener(restaurantSnapshot -> {
+                                            if (restaurantSnapshot.exists()) {
+                                                Boolean isApproved = restaurantSnapshot.getBoolean("isApproved");
+                                                if (isApproved != null && isApproved) {
+                                                    Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                                                    intent.putExtra("userRole", "restaurant");
+                                                    intent.putExtra("restaurantId", restaurantId);
+                                                    intent.putExtra("FRAGMENT_TO_LOAD", "RESTAURANT_DASHBOARD");
+                                                    if (CheckBox.isChecked()) {
+                                                        DocumentReference restaurantRef = db.collection("FoodPlaces").document(restaurantId);
+                                                        restaurantRef.update("rememberMe", true, "email", user.getEmail());
+                                                    }
+                                                    startActivity(intent);
+                                                    finish();
+                                                } else {
+                                                    Intent intent = new Intent(MainActivity.this, RestaurantPendingActivity.class);
+                                                    intent.putExtra("restaurantId", restaurantId);
+                                                    startActivity(intent);
+                                                    finish();
+                                                }
+                                            } else {
+                                                Toast.makeText(MainActivity.this, "Restaurant not found", Toast.LENGTH_SHORT).show();
                                             }
-                                            startActivity(intent);
-                                            finish();
-                                        } else {
-                                            // No valid role in users collection
-                                            Toast.makeText(MainActivity.this, "Account role not defined", Toast.LENGTH_SHORT).show();
-                                        }
-                                    } else {
-                                        // No document in users or FoodPlaces
-                                        Toast.makeText(MainActivity.this, "Account not found in users or restaurants", Toast.LENGTH_SHORT).show();
-                                    }
-                                })
-                                .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Error checking user role: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                                        })
+                                        .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Error checking restaurant: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                            } else {
+                                Toast.makeText(MainActivity.this, "Restaurant ID not found", Toast.LENGTH_SHORT).show();
+                            }
+                        } else if ("user".equals(role)) {
+                            Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                            intent.putExtra("userRole", "user");
+                            if (CheckBox.isChecked()) {
+                                DocumentReference userRef = db.collection("users").document(user.getUid());
+                                userRef.update("rememberMe", true, "email", user.getEmail());
+                            }
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            Toast.makeText(MainActivity.this, "Account role not defined", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(MainActivity.this, "Account not found", Toast.LENGTH_SHORT).show();
                     }
                 })
-                .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Error checking restaurant role: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Error checking user role: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
+
+
+
 
     public void updateCart() {
         CartFragment cartFragment = (CartFragment) getSupportFragmentManager().findFragmentByTag("CartFragment");

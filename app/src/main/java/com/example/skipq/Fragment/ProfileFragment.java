@@ -562,42 +562,27 @@ public class ProfileFragment extends Fragment {
                             if (!isNetworkAvailable()) {
                                 Log.w(TAG, "No internet connection, loading default logo");
                                 Toast.makeText(getContext(), "No internet connection", Toast.LENGTH_SHORT).show();
-                                Glide.with(ProfileFragment.this)
-                                        .load(R.drawable.white)
-                                        .apply(new RequestOptions()
-                                                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                                                .skipMemoryCache(true))
-                                        .into(restaurantLogo);
-                            } else if (originalLogoUrl != null && !originalLogoUrl.isEmpty()) {
-                                Log.d(TAG, "Loading logo from Firestore logoUrl: " + originalLogoUrl);
-                                Glide.with(ProfileFragment.this)
-                                        .load(originalLogoUrl)
-                                        .apply(new RequestOptions()
-                                                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                                                .skipMemoryCache(true))
-                                        .error(R.drawable.white)
-                                        .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {
-                                            @Override
-                                            public boolean onLoadFailed(@androidx.annotation.Nullable com.bumptech.glide.load.engine.GlideException e, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
-                                                Log.e(TAG, "Glide failed to load logo: " + originalLogoUrl, e);
-                                                // Fallback to Storage
-                                                loadLogoFromStorage(sanitizedName);
-                                                return true;
-                                            }
-
-                                            @Override
-                                            public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
-                                                Log.d(TAG, "Glide successfully loaded logo: " + originalLogoUrl);
-                                                return false;
-                                            }
-                                        })
-                                        .into(restaurantLogo);
+                                restaurantLogo.setImageResource(R.drawable.white);
                             } else {
-                                Log.w(TAG, "logoUrl is null or empty, attempting to load from Storage");
-                                loadLogoFromStorage(sanitizedName);
+                                String imagePath = "restaurant_logos/" + sanitizedName + "_logo.jpg";
+                                StorageReference storageReference = storage.getReference().child(imagePath);
+                                storageReference.getDownloadUrl()
+                                        .addOnSuccessListener(uri -> {
+                                            Log.d(TAG, "Loading logo from Storage: " + uri);
+                                            originalLogoUrl = uri.toString();
+                                            Glide.with(ProfileFragment.this)
+                                                    .load(uri)
+                                                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                                    .placeholder(R.drawable.white)
+                                                    .error(R.drawable.white)
+                                                    .into(restaurantLogo);
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Log.w(TAG, "Failed to load logo from Storage: " + imagePath, e);
+                                            restaurantLogo.setImageResource(R.drawable.white);
+                                        });
                             }
 
-                            // Load addresses
                             db.collection("FoodPlaces").document(restaurantId).collection("Addresses").get()
                                     .addOnSuccessListener(querySnapshot -> {
                                         if (isAdded()) {
@@ -1000,15 +985,14 @@ public class ProfileFragment extends Fragment {
                         updateFirestore(restaurantRef, updates, updatedAddresses);
                         if (isAdded()) {
                             Log.d(TAG, "Refreshing logo in ProfileFragment with URL: " + logoUrl);
-                            originalLogoUrl = logoUrl;
                             Glide.with(ProfileFragment.this)
-                                    .load(logoUrl)
-                                    .apply(new RequestOptions()
-                                            .diskCacheStrategy(DiskCacheStrategy.NONE)
-                                            .skipMemoryCache(true))
+                                    .load(uri)
+                                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                    .placeholder(R.drawable.white)
                                     .error(R.drawable.white)
                                     .into(restaurantLogo);
                             logoUri = null;
+                            originalLogoUrl = logoUrl; // Update originalLogoUrl to prevent repeated change detection
                         }
                     }))
                     .addOnFailureListener(e -> {
