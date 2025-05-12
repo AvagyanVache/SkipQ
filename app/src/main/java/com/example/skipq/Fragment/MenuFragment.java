@@ -1,6 +1,7 @@
 package com.example.skipq.Fragment;
 
 import android.Manifest;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.Spinner;
@@ -51,8 +53,8 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
     private String restaurantId;
 
     private SearchView searchBar;
-    public TextView backButton;
-    private Spinner addressSpinner;
+    public ImageView backButton;
+    private AutoCompleteTextView addressSpinner;
     private ArrayList<RestaurantAddress> addressList = new ArrayList<>();
     private ImageView restaurantInfo;
 
@@ -65,7 +67,9 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_menu, container, false);
-
+        if (getActivity() != null) {
+            getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
         recyclerViewMenu = view.findViewById(R.id.recycleViewMenu);
         recyclerViewMenu.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -137,7 +141,7 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
 
             @Override
             public void onAddToCart(MenuDomain menuItem) {
-                if (addressSpinner.getSelectedItemPosition() == 0) {
+                if (addressSpinner.getText().toString().equals("Select an address")) {
                     Toast.makeText(getContext(), "Please select a restaurant address", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -173,7 +177,7 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
 
                 menuAdaptor.notifyDataSetChanged();
             }
-        };
+            };
 
         MenuAdaptor.OnItemClickListener onItemClickListener = item -> showItemDetailsDialog(item);
 
@@ -322,8 +326,11 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
                         }
                     }
 
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, addressStrings);
-                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                            requireContext(),
+                            R.layout.dropdown_item,
+                            addressStrings
+                    );
                     addressSpinner.setAdapter(adapter);
                 })
                 .addOnFailureListener(e -> {
@@ -338,7 +345,6 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
             Toast.makeText(getContext(), "Error loading restaurant info", Toast.LENGTH_SHORT).show();
             return;
         }
-
         db.collection("FoodPlaces").document(restaurantId).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
@@ -388,28 +394,24 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void setupAddressSpinner() {
-        addressSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position == 0) {
-                    CartManager.getInstance().setSelectedAddress(null, null);
-                } else {
-                    RestaurantAddress selectedAddress = addressList.get(position - 1);
-                    CartManager.getInstance().setSelectedAddress(selectedAddress.getAddress(),
-                            new LatLng(selectedAddress.getLatitude(), selectedAddress.getLongitude()));
-                    Toast.makeText(getContext(), "Selected: " + selectedAddress.getAddress(), Toast.LENGTH_SHORT).show();
-
-                    if (gMap != null) {
-                        LatLng addressLatLng = new LatLng(selectedAddress.getLatitude(), selectedAddress.getLongitude());
-                        gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(addressLatLng, 15));
-                        gMap.addMarker(new MarkerOptions().position(addressLatLng).title(selectedAddress.getAddress()));
-                    }
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+        addressSpinner.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedAddress = (String) parent.getItemAtPosition(position);
+            if (selectedAddress.equals("Select an address")) {
                 CartManager.getInstance().setSelectedAddress(null, null);
+            } else {
+                // Adjust position to account for placeholder
+                RestaurantAddress restaurantAddress = addressList.get(position - 1);
+                CartManager.getInstance().setSelectedAddress(
+                        restaurantAddress.getAddress(),
+                        new LatLng(restaurantAddress.getLatitude(), restaurantAddress.getLongitude())
+                );
+                Toast.makeText(getContext(), "Selected: " + restaurantAddress.getAddress(), Toast.LENGTH_SHORT).show();
+
+                if (gMap != null) {
+                    LatLng addressLatLng = new LatLng(restaurantAddress.getLatitude(), restaurantAddress.getLongitude());
+                    gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(addressLatLng, 15));
+                    gMap.addMarker(new MarkerOptions().position(addressLatLng).title(restaurantAddress.getAddress()));
+                }
             }
         });
     }

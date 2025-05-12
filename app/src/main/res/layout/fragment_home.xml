@@ -41,11 +41,11 @@
         android:layout_margin="16dp"
         android:background="@drawable/white_bg"
         android:hint="Search here"
-        android:padding="12dp"
-        android:textColorHint="#808080"
         android:iconifiedByDefault="false"
-        app:layout_constraintTop_toBottomOf="@id/topBar"
-        tools:layout_editor_absoluteX="16dp" />
+        android:textColorHint="#808080"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topBar" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/orderCard"
@@ -84,6 +84,7 @@
         android:horizontalSpacing="16dp"
         android:numColumns="2"
         android:verticalSpacing="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/recyclerViewCategories" />

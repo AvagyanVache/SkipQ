@@ -161,14 +161,11 @@
         app:layout_constraintStart_toEndOf="@+id/ItemPhoto"
         app:layout_constraintTop_toBottomOf="@+id/item_name_text"
         app:layout_constraintVertical_bias="1.0">
-
-
         <TextView
             android:id="@+id/item_availability_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="25dp"
-
+            android:layout_marginTop="35dp"
             android:text="Availability: Unknown"
             tools:layout_editor_absoluteX="162dp"
             tools:layout_editor_absoluteY="31dp" />

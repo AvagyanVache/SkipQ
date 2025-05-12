@@ -13,30 +13,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/backButton"
-            android:layout_width="60dp"
-            android:layout_height="20dp"
-            android:layout_marginStart="4dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/back_background"
-            android:text="      Back"
-            android:textColor="@color/white"
-            android:textStyle="bold" />
 
         <ImageView
-            android:id="@+id/imageView3"
-            android:layout_width="23dp"
-            android:layout_height="16dp"
-            android:layout_marginLeft="-60dp"
+            android:id="@+id/backButton"
+            android:layout_width="40dp"
+            android:layout_height="20dp"
+            android:layout_marginLeft="10dp"
             android:layout_marginTop="13dp"
+            android:background="@drawable/back_background"
             app:srcCompat="@drawable/back_arrow"
             app:tint="@color/white" />
         <ImageView
             android:id="@+id/restaurantInfo"
             android:layout_width="wrap_content"
-            android:layout_height="20dp"
-            android:layout_marginLeft="300dp"
+            android:layout_height="25dp"
+            android:layout_marginLeft="280dp"
             android:layout_marginTop="13dp"
             app:srcCompat="@drawable/info"
             app:tint="@color/white" />
@@ -49,31 +40,43 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="170dp"
-        android:layout_marginTop="68dp"
+        android:layout_marginTop="60dp"
+
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/address_dropdown_layout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:layout_width="412dp"
+        android:layout_height="53dp"
+        android:layout_marginTop="10dp"
+        android:background="@color/white"
+
+        android:gravity="center"
+        android:hint="Select Address"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/map">
+
+        <AutoCompleteTextView
+            android:id="@+id/address_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:gravity="center"
+            android:inputType="none"
+            android:textColor="@color/black" />
+
+    </com.google.android.material.textfield.TextInputLayout>
     <TextView
-        android:id="@+id/textView5"
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Select Address"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@+id/map"
-        tools:layout_editor_absoluteX="25dp" />
-
-    <Spinner
-        android:id="@+id/address_spinner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        app:layout_constraintTop_toBottomOf="@+id/textView5"
-        tools:layout_editor_absoluteX="0dp" />
-
+        android:padding="12dp"
+        android:textColor="@android:color/black"
+        android:textSize="16sp" />
     <SearchView
         android:id="@+id/searchBar"
         android:layout_width="0dp"
@@ -81,14 +84,13 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/white_bg"
-        android:hint="Search here"
         android:iconifiedByDefault="false"
-        android:padding="12dp"
+        android:layout_marginTop="10dp"
         android:textColorHint="#808080"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/address_spinner" />
+        app:layout_constraintTop_toBottomOf="@+id/address_dropdown_layout" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycleViewMenu"

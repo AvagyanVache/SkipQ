@@ -3,6 +3,7 @@ package com.example.skipq.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.location.Address;
 import android.location.Geocoder;
 import android.net.Uri;
@@ -14,8 +15,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -23,6 +26,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -63,9 +67,10 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
     private RecyclerView recyclerViewAddresses;
     private AddressAdapter addressAdapter;
     private List<RestaurantAddress> addressList = new ArrayList<>();
-    private Button uploadLogoButton, signUpButton, addAddressButton;
+    private Button signUpButton, addAddressButton;
     private TextView backButton;
-    private Spinner categorySpinner;
+    private ImageView uploadLogo;
+    private AutoCompleteTextView categoryDropdown;
     private String selectedCategory = "Restaurant/Cafe";
     private FirebaseFirestore db;
     private FirebaseStorage storage;
@@ -77,7 +82,8 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_restaurant_signup2);
-
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         backButton = findViewById(R.id.backButton);
         restaurantName = findViewById(R.id.restaurant_name);
         restaurantApiLink = findViewById(R.id.restaurant_api_link);
@@ -85,9 +91,10 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
         phoneInput = findViewById(R.id.phone_input);
         recyclerViewAddresses = findViewById(R.id.recycler_view_addresses);
         addAddressButton = findViewById(R.id.add_address_button);
-        uploadLogoButton = findViewById(R.id.uploadLogoButton);
+        uploadLogo = findViewById(R.id.upload_logo);
         signUpButton = findViewById(R.id.SignUpButton);
-        categorySpinner = findViewById(R.id.category_spinner);
+        categoryDropdown = findViewById(R.id.dropdown_menu);
+
 
         db = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
@@ -107,27 +114,19 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
             return;
         }
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.restaurant_categories, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        categorySpinner.setAdapter(adapter);
-        // Set default selection to "Restaurant/Cafe"
-        categorySpinner.setSelection(adapter.getPosition("Restaurant/Cafe"));
-        categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                selectedCategory = parent.getItemAtPosition(position).toString();
-                Log.d("RestaurantSignUp", "Selected category: " + selectedCategory);
-            }
+                R.array.restaurant_categories, android.R.layout.simple_dropdown_item_1line);
+        categoryDropdown.setAdapter(adapter);
+        categoryDropdown.setText("Restaurant/Cafe", false);
+        selectedCategory = "Restaurant/Cafe";
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                selectedCategory = "Restaurant/Cafe"; // Default if nothing selected
-            }
+        categoryDropdown.setOnItemClickListener((parent, view, position, id) -> {
+            selectedCategory = parent.getItemAtPosition(position).toString();
+            Log.d("RestaurantSignUp", "Selected category: " + selectedCategory);
         });
 
         backButton.setOnClickListener(v -> finish());
 
-        uploadLogoButton.setOnClickListener(v -> {
+        uploadLogo.setOnClickListener(v -> {
             Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(pickIntent, PICK_IMAGE_REQUEST);
         });

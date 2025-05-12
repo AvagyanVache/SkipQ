@@ -2,6 +2,7 @@ package com.example.skipq.Fragment;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.location.Address;
 import android.location.Geocoder;
 import android.net.ConnectivityManager;
@@ -9,6 +10,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,9 +22,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
@@ -34,6 +39,8 @@ import com.example.skipq.Activity.DeleteAccountActivity;
 import com.example.skipq.Activity.HomeActivity;
 import com.example.skipq.Activity.MainActivity;
 import com.example.skipq.R;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -64,8 +71,7 @@ public class ProfileFragment extends Fragment {
     // User-specific views
     private TextView userNameSurname, userEmail, userPhoneNumber, profileTitle;
     private ImageView profilePicture;
-    // Restaurant-specific views
-    private EditText restaurantName, restaurantContactPhone;
+    private TextView restaurantNameDisplay, restaurantPhoneDisplay;
     private ImageView restaurantLogo;
     private CheckBox mondayCheckbox, tuesdayCheckbox, wednesdayCheckbox, thursdayCheckbox, fridayCheckbox, saturdayCheckbox, sundayCheckbox;
     private EditText mondayHours, tuesdayHours, wednesdayHours, thursdayHours, fridayHours, saturdayHours, sundayHours;
@@ -92,6 +98,10 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        if (getActivity() != null) {
+            getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
@@ -143,14 +153,14 @@ public class ProfileFragment extends Fragment {
         userPhoneNumber = view.findViewById(R.id.userPhoneNumber);
         profilePicture = view.findViewById(R.id.profilePicture);
         restaurantProfileSection = view.findViewById(R.id.restaurantProfileSection);
-        restaurantName = view.findViewById(R.id.restaurantName);
-        restaurantContactPhone = view.findViewById(R.id.restaurantContactPhone);
         restaurantLogo = view.findViewById(R.id.restaurantLogo);
         addressesContainer = view.findViewById(R.id.addressesContainer);
         addressesSection = view.findViewById(R.id.addressesSection);
         saveRestaurantChanges = view.findViewById(R.id.saveRestaurantChanges);
         addAddressButton = view.findViewById(R.id.addAddressButton);
         btnLogout = view.findViewById(R.id.btnLogout);
+        restaurantNameDisplay = view.findViewById(R.id.RestaurantName);
+        restaurantPhoneDisplay = view.findViewById(R.id.RestaurantPhone);
 
         mondayCheckbox = view.findViewById(R.id.mondayCheckbox);
         tuesdayCheckbox = view.findViewById(R.id.tuesdayCheckbox);
@@ -279,6 +289,7 @@ public class ProfileFragment extends Fragment {
             requireActivity().finish();
         });
     }
+
     private void setupOperatingHoursCheckbox(CheckBox checkBox, EditText hoursField) {
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             hoursField.setEnabled(isChecked);
@@ -292,15 +303,20 @@ public class ProfileFragment extends Fragment {
     private void setupOperatingHoursTextWatcher(EditText hoursField) {
         hoursField.addTextChangedListener(new android.text.TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
             @Override
             public void afterTextChanged(android.text.Editable s) {
                 checkForChanges();
             }
         });
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -320,10 +336,15 @@ public class ProfileFragment extends Fragment {
         profileTitle.setText("Restaurant Profile");
         profileTitle.setVisibility(View.VISIBLE);
         restaurantProfileSection.setVisibility(View.VISIBLE);
-        restaurantName.setVisibility(View.VISIBLE);
-        restaurantContactPhone.setVisibility(View.VISIBLE);
+        view.findViewById(R.id.RestaurantNameSection).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.RestaurantPhoneSection).setVisibility(View.VISIBLE);
         restaurantLogo.setVisibility(View.VISIBLE);
         addressesSection.setVisibility(View.VISIBLE);
+        view.findViewById(R.id.RestaurantNameSection).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.RestaurantPhoneSection).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.divider7).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.divider8).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.divider7).setVisibility(View.VISIBLE);
         userNameSurname.setVisibility(View.GONE);
         userEmail.setVisibility(View.GONE);
         userPhoneNumber.setVisibility(View.GONE);
@@ -335,14 +356,14 @@ public class ProfileFragment extends Fragment {
         view.findViewById(R.id.paymentSection).setVisibility(View.GONE);
         view.findViewById(R.id.settingsSection).setVisibility(View.GONE);
         view.findViewById(R.id.languageSection).setVisibility(View.GONE);
-        view.findViewById(R.id.passwordSection).setVisibility(View.GONE);
-        view.findViewById(R.id.deleteAccountSection).setVisibility(View.GONE);
+        view.findViewById(R.id.passwordSection).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.deleteAccountSection).setVisibility(View.VISIBLE);
         view.findViewById(R.id.divider1).setVisibility(View.GONE);
         view.findViewById(R.id.divider2).setVisibility(View.GONE);
         view.findViewById(R.id.divider3).setVisibility(View.GONE);
-        view.findViewById(R.id.divider4).setVisibility(View.GONE);
-        view.findViewById(R.id.divider5).setVisibility(View.GONE);
-        view.findViewById(R.id.divider6).setVisibility(View.GONE);
+        view.findViewById(R.id.divider4).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.divider5).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.divider6).setVisibility(View.VISIBLE);
 
         LinearLayout operatingHoursSection = view.findViewById(R.id.operatingHoursSection);
         ImageView dropdownOperatingHours = view.findViewById(R.id.dropdownOperatingHours);
@@ -372,29 +393,18 @@ public class ProfileFragment extends Fragment {
             Log.d(TAG, "Addresses dropdown toggled: " + (isVisible ? "collapsed" : "expanded"));
         });
 
-        // Setup text watchers for change detection
-        restaurantName.addTextChangedListener(new android.text.TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override
-            public void afterTextChanged(android.text.Editable s) {
-                checkForChanges();
-            }
+        ImageView changeRestaurantName = view.findViewById(R.id.changeRestaurantName);
+        changeRestaurantName.setOnClickListener(v -> {
+            Log.d(TAG, "Change restaurant name clicked");
+            showChangeNameDialog();
         });
 
-        restaurantContactPhone.addTextChangedListener(new android.text.TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override
-            public void afterTextChanged(android.text.Editable s) {
-                checkForChanges();
-            }
+        ImageView changeRestaurantNumber = view.findViewById(R.id.changeRestaurantNumber);
+        changeRestaurantNumber.setOnClickListener(v -> {
+            Log.d(TAG, "Change restaurant phone clicked");
+            showChangePhoneDialog();
         });
-                restaurantLogo.setOnClickListener(v -> {
+        restaurantLogo.setOnClickListener(v -> {
             Log.d(TAG, "Restaurant logo clicked");
             String permission;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -415,6 +425,19 @@ public class ProfileFragment extends Fragment {
                 Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 logoPickerLauncher.launch(pickIntent);
             }
+        });
+        ImageView changePassword = view.findViewById(R.id.changePassword);
+        changePassword.setOnClickListener(v -> {
+            Log.d(TAG, "Change password clicked");
+            Intent intent = new Intent(requireActivity(), ChangePasswordActivity.class);
+            startActivity(intent);
+        });
+
+        ImageView deleteAccount = view.findViewById(R.id.deleteAccount);
+        deleteAccount.setOnClickListener(v -> {
+            Log.d(TAG, "Delete account clicked");
+            Intent intent = new Intent(requireActivity(), DeleteAccountActivity.class);
+            startActivity(intent);
         });
 
         loadRestaurantData();
@@ -551,9 +574,8 @@ public class ProfileFragment extends Fragment {
                                                 .collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()))
                                 );
                             }
-
-                            restaurantName.setText(originalName);
-                            restaurantContactPhone.setText(originalContactPhone);
+                            restaurantNameDisplay.setText(name != null ? name : "Restaurant Name");
+                            restaurantPhoneDisplay.setText(contactPhone != null ? contactPhone : "+123-456-7890");
 
                             // Load operating hours
                             loadOperatingHours(operatingHoursMap);
@@ -562,7 +584,7 @@ public class ProfileFragment extends Fragment {
                             if (!isNetworkAvailable()) {
                                 Log.w(TAG, "No internet connection, loading default logo");
                                 Toast.makeText(getContext(), "No internet connection", Toast.LENGTH_SHORT).show();
-                                restaurantLogo.setImageResource(R.drawable.white);
+
                             } else {
                                 String imagePath = "restaurant_logos/" + sanitizedName + "_logo.jpg";
                                 StorageReference storageReference = storage.getReference().child(imagePath);
@@ -573,13 +595,11 @@ public class ProfileFragment extends Fragment {
                                             Glide.with(ProfileFragment.this)
                                                     .load(uri)
                                                     .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                                    .placeholder(R.drawable.white)
-                                                    .error(R.drawable.white)
                                                     .into(restaurantLogo);
+                                            loadLogoFromStorage(sanitizedName);
                                         })
                                         .addOnFailureListener(e -> {
                                             Log.w(TAG, "Failed to load logo from Storage: " + imagePath, e);
-                                            restaurantLogo.setImageResource(R.drawable.white);
                                         });
                             }
 
@@ -700,6 +720,7 @@ public class ProfileFragment extends Fragment {
             }
         }
     }
+
     private void loadLogoFromStorage(String sanitizedName) {
         StorageReference logoRef = storage.getReference().child("restaurant_logos/" + sanitizedName + "_logo.jpg");
         logoRef.getDownloadUrl()
@@ -712,7 +733,6 @@ public class ProfileFragment extends Fragment {
                             .apply(new RequestOptions()
                                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                                     .skipMemoryCache(true))
-                            .error(R.drawable.white)
                             .into(restaurantLogo);
                     // Update Firestore with the correct logoUrl
                     db.collection("FoodPlaces").document(restaurantId)
@@ -731,6 +751,7 @@ public class ProfileFragment extends Fragment {
                             .into(restaurantLogo);
                 });
     }
+
     private void addNewAddressField() {
         Log.d(TAG, "Adding new address field");
         addAddressField("", 0.0, 0.0, true);
@@ -833,10 +854,12 @@ public class ProfileFragment extends Fragment {
 
         addressInput.addTextChangedListener(new android.text.TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
 
             @Override
             public void afterTextChanged(android.text.Editable s) {
@@ -895,15 +918,10 @@ public class ProfileFragment extends Fragment {
             return;
         }
 
-        String name = restaurantName.getText().toString().trim();
-        String contactPhone = restaurantContactPhone.getText().toString().trim();
+        ;
         String sanitizedName = restaurantId.replaceAll("[^a-zA-Z0-9]", "_"); // Sanitize restaurantId
 
-        if (name.isEmpty()) {
-            Log.w(TAG, "Restaurant name is empty");
-            Toast.makeText(getContext(), "Restaurant name cannot be empty", Toast.LENGTH_SHORT).show();
-            return;
-        }
+
         Map<String, String> operatingHours = new HashMap<>();
         if (mondayCheckbox.isChecked() && !mondayHours.getText().toString().trim().isEmpty()) {
             operatingHours.put("Monday", mondayHours.getText().toString().trim());
@@ -956,13 +974,10 @@ public class ProfileFragment extends Fragment {
         FirebaseUser user = mAuth.getCurrentUser();
         DocumentReference restaurantRef = db.collection("FoodPlaces").document(restaurantId);
         Map<String, Object> updates = new HashMap<>();
-        updates.put("name", name);
-        updates.put("contactPhone", contactPhone);
         updates.put("operatingHours", operatingHours);
         updates.put("rememberMe", true);
         updates.put("role", "restaurant");
         updates.put("uid", user != null ? user.getUid() : "");
-
         if (logoUri != null) {
             StorageReference logoRef = storage.getReference().child("restaurant_logos/" + sanitizedName + "_logo.jpg");
             logoRef.putFile(logoUri)
@@ -989,7 +1004,6 @@ public class ProfileFragment extends Fragment {
                                     .load(uri)
                                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                                     .placeholder(R.drawable.white)
-                                    .error(R.drawable.white)
                                     .into(restaurantLogo);
                             logoUri = null;
                             originalLogoUrl = logoUrl; // Update originalLogoUrl to prevent repeated change detection
@@ -1033,37 +1047,30 @@ public class ProfileFragment extends Fragment {
     private void checkForChanges() {
         boolean hasChanges = false;
 
-        // Check restaurant name
-        String currentName = restaurantName.getText().toString().trim();
-        if (!currentName.equals(originalName)) {
-            hasChanges = true;
-        }
-
-        // Check contact phone
-        String currentPhone = restaurantContactPhone.getText().toString().trim();
-        if (!currentPhone.equals(originalContactPhone)) {
-            hasChanges = true;
-        }
-
         Map<String, String> currentOperatingHours = new HashMap<>();
-        if (mondayCheckbox.isChecked()) currentOperatingHours.put("Monday", mondayHours.getText().toString().trim());
-        if (tuesdayCheckbox.isChecked()) currentOperatingHours.put("Tuesday", tuesdayHours.getText().toString().trim());
-        if (wednesdayCheckbox.isChecked()) currentOperatingHours.put("Wednesday", wednesdayHours.getText().toString().trim());
-        if (thursdayCheckbox.isChecked()) currentOperatingHours.put("Thursday", thursdayHours.getText().toString().trim());
-        if (fridayCheckbox.isChecked()) currentOperatingHours.put("Friday", fridayHours.getText().toString().trim());
-        if (saturdayCheckbox.isChecked()) currentOperatingHours.put("Saturday", saturdayHours.getText().toString().trim());
-        if (sundayCheckbox.isChecked()) currentOperatingHours.put("Sunday", sundayHours.getText().toString().trim());
+        if (mondayCheckbox.isChecked())
+            currentOperatingHours.put("Monday", mondayHours.getText().toString().trim());
+        if (tuesdayCheckbox.isChecked())
+            currentOperatingHours.put("Tuesday", tuesdayHours.getText().toString().trim());
+        if (wednesdayCheckbox.isChecked())
+            currentOperatingHours.put("Wednesday", wednesdayHours.getText().toString().trim());
+        if (thursdayCheckbox.isChecked())
+            currentOperatingHours.put("Thursday", thursdayHours.getText().toString().trim());
+        if (fridayCheckbox.isChecked())
+            currentOperatingHours.put("Friday", fridayHours.getText().toString().trim());
+        if (saturdayCheckbox.isChecked())
+            currentOperatingHours.put("Saturday", saturdayHours.getText().toString().trim());
+        if (sundayCheckbox.isChecked())
+            currentOperatingHours.put("Sunday", sundayHours.getText().toString().trim());
 
         if (!currentOperatingHours.equals(originalOperatingHours)) {
             hasChanges = true;
         }
 
-        // Check logo
         if (logoUri != null && !logoUri.toString().equals(originalLogoUrl)) {
             hasChanges = true;
         }
 
-        // Check addresses
         if (addresses.size() != originalAddresses.size()) {
             hasChanges = true;
         } else {
@@ -1081,5 +1088,92 @@ public class ProfileFragment extends Fragment {
         }
 
         saveRestaurantChanges.setVisibility(hasChanges ? View.VISIBLE : View.GONE);
+    }
+    private void showChangeNameDialog() {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
+        builder.setTitle("Change Restaurant Name");
+
+        TextInputLayout inputLayout = new TextInputLayout(requireContext());
+        inputLayout.setHint("Enter new restaurant name");
+        inputLayout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+
+        TextInputEditText input = new TextInputEditText(requireContext());
+        input.setText(restaurantNameDisplay.getText().toString());
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        inputLayout.addView(input);
+
+        int padding = (int) (16 * getResources().getDisplayMetrics().density); // 16dp padding
+        inputLayout.setPadding(padding, padding, padding, padding);
+
+        builder.setView(inputLayout);
+
+        builder.setPositiveButton("Confirm", (dialog, which) -> {
+            String newName = input.getText().toString().trim();
+            if (newName.isEmpty()) {
+                Toast.makeText(getContext(), "Restaurant name cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            DocumentReference restaurantRef = db.collection("FoodPlaces").document(restaurantId);
+            restaurantRef.update("name", newName)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "Restaurant name updated to: " + newName);
+                        restaurantNameDisplay.setText(newName);
+                        originalName = newName;
+                        Toast.makeText(getContext(), "Restaurant name updated", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to update restaurant name", e);
+                        Toast.makeText(getContext(), "Failed to update name", Toast.LENGTH_SHORT).show();
+                    });
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+        builder.show();
+    }
+
+
+
+    private void showChangePhoneDialog() {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
+        builder.setTitle("Change Contact Phone");
+
+        TextInputLayout inputLayout = new TextInputLayout(requireContext());
+        TextInputEditText input = new TextInputEditText(requireContext());
+
+        input.setText(restaurantPhoneDisplay.getText().toString());
+        input.setInputType(InputType.TYPE_CLASS_PHONE);
+
+        inputLayout.setHint("Enter new phone number");
+        inputLayout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+
+        inputLayout.addView(input);
+        int padding = (int) (16 * getResources().getDisplayMetrics().density); // 16dp padding
+        inputLayout.setPadding(padding, padding, padding, padding);
+        builder.setView(inputLayout); // <-- This is the fix
+
+        builder.setPositiveButton("Confirm", (dialog, which) -> {
+            String newPhone = input.getText().toString().trim();
+            if (newPhone.isEmpty()) {
+                Toast.makeText(getContext(), "Phone number cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            DocumentReference restaurantRef = db.collection("FoodPlaces").document(restaurantId);
+            restaurantRef.update("contactPhone", newPhone)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "Contact phone updated to: " + newPhone);
+                        restaurantPhoneDisplay.setText(newPhone);
+                        originalContactPhone = newPhone;
+                        Toast.makeText(getContext(), "Contact phone updated", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to update contact phone", e);
+                        Toast.makeText(getContext(), "Failed to update phone", Toast.LENGTH_SHORT).show();
+                    });
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+        builder.show();
     }
 }

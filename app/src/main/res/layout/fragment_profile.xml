@@ -83,7 +83,6 @@
                     android:contentDescription="Restaurant Logo"
                     android:scaleType="centerCrop"
                     app:tint="@color/white" />
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -93,27 +92,114 @@
                     android:textColor="@color/white"
                     android:textSize="14sp" />
 
-                <EditText
-                    android:id="@+id/restaurantName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:hint="Restaurant Name"
-                    android:inputType="text"
-                    android:textColor="@color/white"
-                    android:textColorHint="#B0FFFFFF"
-                    android:backgroundTint="@color/white" />
+                <RelativeLayout
+                    android:id="@+id/RestaurantNameSection"
+                    android:layout_width="342dp"
+                    android:layout_height="58dp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="10dp">
 
-                <EditText
-                    android:id="@+id/restaurantContactPhone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:hint="Contact Phone"
-                    android:inputType="phone"
-                    android:textColor="@color/white"
-                    android:textColorHint="#B0FFFFFF"
-                    android:backgroundTint="@color/white" />
+                    <ImageView
+                        android:id="@+id/NameIcon"
+                        android:layout_width="55dp"
+                        android:layout_height="46dp"
+                        android:layout_marginStart="45dp"
+                        android:layout_marginTop="15dp"
+                        android:src="@drawable/name_icon"
+                        app:tint="@color/white" />
+
+                    <TextView
+                        android:id="@+id/RestaurantNameLabel"
+                        android:layout_width="229dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="70dp"
+                        android:layout_marginTop="5dp"
+                        android:gravity="center"
+                        android:text="Restaurant Name"
+                        android:textColor="@color/white"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/RestaurantName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="120dp"
+                        android:layout_marginTop="35dp"
+                        android:text="Gmail@gmail.com"
+                        android:textColor="@color/white"
+                        android:textSize="15sp" />
+                    <ImageView
+                        android:id="@+id/changeRestaurantName"
+                        android:layout_width="35dp"
+                        android:layout_height="39dp"
+                        android:layout_marginStart="310dp"
+                        android:layout_marginTop="10dp"
+                        android:src="@drawable/right_arrow"
+                        app:tint="@color/white" />
+                </RelativeLayout>
+                <ImageView
+                    android:id="@+id/divider7"
+                    android:layout_width="350dp"
+                    android:layout_height="3dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/white_bg" />
+
+                <RelativeLayout
+                    android:id="@+id/RestaurantPhoneSection"
+                    android:layout_width="350dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center">
+
+                    <ImageView
+                        android:id="@+id/RestaurantPhoneIcon"
+                        android:layout_width="71dp"
+                        android:layout_height="46dp"
+                        android:layout_marginStart="40dp"
+                        android:layout_marginTop="10dp"
+                        android:src="@drawable/phone_icon"
+                        app:tint="@color/white" />
+
+                    <TextView
+                        android:id="@+id/RestaurantPhoneLabel"
+                        android:layout_width="251dp"
+                        android:layout_height="23dp"
+                        android:layout_marginStart="50dp"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center"
+                        android:text="Contact Phone"
+                        android:textColor="@color/white"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/RestaurantPhone"
+                        android:layout_width="253dp"
+                        android:layout_height="34dp"
+                        android:layout_marginStart="40dp"
+                        android:layout_marginTop="25dp"
+                        android:gravity="center"
+                        android:text="+123-456-7890"
+                        android:textColor="@color/white"
+                        android:textSize="15sp" />
+                    <ImageView
+                        android:id="@+id/changeRestaurantNumber"
+                        android:layout_width="35dp"
+                        android:layout_height="39dp"
+                        android:layout_marginStart="310dp"
+                        android:layout_marginTop="10dp"
+                        android:src="@drawable/right_arrow"
+                        app:tint="@color/white" />
+                </RelativeLayout>
+
+                <ImageView
+                    android:id="@+id/divider8"
+                    android:layout_width="350dp"
+                    android:layout_height="3dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/white_bg" />
+
+
 
                 <LinearLayout
                     android:id="@+id/operatingHoursSection"
@@ -124,13 +210,15 @@
 
                    <LinearLayout
                        android:layout_width="wrap_content"
-                       android:layout_height="wrap_content">
+                       android:layout_height="wrap_content"
+                       android:layout_gravity="center">
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Operating Hours"
                         android:textColor="@color/white"
                         android:textSize="16sp"
+                        android:layout_gravity="center"
                         android:textStyle="bold" />
                     <ImageView
                         android:id="@+id/dropdownOperatingHours"
@@ -138,7 +226,10 @@
                         android:layout_height="30dp"
                         android:src="@drawable/dropdown"
                         app:tint="@color/white" />
+
                    </LinearLayout>
+
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -151,6 +242,7 @@
                             android:layout_height="wrap_content"
                             android:text="Monday"
                             android:textColor="@color/white" />
+
 
                         <EditText
                             android:id="@+id/mondayHours"
@@ -340,9 +432,18 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:layout_marginTop="20dp">
+                    <ImageView
+                        android:id="@+id/divider9"
+                        android:layout_width="350dp"
+                        android:layout_height="3dp"
+                        android:layout_gravity="center"
+                        android:layout_marginBottom="20dp"
+                        android:background="@drawable/white_bg" />
                    <LinearLayout
                        android:layout_width="wrap_content"
-                       android:layout_height="wrap_content">
+                       android:layout_height="wrap_content"
+                       android:layout_gravity="center"
+                       android:layout_marginBottom="10dp">
                     <TextView
                         android:id="@+id/addressesTitle"
                         android:layout_width="wrap_content"
@@ -359,6 +460,7 @@
                         android:src="@drawable/dropdown"
                         app:tint="@color/white" />
                     </LinearLayout>
+
                     <LinearLayout
                         android:id="@+id/addressesContainer"
                         android:layout_width="match_parent"

@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -13,14 +14,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -67,17 +74,25 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
  private View linearLayout;
  private FirebaseFirestore db;
  private ListenerRegistration profileListener;
- private Spinner orderTypeSpinner; // New
- private TextInputLayout customerCountLayout; // New
- private TextInputEditText customerCountInput; // New
+ private TextInputLayout customerCountLayout;
+ private TextInputEditText customerCountInput;
  private String selectedOrderType = "Pick Up";
+ private RadioGroup orderTypeRadioGroup;
+ private RadioButton radioPickUp;
+ private RadioButton radioEatIn;
+ private TextView orderTypeLabel, selectedLocationText;
 
+ private ImageView locationPhoto;
  @Override
  public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
   View view = inflater.inflate(R.layout.fragment_cart, container, false);
   CartManager.getInstance().setListener(this);
 
-  // Initialize views
+  AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+  if (getActivity() != null) {
+   getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+  }
+
   checkOutButton = view.findViewById(R.id.CheckOutbutton);
   recyclerView = view.findViewById(R.id.cartRecycleView);
   totalPriceTextView = view.findViewById(R.id.totalPrice);
@@ -89,33 +104,39 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   textInputName = view.findViewById(R.id.textInputName);
   linearLayout = view.findViewById(R.id.linearLayout);
   emptyCartImg = view.findViewById(R.id.emptyCartImg);
-  orderTypeSpinner = view.findViewById(R.id.orderTypeSpinner); // New
-  customerCountLayout = view.findViewById(R.id.customerCountLayout); // New
+  customerCountLayout = view.findViewById(R.id.customerCountLayout);
   customerCountInput = view.findViewById(R.id.customerCountInput);
-
+  orderTypeRadioGroup = view.findViewById(R.id.orderTypeRadioGroup);
+  radioPickUp = view.findViewById(R.id.radioPickUp);
+  radioEatIn = view.findViewById(R.id.radioEatIn);
+  orderTypeLabel = view.findViewById(R.id.orderTypeLabel);
+  locationPhoto=view.findViewById(R.id.location);
+  selectedLocationText=view.findViewById(R.id.selected_location_text);
   cartList = new ArrayList<>(CartManager.getInstance().getCartList());
   db = FirebaseFirestore.getInstance();
 
   FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-
-
-  orderTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-   @Override
-   public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-    selectedOrderType = parent.getItemAtPosition(position).toString();
-    customerCountLayout.setVisibility(selectedOrderType.equals("Eat In") ? View.VISIBLE : View.GONE);
-    if (!selectedOrderType.equals("Eat In")) {
-     customerCountInput.setText("1"); // Reset to default
-    }
-   }
-
-   @Override
-   public void onNothingSelected(AdapterView<?> parent) {
+  orderTypeRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+   if (checkedId == R.id.radioPickUp) {
     selectedOrderType = "Pick Up";
     customerCountLayout.setVisibility(View.GONE);
+    customerCountInput.setVisibility(View.GONE);
+   } else if (checkedId == R.id.radioEatIn) {
+    selectedOrderType = "Eat In";
+    customerCountLayout.setVisibility(View.VISIBLE);
+    customerCountInput.setVisibility(View.VISIBLE);
    }
   });
-  // Set up profile icon click listener
+
+  ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+          requireContext(),
+          R.array.order_types,
+          android.R.layout.simple_dropdown_item_1line
+  );
+  adapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
+
+
+
   profileIcon.setOnClickListener(v -> {
    Intent intent = new Intent(getActivity(), HomeActivity.class);
    intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
@@ -133,7 +154,6 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
 
   // Update UI casting on cart state
   updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg, selectedLocationTextView);
-
   // Load user data if authenticated
   if (currentUser != null) {
    setupProfileListener(currentUser);
@@ -218,10 +238,10 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
            if (documentSnapshot != null && documentSnapshot.exists() && isAdded()) {
             String profilePictureUrl = documentSnapshot.getString("profilePictureUrl");
             loadProfileImage(profilePictureUrl, profileIcon);
+            loadProfileImage(profilePictureUrl, profileIcon);
            }
           });
  }
-
  private void loadProfileImage(String profilePictureUrl, ImageView imageView) {
   if (profilePictureUrl != null && !profilePictureUrl.isEmpty() && isAdded()) {
    Glide.with(this)
@@ -332,6 +352,10 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
      customerCountLayout.setError("Number of customers must be at least 1");
      return false;
     }
+    if (count > 100) {
+     customerCountLayout.setError("Number of customers cannot exceed 100");
+     return false;
+    }
     customerCountLayout.setError(null);
     return true;
    } catch (NumberFormatException e) {
@@ -339,12 +363,11 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
     return false;
    }
   }
-  return true;
+  return true; // Valid for non-"Eat In" orders
  }
-
  private void proceedToOrder() {
-  if (!validateName() || !validatePhoneNumber() || !validateAddress()) {
-   Toast.makeText(getContext(), "Please fill in all required fields and select an address", Toast.LENGTH_SHORT).show();
+  if (!validateName() || !validatePhoneNumber() || !validateAddress() || !validateCustomerCount()) {
+   Toast.makeText(getContext(), "Please fill in all required fields, select an address, and provide a valid customer count", Toast.LENGTH_SHORT).show();
    return;
   }
 
@@ -539,8 +562,12 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    linearLayout.setVisibility(View.GONE);
    checkOutButton.setVisibility(View.GONE);
    selectedLocationTextView.setVisibility(View.GONE);
-   orderTypeSpinner.setVisibility(View.GONE);
+   orderTypeRadioGroup.setVisibility(View.GONE);
    customerCountLayout.setVisibility(View.GONE);
+   customerCountInput.setVisibility(View.GONE);
+   orderTypeLabel.setVisibility(View.GONE);
+   selectedLocationText.setVisibility(View.GONE);
+   locationPhoto.setVisibility(View.GONE);
   } else {
    cartEmpty.setVisibility(View.GONE);
    emptyCartImg.setVisibility(View.GONE);
@@ -549,16 +576,19 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    textInputName.setVisibility(View.VISIBLE);
    linearLayout.setVisibility(View.VISIBLE);
    checkOutButton.setVisibility(View.VISIBLE);
+   orderTypeLabel.setVisibility(View.VISIBLE);
    selectedLocationTextView.setVisibility(View.VISIBLE);
-   orderTypeSpinner.setVisibility(View.VISIBLE);
+   orderTypeRadioGroup.setVisibility(View.VISIBLE);
+   selectedLocationText.setVisibility(View.VISIBLE);
+   locationPhoto.setVisibility(View.VISIBLE);
    customerCountLayout.setVisibility(selectedOrderType.equals("Eat In") ? View.VISIBLE : View.GONE);
+   customerCountInput.setVisibility(selectedOrderType.equals("Eat In") ? View.VISIBLE : View.GONE);
   }
  }
-
  private void updateSelectedAddress() {
   String selectedAddress = CartManager.getInstance().getSelectedAddress();
   if (selectedAddress != null && !selectedAddress.isEmpty()) {
-   selectedLocationTextView.setText("Selected Address: " + selectedAddress);
+   selectedLocationTextView.setText(selectedAddress);
   } else {
    selectedLocationTextView.setText("No address selected");
   }

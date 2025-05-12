@@ -63,6 +63,7 @@ dependencies {
     implementation ("com.google.firebase:firebase-messaging:23.4.1")
     implementation ("com.google.firebase:firebase-functions:20.4.0")
     implementation ("com.firebaseui:firebase-ui-storage:8.0.2")
+    implementation ("com.google.zxing:core:3.5.3")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1")
 
 

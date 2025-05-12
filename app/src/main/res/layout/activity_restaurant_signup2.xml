@@ -64,6 +64,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Sign Up - Step 2 of 2"
+                    android:layout_marginTop="5dp"
                     android:textColor="@color/secondary_color"
                     android:textSize="32sp"
                     android:textStyle="bold" />
@@ -71,7 +72,9 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
                     android:alpha="0.7"
+                    android:textColor="@color/secondary_color"
                     android:text="Complete your restaurant profile" />
 
                 <com.google.android.material.textfield.TextInputLayout
@@ -87,8 +90,47 @@
                         android:inputType="text"
                         android:textColorHint="@color/secondary_color" />
                 </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputPhoneNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="15dp">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/phone_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter Contact Phone"
+                        android:inputType="phone"
+                        android:textColorHint="@color/secondary_color" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Address Input Section -->
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Select Your FoodPlace category">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/dropdown_menu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputLayout3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="15dp">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/restaurant_api_link"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="API Link (Optional)"
+                        android:inputType="textUri"
+                        android:textColorHint="@color/secondary_color" />
+                </com.google.android.material.textfield.TextInputLayout>
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/textInputLayoutAddress"
                     android:layout_width="match_parent"
@@ -112,19 +154,7 @@
                     android:layout_marginTop="10dp"
                     android:backgroundTint="@color/primary_color"
                     android:textColor="#FFFFFF" />
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/textInputPhoneNumber"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="15dp">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/phone_input"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Enter Contact Phone"
-                        android:inputType="phone"
-                        android:textColorHint="@color/secondary_color" />
-                </com.google.android.material.textfield.TextInputLayout>
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -141,39 +171,25 @@
                     android:layout_height="wrap_content"
                     android:maxHeight="200dp"
                     android:layout_marginBottom="16dp"/>
-
-                <!-- Category Spinner -->
-                <Spinner
-                    android:id="@+id/category_spinner"
-                    android:layout_width="match_parent"
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="Upload Logo"
+                    android:layout_marginLeft="100dp"
+                    android:textColor="@color/secondary_color"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
                     android:layout_marginTop="16dp"
-                    android:layout_marginBottom="16dp"
-                    android:entries="@array/restaurant_categories"
-                    android:prompt="@string/category_prompt" />
-
-                <!-- API Link and Buttons -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/textInputLayout3"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="15dp">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/restaurant_api_link"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="API Link (Optional)"
-                        android:inputType="textUri"
-                        android:textColorHint="@color/secondary_color" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <Button
-                    android:id="@+id/uploadLogoButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Upload Logo (Optional)"
-                    android:layout_marginTop="10dp" />
-
+                    android:layout_marginBottom="8dp"/>
+                <ImageView
+                    android:id="@+id/upload_logo"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@drawable/upload"/>
+                </LinearLayout>
                 <Button
                     android:id="@+id/SignUpButton"
                     android:layout_width="match_parent"

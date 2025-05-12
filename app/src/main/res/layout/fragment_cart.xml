@@ -82,23 +82,23 @@
 
                     <com.hbb20.CountryCodePicker
                         android:id="@+id/countryCodePicker"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:ccp_defaultPhoneCode="374"
-                        app:ccp_showPhoneCode="true"
-                        app:ccp_showNameCode="true"
-                        android:layout_gravity="center_vertical"
+                        android:layout_width="122dp"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/white_bg"
+                        android:gravity="center"
                         app:ccp_contentColor="@color/secondary_color"
-                        android:background="@drawable/white_bg" />
+                        app:ccp_defaultPhoneCode="374"
+                        app:ccp_showNameCode="true"
+                        app:ccp_showPhoneCode="true" />
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/phoneNumberInput"
-                        android:layout_width="0dp"
+                        android:layout_width="275dp"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
+                        android:background="@drawable/white_bg"
                         android:hint="Phone Number"
                         android:inputType="phone"
-                        android:background="@drawable/white_bg"
                         android:textColorHint="@color/secondary_color" />
 
                 </LinearLayout>
@@ -119,40 +119,103 @@
                     android:inputType="textPersonName"/>
 
             </com.google.android.material.textfield.TextInputLayout>
-
-            <TextView
-                android:id="@+id/selected_location"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:text="Selected Adress"
-                android:textColor="@color/white"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-            <Spinner
-                android:id="@+id/orderTypeSpinner"
+            <!-- Order Type Section -->
+            <LinearLayout
+                android:id="@+id/orderTypeSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:entries="@array/order_types" />
+                android:orientation="vertical"
+                android:layout_marginTop="10dp">
 
-            <!-- New EditText for Customer Count, initially gone -->
+                <TextView
+                    android:id="@+id/orderTypeLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Choose Your Order Type"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_gravity="center"
+                    android:paddingBottom="8dp" />
+
+                <RadioGroup
+                    android:id="@+id/orderTypeRadioGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="10dp"
+                    android:background="@drawable/white_bg">
+
+                    <RadioButton
+                        android:id="@+id/radioPickUp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Pick Up"
+                        android:textColor="@color/black"
+                        android:textSize="16sp"
+                        android:checked="true" />
+
+                    <RadioButton
+                        android:id="@+id/radioEatIn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Eat In"
+                        android:textColor="@color/black"
+                        android:textSize="16sp" />
+                </RadioGroup>
+            </LinearLayout>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/customerCountLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Number of Customers"
-                android:visibility="gone">
+                android:visibility="gone"
+                android:padding="10dp"
+                android:layout_marginTop="8dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/customerCountInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="number"
-                    android:min="1" />
-
+                    android:hint="Number of Customers"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/secondary_color"
+                    android:background="@drawable/white_bg" />
             </com.google.android.material.textfield.TextInputLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp">
+
+                <ImageView
+                    android:id="@+id/location"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/location"
+                    />
+                <TextView
+                    android:id="@+id/selected_location_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="Selected Address"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/selected_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="Selected Address"
+                android:textColor="@color/white"
+                android:textSize="20sp"/>
             <LinearLayout
                 android:id="@+id/linearLayout"
                 android:layout_width="280dp"

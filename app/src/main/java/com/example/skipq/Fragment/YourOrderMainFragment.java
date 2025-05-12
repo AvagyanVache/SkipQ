@@ -2,6 +2,7 @@ package com.example.skipq.Fragment;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Paint;
@@ -18,6 +19,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -52,7 +54,7 @@ public class YourOrderMainFragment extends Fragment {
     private ArrayList<YourOrderMainDomain> groupedOrders;
     private FirebaseFirestore firestore;
     private String userId;
-    private ImageView profileIcon;
+    private ImageView profileIcon, emptyOrder ;
     private FirebaseFirestore db;
     private ListenerRegistration profileListener;
     private ListenerRegistration pendingApprovalListener;
@@ -67,13 +69,18 @@ public class YourOrderMainFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.your_order_main_fragment, container, false);
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        if (getActivity() != null) {
+            getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
         setRetainInstance(true);
         recyclerView = view.findViewById(R.id.YourOrderMainRecycleView);
-        emptyOrderText = view.findViewById(R.id.OrderEmpty);
+        emptyOrder  = view.findViewById(R.id.OrderEmpty);
         goShoppingText = view.findViewById(R.id.GoShopping);
         currentOrdersText = view.findViewById(R.id.CurrentOrders);
         orderHistoryText = view.findViewById(R.id.OrderHistory);
         profileIcon = view.findViewById(R.id.profileIcon);
+        emptyOrderText=view.findViewById(R.id.OrderEmptyText);
 
         db = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -526,13 +533,18 @@ public class YourOrderMainFragment extends Fragment {
     }
     private void updateEmptyStateVisibility() {
         if (groupedOrders.isEmpty()) {
+            emptyOrder .setVisibility(View.VISIBLE);
             emptyOrderText.setVisibility(View.VISIBLE);
             goShoppingText.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
+            currentOrdersText.setVisibility(View.GONE);
         } else {
+            emptyOrder .setVisibility(View.GONE);
             emptyOrderText.setVisibility(View.GONE);
             goShoppingText.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
+            currentOrdersText.setVisibility(View.VISIBLE);
+
         }
     }
 
