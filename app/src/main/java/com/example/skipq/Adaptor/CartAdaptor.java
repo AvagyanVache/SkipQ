@@ -124,10 +124,10 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
         if (description == null || description.isEmpty()) {
             return "No description";
         }
-        if (description.length() <= 15) {
+        if (description.length() <= 10) {
             return description;
         }
-        return description.substring(0, 15) + "...";
+        return description.substring(0, 10) + "...";
     }
 
     private void showItemDetailsDialog(MenuDomain item) {

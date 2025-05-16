@@ -135,6 +135,8 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
                 .whereEqualTo("isApproved", true)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!isAdded()) return; // Guard clause to prevent crash
+
                     restaurantList.clear();
 
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
@@ -148,11 +150,13 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
                             restaurantList.add(new RestaurantDomain(name, logoUrl));
                         }
                     }
+                    if (!isAdded()) return; // Guard clause to prevent crash
 
                     if (restaurantAdaptor == null) {
                         restaurantAdaptor = new RestaurantAdaptor(getContext(), restaurantList, restaurant -> openMenuFragment(restaurant.getName()));
                         recyclerViewRestaurantList.setAdapter(restaurantAdaptor);
-                        recyclerViewRestaurantList.setLayoutManager(new GridLayoutManager(getContext(), 2));
+                        int spanCount = calculateSpanCount();
+                        recyclerViewRestaurantList.setLayoutManager(new GridLayoutManager(getContext(), spanCount));
                     } else {
                         restaurantAdaptor.notifyDataSetChanged();
                     }
@@ -160,6 +164,12 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
                 .addOnFailureListener(e -> {
                     Log.e("Firestore", "Error fetching restaurants", e);
                 });
+    }
+    private int calculateSpanCount() {
+        float screenWidthDp = getResources().getConfiguration().screenWidthDp;
+        int itemMinWidthDp = 180; // adjust as needed
+
+        return Math.max(2, Math.round(screenWidthDp / itemMinWidthDp));
     }
 
     @Override

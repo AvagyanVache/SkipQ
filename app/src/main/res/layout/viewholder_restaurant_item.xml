@@ -49,8 +49,8 @@
 
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="235dp"
+        android:layout_height="23dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
         app:layout_constraintHorizontal_bias="1.0"
@@ -61,9 +61,9 @@
         <TextView
             android:id="@+id/MenuItemPrice"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-android:layout_marginRight="10dp"
+            android:layout_height="match_parent"
             android:text="Item Price"
+            android:padding="2dp"
             tools:layout_editor_absoluteX="128dp"
             tools:layout_editor_absoluteY="72dp" />
 
@@ -71,7 +71,7 @@ android:layout_marginRight="10dp"
         <ImageView
             android:id="@+id/imageView8"
             android:layout_width="20dp"
-            android:layout_height="17dp"
+            android:layout_height="match_parent"
 
             app:srcCompat="@drawable/timer"
             tools:layout_editor_absoluteX="224dp"
@@ -80,25 +80,27 @@ android:layout_marginRight="10dp"
         <TextView
             android:id="@+id/PrepTime"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:gravity="center_horizontal"
             android:text="PrepTime"
+            android:padding="2dp"
             tools:layout_editor_absoluteX="248dp"
             tools:layout_editor_absoluteY="90dp" />
 
         <TextView
             android:id="@+id/AddToCart"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:background="@drawable/back_background"
             android:backgroundTint="@color/primary_color"
             android:gravity="center"
-            android:paddingTop="1dp"
             android:paddingLeft="2dp"
+            android:layout_marginStart="15dp"
+            android:layout_marginLeft="3dp"
+            android:paddingTop="1dp"
             android:paddingRight="2dp"
             android:paddingBottom="1dp"
-            android:layout_marginRight="10dp"
-            android:text="Add to Cart"
+            android:text="Add"
             android:textColor="@color/white"
             android:textStyle="bold"
             tools:layout_editor_absoluteX="334dp"
@@ -119,7 +121,7 @@ android:layout_marginRight="10dp"
         <TextView
             android:id="@+id/MenuItemDescription"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_marginLeft="30dp"
             android:layout_marginRight="10dp"
             android:gravity="center"
@@ -150,7 +152,7 @@ android:layout_marginRight="10dp"
         <TextView
             android:id="@+id/ItemCount"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:gravity="center"
             android:text="00"
             android:textColor="@color/white"

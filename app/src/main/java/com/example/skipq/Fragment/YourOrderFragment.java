@@ -56,9 +56,9 @@ public class YourOrderFragment extends Fragment {
     private double totalPrice;
     private FirebaseFirestore db;
     private FirebaseAuth auth;
-    private ImageView qrCodeImageView;
+  //  private ImageView qrCodeImageView;
     private boolean isOrderCanceled = false;
-    private TextView backButton;
+    private ImageView backButton;
     private long timeRemaining = 0;
     private ListenerRegistration orderListener;
     private String lastApprovalStatus = null; // Track the previous status
@@ -106,7 +106,7 @@ public class YourOrderFragment extends Fragment {
         recyclerView = view.findViewById(R.id.your_order_recyclerview);
         totalPriceTextView = view.findViewById(R.id.orderTotal);
         orderCountdownTextView = view.findViewById(R.id.OrderCountdown);
-        qrCodeImageView = view.findViewById(R.id.qrCodeImage);
+      //  qrCodeImageView = view.findViewById(R.id.qrCodeImage);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         backButton = view.findViewById(R.id.backButton);
 
@@ -166,10 +166,8 @@ public class YourOrderFragment extends Fragment {
                 }
             }
 
-            // Set QR code to ImageView
-            qrCodeImageView.setImageBitmap(qrBitmap);
+//            qrCodeImageView.setImageBitmap(qrBitmap);
 
-            // Encode QR bitmap to Base64 and upload to Firestore
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             qrBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
             byte[] qrBytes = baos.toByteArray();
@@ -182,7 +180,7 @@ public class YourOrderFragment extends Fragment {
 
         } catch (WriterException e) {
             Log.e("YourOrderFragment", "Failed to generate QR code: " + e.getMessage());
-            qrCodeImageView.setImageResource(android.R.drawable.ic_dialog_alert);
+        //    qrCodeImageView.setImageResource(android.R.drawable.ic_dialog_alert);
         }
     }
 
@@ -312,16 +310,16 @@ public class YourOrderFragment extends Fragment {
                             try {
                                 byte[] decodedBytes = Base64.decode(qrCodeBase64, Base64.DEFAULT);
                                 Bitmap qrBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-                                qrCodeImageView.setImageBitmap(qrBitmap);
+                                //qrCodeImageView.setImageBitmap(qrBitmap);
                                 Log.d("YourOrderFragment", "QR code loaded from Firestore for orderId: " + orderId);
                             } catch (Exception e) {
                                 Log.e("YourOrderFragment", "Failed to decode QR code: " + e.getMessage());
-                                qrCodeImageView.setImageResource(android.R.drawable.ic_dialog_alert);
+                            //    qrCodeImageView.setImageResource(android.R.drawable.ic_dialog_alert);
                             }
 
                         } else {
                             Log.w("YourOrderFragment", "No QR code found for orderId: " + orderId);
-                            qrCodeImageView.setImageResource(android.R.drawable.ic_dialog_alert);
+                            //qrCodeImageView.setImageResource(android.R.drawable.ic_dialog_alert);
                         }
                         if (restaurantId != null && orderItems != null) {
                             fetchMenuItemsForOrder(restaurantId, orderItems);

@@ -537,13 +537,11 @@ public class YourOrderMainFragment extends Fragment {
             emptyOrderText.setVisibility(View.VISIBLE);
             goShoppingText.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
-            currentOrdersText.setVisibility(View.GONE);
         } else {
             emptyOrder .setVisibility(View.GONE);
             emptyOrderText.setVisibility(View.GONE);
             goShoppingText.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
-            currentOrdersText.setVisibility(View.VISIBLE);
 
         }
     }

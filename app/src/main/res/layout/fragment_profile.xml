@@ -3,6 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingBottom="?attr/actionBarSize"
+
     android:background="@color/primary_color">
 
     <ScrollView
@@ -59,7 +61,6 @@
                     android:layout_width="198dp"
                     android:layout_height="38dp"
                     android:layout_gravity="center"
-                    android:layout_marginStart="20dp"
                     android:gravity="center"
                     android:text="Name Surname"
                     android:textColor="@color/white"
@@ -94,8 +95,8 @@
 
                 <RelativeLayout
                     android:id="@+id/RestaurantNameSection"
-                    android:layout_width="342dp"
-                    android:layout_height="58dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_marginTop="10dp">
 
@@ -129,32 +130,24 @@
                         android:text="Gmail@gmail.com"
                         android:textColor="@color/white"
                         android:textSize="15sp" />
-                    <ImageView
-                        android:id="@+id/changeRestaurantName"
-                        android:layout_width="35dp"
-                        android:layout_height="39dp"
-                        android:layout_marginStart="310dp"
-                        android:layout_marginTop="10dp"
-                        android:src="@drawable/right_arrow"
-                        app:tint="@color/white" />
                 </RelativeLayout>
                 <ImageView
                     android:id="@+id/divider7"
-                    android:layout_width="350dp"
+                    android:layout_width="match_parent"
                     android:layout_height="3dp"
                     android:layout_gravity="center"
                     android:background="@drawable/white_bg" />
 
                 <RelativeLayout
                     android:id="@+id/RestaurantPhoneSection"
-                    android:layout_width="350dp"
-                    android:layout_height="60dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="center">
 
                     <ImageView
                         android:id="@+id/RestaurantPhoneIcon"
-                        android:layout_width="71dp"
-                        android:layout_height="46dp"
+                        android:layout_width="55dp"
+                        android:layout_height="45dp"
                         android:layout_marginStart="40dp"
                         android:layout_marginTop="10dp"
                         android:src="@drawable/phone_icon"
@@ -194,7 +187,7 @@
 
                 <ImageView
                     android:id="@+id/divider8"
-                    android:layout_width="350dp"
+                    android:layout_width="match_parent"
                     android:layout_height="3dp"
                     android:layout_gravity="center"
                     android:background="@drawable/white_bg" />
@@ -434,7 +427,7 @@
                     android:layout_marginTop="20dp">
                     <ImageView
                         android:id="@+id/divider9"
-                        android:layout_width="350dp"
+                        android:layout_width="match_parent"
                         android:layout_height="3dp"
                         android:layout_gravity="center"
                         android:layout_marginBottom="20dp"
@@ -514,7 +507,7 @@
             <!-- User Email Section -->
             <RelativeLayout
                 android:id="@+id/emailSection"
-                android:layout_width="342dp"
+                android:layout_width="wrap_content"
                 android:layout_height="58dp"
                 android:layout_gravity="center"
                 android:layout_marginTop="10dp">
@@ -523,7 +516,7 @@
                     android:id="@+id/emailIcon"
                     android:layout_width="55dp"
                     android:layout_height="46dp"
-                    android:layout_marginStart="45dp"
+                    android:layout_marginStart="30dp"
                     android:layout_marginTop="15dp"
                     android:src="@drawable/email"
                     app:tint="@color/white" />
@@ -553,7 +546,7 @@
 
             <ImageView
                 android:id="@+id/divider1"
-                android:layout_width="350dp"
+                android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_gravity="center"
                 android:background="@drawable/white_bg" />
@@ -561,7 +554,7 @@
             <!-- User Phone Section -->
             <RelativeLayout
                 android:id="@+id/phoneSection"
-                android:layout_width="350dp"
+                android:layout_width="wrap_content"
                 android:layout_height="60dp"
                 android:layout_gravity="center">
 
@@ -569,7 +562,7 @@
                     android:id="@+id/phoneIcon"
                     android:layout_width="71dp"
                     android:layout_height="46dp"
-                    android:layout_marginStart="40dp"
+                    android:layout_marginStart="25dp"
                     android:layout_marginTop="10dp"
                     android:src="@drawable/phone_icon"
                     app:tint="@color/white" />
@@ -600,7 +593,7 @@
 
             <ImageView
                 android:id="@+id/divider2"
-                android:layout_width="350dp"
+                android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_gravity="center"
                 android:background="@drawable/white_bg" />
@@ -608,7 +601,7 @@
             <!-- User Payment Section -->
             <RelativeLayout
                 android:id="@+id/paymentSection"
-                android:layout_width="354dp"
+                android:layout_width="wrap_content"
                 android:layout_height="58dp"
                 android:layout_gravity="center">
 
@@ -656,7 +649,7 @@
 
             <ImageView
                 android:id="@+id/divider3"
-                android:layout_width="350dp"
+                android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_gravity="center"
                 android:background="@drawable/white_bg" />
@@ -684,7 +677,7 @@
             <!-- User Language Section -->
             <RelativeLayout
                 android:id="@+id/languageSection"
-                android:layout_width="361dp"
+                android:layout_width="wrap_content"
                 android:layout_height="63dp"
                 android:layout_gravity="center"
                 android:layout_marginTop="20dp">
@@ -732,7 +725,7 @@
 
             <ImageView
                 android:id="@+id/divider4"
-                android:layout_width="350dp"
+                android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_gravity="center"
                 android:background="@drawable/white_bg" />
@@ -740,7 +733,7 @@
             <!-- User Password Section -->
             <RelativeLayout
                 android:id="@+id/passwordSection"
-                android:layout_width="359dp"
+                android:layout_width="wrap_content"
                 android:layout_height="55dp"
                 android:layout_gravity="center">
 
@@ -786,7 +779,7 @@
 
             <ImageView
                 android:id="@+id/divider5"
-                android:layout_width="350dp"
+                android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_gravity="center"
                 android:background="@drawable/white_bg" />
@@ -794,7 +787,7 @@
             <!-- User Delete Account Section -->
             <RelativeLayout
                 android:id="@+id/deleteAccountSection"
-                android:layout_width="357dp"
+                android:layout_width="wrap_content"
                 android:layout_height="57dp"
                 android:layout_gravity="center">
 
@@ -831,7 +824,7 @@
 
             <ImageView
                 android:id="@+id/divider6"
-                android:layout_width="350dp"
+                android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_gravity="center"
                 android:background="@drawable/white_bg" />

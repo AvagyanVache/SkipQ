@@ -36,6 +36,7 @@
         android:layout_height="23dp"
         android:layout_marginEnd="56dp"
         android:text="Item Name"
+        android:gravity="center"
         android:textColor="@color/black"
         android:textSize="15sp"
         android:textStyle="bold"
@@ -47,10 +48,8 @@
         app:layout_constraintVertical_bias="0.119" />
 
 
-
-
     <LinearLayout
-        android:layout_width="221dp"
+        android:layout_width="205dp"
         android:layout_height="19dp"
         android:layout_marginTop="6dp"
         android:layout_marginBottom="4dp"
@@ -88,64 +87,66 @@
             tools:layout_editor_absoluteX="266dp"
             tools:layout_editor_absoluteY="84dp" />
     </LinearLayout>
+
     <LinearLayout
         android:id="@+id/linearLayout6"
-        android:layout_width="221dp"
-        android:layout_height="20dp"
+        android:layout_width="193dp"
+        android:layout_height="21dp"
         android:layout_marginTop="9dp"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
         app:layout_constraintStart_toEndOf="@+id/CartItemPhoto"
         app:layout_constraintTop_toBottomOf="@+id/CartItemTitle">
 
-    <TextView
+        <TextView
             android:id="@+id/CartItemDescription"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="10dp"
-        android:text="Item Description"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="10dp"
+            android:text="Item Description"
             tools:layout_editor_absoluteX="187dp"
             tools:layout_editor_absoluteY="43dp" />
 
-<LinearLayout
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center_vertical"
-    android:paddingTop="1dp"
-    android:paddingLeft="2dp"
-    android:paddingRight="2dp"
-    android:paddingBottom="1dp"
-    android:background="@drawable/back_background"
-    android:backgroundTint="@color/primary_color"
-
-    >
-        <ImageView
-            android:id="@+id/CartItemPlus"
-            android:layout_width="19dp"
-            android:layout_height="wrap_content"
-            app:layout_constraintVertical_bias="0.567"
-            app:srcCompat="@drawable/plus"
-            app:tint="@color/white" />
-
-        <TextView
-            android:id="@+id/CartItemCount"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="00"
-            android:textColor="@color/white"
-            tools:layout_editor_absoluteX="300dp"
-            tools:layout_editor_absoluteY="50dp" />
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/back_background"
+            android:backgroundTint="@color/primary_color"
+            android:paddingLeft="2dp"
+            android:paddingTop="1dp"
+            android:paddingRight="2dp"
+            android:paddingBottom="1dp"
 
-        <ImageView
-            android:id="@+id/CartItemMinus"
-            android:layout_width="19dp"
-            android:layout_height="wrap_content"
+            >
 
-            app:layout_constraintVertical_bias="0.567"
-            app:srcCompat="@drawable/minus"
-            app:tint="@color/white" />
-</LinearLayout>
+            <ImageView
+                android:id="@+id/CartItemPlus"
+                android:layout_width="19dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintVertical_bias="0.567"
+                app:srcCompat="@drawable/plus"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/CartItemCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="00"
+                android:textColor="@color/white"
+                tools:layout_editor_absoluteX="300dp"
+                tools:layout_editor_absoluteY="50dp" />
+
+            <ImageView
+                android:id="@+id/CartItemMinus"
+                android:layout_width="19dp"
+                android:layout_height="wrap_content"
+
+                app:layout_constraintVertical_bias="0.567"
+                app:srcCompat="@drawable/minus"
+                app:tint="@color/white" />
+        </LinearLayout>
 
     </LinearLayout>
 

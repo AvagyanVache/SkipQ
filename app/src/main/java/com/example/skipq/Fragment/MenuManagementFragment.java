@@ -7,12 +7,14 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,6 +24,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
@@ -32,6 +35,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.skipq.Adaptor.MenuManagementAdapter;
 import com.example.skipq.Domain.MenuDomain;
 import com.example.skipq.R;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.SetOptions;
@@ -63,9 +70,15 @@ public class MenuManagementFragment extends Fragment {
     private String originalItemName;
     private Uri selectedImageUri;
     private FirebaseStorage storage;
+
+    private Button currentImageButton;
+
     private ActivityResultLauncher<String> pickImageLauncher;
     private ActivityResultLauncher<String> requestPermissionLauncher;
+    private ActivityResultLauncher<String> dialogPickImageLauncher;
     private Switch availabilitySwitch;
+    private Uri dialogSelectedImageUri = null;
+
     private String originalDocumentId;
 
     @Nullable
@@ -73,6 +86,9 @@ public class MenuManagementFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_menu_management, container, false);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+
+        dialogPickImageLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+        });
         if (getActivity() != null) {
             getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
@@ -101,21 +117,8 @@ public class MenuManagementFragment extends Fragment {
 
         loadMenuItems();
 
-        addItemButton.setOnClickListener(v -> {
-            if (cardView.getVisibility() != View.VISIBLE) {
-                cardView.setVisibility(View.VISIBLE);
-                backButton.setVisibility(View.VISIBLE);
-                isUpdating = false;
-                addItemButton.setText("Submit Item");
-                clearInputs();
-            } else {
-                if (isUpdating) {
-                    submitUpdate();
-                } else {
-                    addItem();
-                }
-            }
-        });
+        addItemButton.setOnClickListener(v -> showAddItemDialog());
+
 
         backButton.setOnClickListener(v -> {
             cardView.setVisibility(View.GONE);
@@ -124,7 +127,14 @@ public class MenuManagementFragment extends Fragment {
             clearInputs();
             isUpdating = false;
         });
-
+        dialogPickImageLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+            if (uri != null) {
+                dialogSelectedImageUri = uri;
+                if (currentImageButton != null) {
+                    currentImageButton.setText("Image selected");
+                }
+            }
+        });
         pickImageLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri != null) {
                 selectedImageUri = uri;
@@ -285,101 +295,256 @@ public class MenuManagementFragment extends Fragment {
     }
 
     private void updateItem(MenuDomain item) {
-        itemName.setText(item.getItemName());
-        itemPrice.setText(item.getItemPrice());
-        itemPrepTime.setText(String.valueOf(item.getPrepTime()));
-        itemDescription.setText(item.getItemDescription());
-        selectedImageUri = null;
-        itemImg.setText(item.getItemImg() != null && !item.getItemImg().isEmpty() ? "Image loaded" : "No image");
+        showEditItemDialog(item);
+    }
+
+    // New method to show the edit item dialog
+    private void showEditItemDialog(MenuDomain item) {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
+        builder.setTitle("Edit Menu Item");
+
+        // Create a LinearLayout to hold all input fields
+        LinearLayout layout = new LinearLayout(requireContext());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(16, 16, 16, 16);
+
+        // Item Name
+        TextInputLayout nameLayout = new TextInputLayout(requireContext());
+        nameLayout.setHint("Item Name");
+        nameLayout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        TextInputEditText nameInput = new TextInputEditText(nameLayout.getContext());
+        nameInput.setText(item.getItemName());
+        nameLayout.addView(nameInput);
+        layout.addView(nameLayout);
+
+        // Item Price
+        TextInputLayout priceLayout = new TextInputLayout(requireContext());
+        priceLayout.setHint("Item Price");
+        priceLayout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        TextInputEditText priceInput = new TextInputEditText(priceLayout.getContext());
+        priceInput.setText(item.getItemPrice());
+        priceInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        priceLayout.addView(priceInput);
+        layout.addView(priceLayout);
+
+        // Prep Time
+        TextInputLayout prepTimeLayout = new TextInputLayout(requireContext());
+        prepTimeLayout.setHint("Preparation Time (minutes)");
+        prepTimeLayout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        TextInputEditText prepTimeInput = new TextInputEditText(prepTimeLayout.getContext());
+        prepTimeInput.setText(String.valueOf(item.getPrepTime()));
+        prepTimeInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        prepTimeLayout.addView(prepTimeInput);
+        layout.addView(prepTimeLayout);
+
+        // Item Description
+        TextInputLayout descriptionLayout = new TextInputLayout(requireContext());
+        descriptionLayout.setHint("Item Description");
+        descriptionLayout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        TextInputEditText descriptionInput = new TextInputEditText(descriptionLayout.getContext());
+        descriptionInput.setText(item.getItemDescription());
+        descriptionLayout.addView(descriptionInput);
+        layout.addView(descriptionLayout);
+
+        // Image Selection
+        Button imageButton = new Button(requireContext());
+        imageButton.setText(item.getItemImg() != null && !item.getItemImg().isEmpty() ? "Image Loaded" : "Select Image");
+        Uri[] dialogSelectedImageUri = {null}; // Array to hold the selected image URI
+
+        // Use the existing pickImageLauncher
+        imageButton.setOnClickListener(v -> {
+            String permission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ?
+                    Manifest.permission.READ_MEDIA_IMAGES : Manifest.permission.READ_EXTERNAL_STORAGE;
+            if (ContextCompat.checkSelfPermission(requireContext(), permission) == PackageManager.PERMISSION_GRANTED) {
+                pickImageLauncher.launch("image/*");
+            } else {
+                requestPermissionLauncher.launch(permission);
+            }
+        });
+        layout.addView(imageButton);
+
+        // Availability Switch
+        SwitchMaterial availabilitySwitch = new SwitchMaterial(requireContext());
+        availabilitySwitch.setText("Available");
         availabilitySwitch.setChecked(item.isAvailable());
+        layout.addView(availabilitySwitch);
 
-        cardView.setVisibility(View.VISIBLE);
-        backButton.setVisibility(View.VISIBLE);
-        isUpdating = true;
-        originalItemName = item.getItemName();
-        originalDocumentId = item.getDocumentId(); // Store the original document ID
-        addItemButton.setText("Update Item");
-    }
+        // Set the dialog view
+        builder.setView(layout);
 
-    private void submitUpdate() {
-        String name = itemName.getText().toString().trim();
-        String price = itemPrice.getText().toString().trim();
-        String prepTime = itemPrepTime.getText().toString().trim();
-        String description = itemDescription.getText().toString().trim();
-        boolean isAvailable = availabilitySwitch.isChecked();
+        builder.setPositiveButton("Confirm", (dialogInterface, which) -> {
+            String name = nameInput.getText().toString().trim();
+            String price = priceInput.getText().toString().trim();
+            String prepTime = prepTimeInput.getText().toString().trim();
+            String description = descriptionInput.getText().toString().trim();
+            boolean isAvailable = availabilitySwitch.isChecked();
 
-        if (name.isEmpty() || price.isEmpty() || prepTime.isEmpty()) {
-            Toast.makeText(getContext(), "Name, price, and prep time are required", Toast.LENGTH_SHORT).show();
-            return;
-        }
+            if (name.isEmpty() || price.isEmpty() || prepTime.isEmpty()) {
+                Toast.makeText(getContext(), "Name, price, and prep time are required", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-        // Check if the new name conflicts with another existing item (excluding the original item)
-        String sanitizedName = name.replaceAll("[^a-zA-Z0-9]", "_");
-        db.collection("FoodPlaces").document(restaurantId).collection("Menu")
-                .document("DefaultMenu").collection("Items").document(sanitizedName)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists() && !sanitizedName.equals(originalDocumentId)) {
-                        Toast.makeText(getContext(), "Item name already exists", Toast.LENGTH_SHORT).show();
-                    } else {
-                        if (selectedImageUri != null) {
-                            try {
-                                Uri compressedUri = compressImage(selectedImageUri);
-                                uploadImageAndUpdateItem(name, price, prepTime, description, compressedUri, isAvailable);
-                            } catch (Exception e) {
-                                Toast.makeText(getContext(), "Failed to compress image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                // Proceed with update using existing image
-                                String existingImageUrl = menuItems.stream()
-                                        .filter(item -> item.getDocumentId().equals(originalDocumentId))
-                                        .findFirst()
-                                        .map(MenuDomain::getItemImg)
-                                        .orElse("");
-                                updateItemInFirestore(name, price, prepTime, description, existingImageUrl, isAvailable);
-                            }
+            String sanitizedName = name.replaceAll("[^a-zA-Z0-9]", "_");
+            db.collection("FoodPlaces").document(restaurantId).collection("Menu")
+                    .document("DefaultMenu").collection("Items").document(sanitizedName)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists() && !sanitizedName.equals(item.getDocumentId())) {
+                            Toast.makeText(getContext(), "Item name already exists", Toast.LENGTH_SHORT).show();
                         } else {
-                            String existingImageUrl = menuItems.stream()
-                                    .filter(item -> item.getDocumentId().equals(originalDocumentId))
-                                    .findFirst()
-                                    .map(MenuDomain::getItemImg)
-                                    .orElse("");
-                            updateItemInFirestore(name, price, prepTime, description, existingImageUrl, isAvailable);
+                            if (dialogSelectedImageUri[0] != null) {
+                                try {
+                                    Uri compressedUri = compressImage(dialogSelectedImageUri[0]);
+                                    uploadImageAndUpdateItem(name, price, prepTime, description, compressedUri, isAvailable, item.getDocumentId());
+                                } catch (Exception e) {
+                                    Toast.makeText(getContext(), "Failed to compress image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    updateItemInFirestore(name, price, prepTime, description, item.getItemImg(), isAvailable, item.getDocumentId());
+                                }
+                            } else {
+                                updateItemInFirestore(name, price, prepTime, description, item.getItemImg(), isAvailable, item.getDocumentId());
+                            }
                         }
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("MenuManagementFragment", "Failed to check item name", e);
-                    Toast.makeText(getContext(), "Failed to validate item name: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("MenuManagementFragment", "Failed to check item name", e);
+                        Toast.makeText(getContext(), "Failed to validate item name: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+        });
+
+        builder.setNegativeButton("Cancel", (dialogInterface, which) -> dialogInterface.cancel());
+
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.white);
+
+        dialog.show();
+    }
+    private void showAddItemDialog() {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
+        builder.setTitle("Add New Menu Item");
+
+        LinearLayout layout = new LinearLayout(requireContext());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(16, 16, 16, 16);
+
+        TextInputLayout nameLayout = new TextInputLayout(requireContext());
+        nameLayout.setHint("Item Name");
+        nameLayout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        TextInputEditText nameInput = new TextInputEditText(nameLayout.getContext());
+        nameLayout.addView(nameInput);
+        layout.addView(nameLayout);
+
+        TextInputLayout priceLayout = new TextInputLayout(requireContext());
+        priceLayout.setHint("Item Price");
+        priceLayout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        TextInputEditText priceInput = new TextInputEditText(priceLayout.getContext());
+        priceInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        priceLayout.addView(priceInput);
+        layout.addView(priceLayout);
+
+        TextInputLayout prepTimeLayout = new TextInputLayout(requireContext());
+        prepTimeLayout.setHint("Preparation Time (minutes)");
+        prepTimeLayout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        TextInputEditText prepTimeInput = new TextInputEditText(prepTimeLayout.getContext());
+        prepTimeInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        prepTimeLayout.addView(prepTimeInput);
+        layout.addView(prepTimeLayout);
+
+        TextInputLayout descriptionLayout = new TextInputLayout(requireContext());
+        descriptionLayout.setHint("Item Description");
+        descriptionLayout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        TextInputEditText descriptionInput = new TextInputEditText(descriptionLayout.getContext());
+        descriptionLayout.addView(descriptionInput);
+        layout.addView(descriptionLayout);
+
+        Button imageButton = new Button(requireContext());
+        imageButton.setText("Select Image");
+        layout.addView(imageButton);
+
+        imageButton.setOnClickListener(v -> {
+            currentImageButton = imageButton;
+            String permission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ?
+                    Manifest.permission.READ_MEDIA_IMAGES : Manifest.permission.READ_EXTERNAL_STORAGE;
+
+            if (ContextCompat.checkSelfPermission(requireContext(), permission) == PackageManager.PERMISSION_GRANTED) {
+                dialogPickImageLauncher.launch("image/*");
+            } else {
+                requestPermissionLauncher.launch(permission);
+            }
+        });
+
+        SwitchMaterial availabilitySwitch = new SwitchMaterial(requireContext());
+        availabilitySwitch.setText("Available");
+        availabilitySwitch.setChecked(true);
+        layout.addView(availabilitySwitch);
+
+        builder.setView(layout);
+
+        builder.setPositiveButton("Add", (dialogInterface, which) -> {
+            String name = nameInput.getText().toString().trim();
+            String price = priceInput.getText().toString().trim();
+            String prepTime = prepTimeInput.getText().toString().trim();
+            String description = descriptionInput.getText().toString().trim();
+            boolean isAvailable = availabilitySwitch.isChecked();
+
+            if (name.isEmpty() || price.isEmpty() || prepTime.isEmpty()) {
+                Toast.makeText(getContext(), "Name, price, and prep time are required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String sanitizedName = name.replaceAll("[^a-zA-Z0-9]", "_");
+
+            db.collection("FoodPlaces").document(restaurantId).collection("Menu")
+                    .document("DefaultMenu").collection("Items").document(sanitizedName)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            Toast.makeText(getContext(), "Item name already exists", Toast.LENGTH_SHORT).show();
+                        } else {
+                            if (dialogSelectedImageUri != null) {
+                                try {
+                                    Uri compressedUri = compressImage(dialogSelectedImageUri);
+                                    uploadImageAndSaveItem(name, price, prepTime, description, compressedUri, isAvailable);
+                                } catch (Exception e) {
+                                    Toast.makeText(getContext(), "Failed to compress image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    saveItemToFirestore(name, price, prepTime, description, "", isAvailable);
+                                }
+                            } else {
+                                saveItemToFirestore(name, price, prepTime, description, "", isAvailable);
+                            }
+                        }
+                    });
+        });
+
+        builder.setNegativeButton("Cancel", (dialogInterface, which) -> dialogInterface.cancel());
+
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.white);
+        dialog.show();
     }
 
-    private void uploadImageAndUpdateItem(String name, String price, String prepTime, String description, Uri imageUri, boolean isAvailable) {
+
+    private void uploadImageAndUpdateItem(String name, String price, String prepTime, String description, Uri imageUri, boolean isAvailable, String originalDocumentId) {
         String sanitizedName = name.replaceAll("[^a-zA-Z0-9]", "_");
         StorageReference imageRef = storage.getReference().child("menu_images/" + restaurantId + "/" + sanitizedName + ".jpg");
 
         // Delete the old image if it exists
-        String oldSanitizedName = originalDocumentId; // Use the original document ID
-        StorageReference oldImageRef = storage.getReference().child("menu_images/" + restaurantId + "/" + oldSanitizedName + ".jpg");
+        StorageReference oldImageRef = storage.getReference().child("menu_images/" + restaurantId + "/" + originalDocumentId + ".jpg");
         oldImageRef.delete()
-                .addOnSuccessListener(aVoid -> Log.d("MenuManagementFragment", "Old image deleted: " + oldSanitizedName))
+                .addOnSuccessListener(aVoid -> Log.d("MenuManagementFragment", "Old image deleted: " + originalDocumentId))
                 .addOnFailureListener(e -> Log.w("MenuManagementFragment", "Failed to delete old image (may not exist): " + e.getMessage()));
 
         imageRef.putFile(imageUri)
                 .addOnSuccessListener(taskSnapshot -> imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
                     String imageUrl = uri.toString();
-                    updateItemInFirestore(name, price, prepTime, description, imageUrl, isAvailable);
+                    updateItemInFirestore(name, price, prepTime, description, imageUrl, isAvailable, originalDocumentId);
                 }))
                 .addOnFailureListener(e -> {
                     Log.e("MenuManagementFragment", "Failed to upload image", e);
                     Toast.makeText(getContext(), "Failed to upload image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    String existingImageUrl = menuItems.stream()
-                            .filter(item -> item.getDocumentId().equals(originalDocumentId))
-                            .findFirst()
-                            .map(MenuDomain::getItemImg)
-                            .orElse("");
-                    updateItemInFirestore(name, price, prepTime, description, existingImageUrl, isAvailable);
+                    updateItemInFirestore(name, price, prepTime, description, "", isAvailable, originalDocumentId);
                 });
     }
-    private void updateItemInFirestore(String name, String price, String prepTime, String description, String imageUrl, boolean isAvailable) {
+    private void updateItemInFirestore(String name, String price, String prepTime, String description, String imageUrl, boolean isAvailable, String originalDocumentId) {
         Map<String, Object> itemData = new HashMap<>();
         itemData.put("Item Name", name);
         itemData.put("Item Price", price);
@@ -411,11 +576,7 @@ public class MenuManagementFragment extends Fragment {
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(getContext(), "Item updated!", Toast.LENGTH_SHORT).show();
                     loadMenuItems();
-                    clearInputs();
-                    cardView.setVisibility(View.GONE);
-                    backButton.setVisibility(View.GONE);
-                    addItemButton.setText("Add Item");
-                    isUpdating = false;
+                    clearInputs(); // Clear UI inputs for consistency
                 })
                 .addOnFailureListener(e -> {
                     Log.e("MenuManagementFragment", "Failed to update item", e);

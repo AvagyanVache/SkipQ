@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingBottom="?attr/actionBarSize"
     android:background="@color/primary_color">
-
 
     <LinearLayout
         android:id="@+id/title"
@@ -51,7 +51,7 @@
         android:layout_height="0dp"
         android:fillViewport="true"
         app:layout_constraintTop_toBottomOf="@id/title"
-        app:layout_constraintBottom_toTopOf="@id/bottomNavigationView">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -64,6 +64,7 @@
                 android:id="@+id/cartRecycleView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
                 android:layout_marginTop="15dp"
                  />
 
@@ -72,8 +73,8 @@
                 android:id="@+id/textInputLayoutPhone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="15dp"
-                android:layout_marginTop="15dp">
+                android:layout_marginTop="15dp"
+                android:padding="15dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -103,6 +104,7 @@
 
                 </LinearLayout>
             </com.google.android.material.textfield.TextInputLayout>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/textInputName"
                 android:layout_width="match_parent"
@@ -328,16 +330,7 @@
         </LinearLayout>
     </ScrollView>
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigationView"
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:layout_marginBottom="10dp"
-        android:background="@drawable/navigationbar_bg"
-        app:menu="@menu/bottom_navigation_menu"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+
 
     <ImageView
         android:id="@+id/emptyCartImg"
@@ -345,8 +338,8 @@
         android:layout_height="150dp"
         android:visibility="gone"
         app:srcCompat="@drawable/empty_cart"
-        app:layout_constraintTop_toBottomOf="@id/title"
-        app:layout_constraintBottom_toTopOf="@id/cartEmpty"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -360,7 +353,6 @@
         android:textSize="25sp"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/emptyCartImg"
-        app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

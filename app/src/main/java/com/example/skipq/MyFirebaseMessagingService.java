@@ -11,6 +11,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String CHANNEL_ID = "order_notifications";
@@ -69,30 +72,36 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         String userId = getUserIdFromSession();
         if (userId != null) {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+            // Save to user's deviceTokens collection
+            Map<String, Object> tokenData = new HashMap<>();
+            tokenData.put("deviceToken", token);
+            tokenData.put("uid", userId);
+
             db.collection("users")
                     .document(userId)
-                    .update("deviceToken", token)
-                    .addOnSuccessListener(aVoid -> Log.d("FCM", "User token saved"))
-                    .addOnFailureListener(e -> Log.e("FCM", "Error saving user token", e));
+                    .collection("deviceTokens")
+                    .document(token)
+                    .set(tokenData)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d("FCM", "User token saved");
 
-            db.collection("FoodPlaces")
-                    .whereEqualTo("uid", userId)
-                    .get()
-                    .addOnSuccessListener(querySnapshot -> {
-                        if (!querySnapshot.isEmpty()) {
-                            String restaurantId = querySnapshot.getDocuments().get(0).getId();
-                            db.collection("FoodPlaces")
-                                    .document(restaurantId)
-                                    .update("deviceToken", token)
-                                    .addOnSuccessListener(aVoid -> Log.d("FCM", "Restaurant token saved for ID: " + restaurantId))
-                                    .addOnFailureListener(e -> Log.e("FCM", "Error saving restaurant token", e));
-                        } else {
-                            Log.d("FCM", "No restaurant found for UID: " + userId);
-                        }
+                        // Also update the restaurant document if this is a restaurant user
+                        db.collection("FoodPlaces")
+                                .whereEqualTo("uid", userId)
+                                .get()
+                                .addOnSuccessListener(querySnapshot -> {
+                                    if (!querySnapshot.isEmpty()) {
+                                        String restaurantId = querySnapshot.getDocuments().get(0).getId();
+                                        db.collection("FoodPlaces")
+                                                .document(restaurantId)
+                                                .update("deviceToken", token)
+                                                .addOnSuccessListener(aVoid1 -> Log.d("FCM", "Restaurant token updated for ID: " + restaurantId))
+                                                .addOnFailureListener(e -> Log.e("FCM", "Error updating restaurant token", e));
+                                    }
+                                });
                     })
-                    .addOnFailureListener(e -> Log.e("FCM", "Error checking restaurant", e));
-        } else {
-            Log.e("FCM", "User ID is null, cannot save token");
+                    .addOnFailureListener(e -> Log.e("FCM", "Error saving user token", e));
         }
     }
 

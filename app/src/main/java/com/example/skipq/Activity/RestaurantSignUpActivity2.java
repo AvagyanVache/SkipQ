@@ -40,6 +40,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -422,6 +423,9 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                                     restaurantInfo.put("contactPhone", phoneInput.getText().toString().trim());
                                     if (!apiLink.isEmpty()) {
                                         restaurantInfo.put("apiLink", apiLink);
+                                        restaurantInfo.put("isApproved", false);
+                                    } else {
+                                        restaurantInfo.put("isApproved", true); // Auto-approve if no API link
                                     }
                                     if (logoUrl != null) {
                                         restaurantInfo.put("logoUrl", logoUrl);
@@ -437,9 +441,11 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                                         userInfo.put("profilePictureUrl", logoUrl);
                                     }
 
-                                    AtomicInteger pendingTasks = new AtomicInteger(addressList.size() + 2);
+                                    // Increment pending tasks to include device token saving
+                                    AtomicInteger pendingTasks = new AtomicInteger(addressList.size() + 3); // +3 for user, restaurant, and device token
                                     List<Exception> errors = new ArrayList<>();
 
+                                    // Save user document
                                     db.collection("users").document(uid)
                                             .set(userInfo, SetOptions.merge())
                                             .addOnSuccessListener(aVoid -> {
@@ -459,6 +465,7 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                                                 }
                                             });
 
+                                    // Save restaurant document
                                     db.collection("FoodPlaces").document(name)
                                             .set(restaurantInfo)
                                             .addOnSuccessListener(aVoid -> {
@@ -477,6 +484,61 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                                                 }
                                             });
 
+                                    // Save device token
+                                    FirebaseMessaging.getInstance().getToken()
+                                            .addOnCompleteListener(tokenTask -> {
+                                                if (tokenTask.isSuccessful()) {
+                                                    String deviceToken = tokenTask.getResult();
+                                                    Map<String, Object> tokenData = new HashMap<>();
+                                                    tokenData.put("deviceToken", deviceToken);
+                                                    tokenData.put("uid", uid);
+
+                                                    // Save to user's deviceTokens collection
+                                                    db.collection("users").document(uid)
+                                                            .collection("deviceTokens").document(deviceToken)
+                                                            .set(tokenData)
+                                                            .addOnSuccessListener(aVoid -> {
+                                                                Log.d("RestaurantSignUp", "Device token saved for UID: " + uid);
+
+                                                                // ALSO save to the restaurant document
+                                                                db.collection("FoodPlaces").document(name)
+                                                                        .update("deviceToken", deviceToken)
+                                                                        .addOnSuccessListener(aVoid2 -> {
+                                                                            Log.d("RestaurantSignUp", "Device token saved to restaurant document");
+                                                                            if (pendingTasks.decrementAndGet() == 0 && errors.isEmpty()) {
+                                                                                setupApprovalListener(name, apiLink);
+                                                                                progressDialog.dismiss();
+                                                                                proceedToPendingActivity(name);
+                                                                            }
+                                                                        })
+                                                                        .addOnFailureListener(e -> {
+                                                                            errors.add(e);
+                                                                            Log.e("RestaurantSignUp", "Failed to save device token to restaurant: " + e.getMessage(), e);
+                                                                            if (pendingTasks.decrementAndGet() == 0) {
+                                                                                progressDialog.dismiss();
+                                                                                Toast.makeText(this, "Failed to save device token: " + errors.get(0).getMessage(), Toast.LENGTH_SHORT).show();
+                                                                            }
+                                                                        });
+                                                            })
+                                                            .addOnFailureListener(e -> {
+                                                                errors.add(e);
+                                                                Log.e("RestaurantSignUp", "Failed to save device token: " + e.getMessage(), e);
+                                                                if (pendingTasks.decrementAndGet() == 0) {
+                                                                    progressDialog.dismiss();
+                                                                    Toast.makeText(this, "Failed to save device token: " + errors.get(0).getMessage(), Toast.LENGTH_SHORT).show();
+                                                                }
+                                                            });
+                                                } else {
+                                                    errors.add(tokenTask.getException());
+                                                    Log.e("RestaurantSignUp", "Failed to retrieve device token: " + tokenTask.getException().getMessage());
+                                                    if (pendingTasks.decrementAndGet() == 0) {
+                                                        progressDialog.dismiss();
+                                                        Toast.makeText(this, "Failed to retrieve device token: " + errors.get(0).getMessage(), Toast.LENGTH_SHORT).show();
+                                                    }
+                                                }
+                                            });
+
+                                    // Save addresses
                                     for (RestaurantAddress address : addressList) {
                                         Map<String, Object> addressData = new HashMap<>();
                                         addressData.put("address", address.getAddress());

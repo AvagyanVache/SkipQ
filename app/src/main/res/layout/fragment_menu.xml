@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingBottom="?attr/actionBarSize"
     android:background="@color/primary_color">
 
     <LinearLayout
@@ -50,9 +51,11 @@
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/address_dropdown_layout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-        android:layout_width="412dp"
-        android:layout_height="53dp"
+        android:layout_width="379dp"
+        android:layout_height="54dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="10dp"
+        android:layout_marginEnd="16dp"
         android:background="@color/white"
 
         android:gravity="center"

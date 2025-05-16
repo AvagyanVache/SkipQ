@@ -120,22 +120,13 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
     }
 
     private String shortenDescription(String description) {
-        if (description.isEmpty()) {
+        if (description == null || description.isEmpty()) {
             return "No description";
         }
-        String[] words = description.split("\\s+");
-        int wordCount = Math.min(words.length, 3);
-        StringBuilder shortDesc = new StringBuilder();
-        for (int i = 0; i < wordCount; i++) {
-            shortDesc.append(words[i]);
-            if (i < wordCount - 1) {
-                shortDesc.append(" ");
-            }
+        if (description.length() <= 10) {
+            return description;
         }
-        if (words.length > 3) {
-            shortDesc.append("...");
-        }
-        return shortDesc.toString();
+        return description.substring(0, 10) + "...";
     }
 
     private void showItemDetailsDialog(MenuDomain item) {

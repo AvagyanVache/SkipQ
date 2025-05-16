@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:padding="16dp"
-    android:background="@drawable/background">
+    android:background="@color/primary_color">
 
     <ProgressBar
         android:id="@+id/pending_progress_bar"
@@ -22,5 +22,15 @@
         android:textSize="18sp"
         android:textAlignment="center"
         android:textColor="@android:color/black"/>
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="This may take some time..."
+        android:layout_marginTop="20dp"
+        android:textAlignment="center"
+        android:textColor="@android:color/black"
+        android:textSize="18sp" />
 
 </LinearLayout>

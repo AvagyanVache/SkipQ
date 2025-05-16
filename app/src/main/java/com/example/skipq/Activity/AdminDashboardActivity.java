@@ -1,12 +1,17 @@
 package com.example.skipq.Activity;
 
+import static androidx.fragment.app.FragmentManager.TAG;
+import static java.security.AccessController.getContext;
+
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,6 +49,84 @@ public class AdminDashboardActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private RestaurantAdapter adapter;
     private List<Restaurant> restaurantList;
+    private FirebaseAuth mAuth;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.activity_admin_dashboard);
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        mAuth = FirebaseAuth.getInstance();
+        // In onCreate, after setContentView(R.layout.activity_admin_dashboard)
+        Button logoutButton = findViewById(R.id.btnLogout);
+        logoutButton.setOnClickListener(v -> {
+            mAuth.signOut();
+            Log.d("AdminDashboard", "User logged out");
+            Intent intent = new Intent(AdminDashboardActivity.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user == null) {
+            Toast.makeText(this, "Unauthorized access", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+        storage = FirebaseStorage.getInstance();
+
+
+
+
+        db.collection("users").document(user.getUid()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (!documentSnapshot.exists() || !"admin".equals(documentSnapshot.getString("role"))) {
+                        Toast.makeText(this, "Unauthorized access", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
+                        recyclerView = findViewById(R.id.recyclerViewRestaurants);
+                        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+                        restaurantList = new ArrayList<>();
+                        adapter = new RestaurantAdapter(restaurantList,
+                                restaurantId -> {
+                                    db.collection("FoodPlaces").document(restaurantId).get()
+                                            .addOnSuccessListener(docSnapshot -> {
+                                                if (docSnapshot.exists()) {
+                                                    String restaurantName = docSnapshot.getString("name");
+                                                    String email = docSnapshot.getString("email");
+                                                    // Update approval status
+                                                    db.collection("FoodPlaces").document(restaurantId)
+                                                            .update("isApproved", true)
+                                                            .addOnSuccessListener(aVoid -> {
+                                                                Toast.makeText(this, "Restaurant approved", Toast.LENGTH_SHORT).show();
+                                                                // Show acceptance dialog
+                                                                loadPendingRestaurants();
+                                                            })
+                                                            .addOnFailureListener(e -> Toast.makeText(this, "Error approving: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                                                } else {
+                                                    Toast.makeText(this, "Restaurant not found", Toast.LENGTH_SHORT).show();
+                                                }
+                                            })
+                                            .addOnFailureListener(e -> Toast.makeText(this, "Error fetching restaurant: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                                },
+                                restaurantId -> showDeclineReasonDialog(this, restaurantId, id -> {
+                                    // No need to call delete here; declineRestaurant handles it
+                                    Log.d("AdminDashboard", "Decline initiated for restaurant: " + id);
+                                }));
+                        recyclerView.setAdapter(adapter);
+                        loadPendingRestaurants();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Error verifying access", Toast.LENGTH_SHORT).show();
+                    finish();
+                });
+    }
+
     private void showDeclineReasonDialog(Context context, String restaurantId, Consumer<String> onDeclineConfirmed) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Decline Restaurant");
@@ -283,67 +366,6 @@ public class AdminDashboardActivity extends AppCompatActivity {
                 });
     }
 
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_admin_dashboard);
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) {
-            Toast.makeText(this, "Unauthorized access", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-
-        db = FirebaseFirestore.getInstance();
-        storage = FirebaseStorage.getInstance();
-        db.collection("users").document(user.getUid()).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (!documentSnapshot.exists() || !"admin".equals(documentSnapshot.getString("role"))) {
-                        Toast.makeText(this, "Unauthorized access", Toast.LENGTH_SHORT).show();
-                        finish();
-                    } else {
-                        setContentView(R.layout.activity_admin_dashboard);
-                        recyclerView = findViewById(R.id.recyclerViewRestaurants);
-                        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-                        restaurantList = new ArrayList<>();
-                        adapter = new RestaurantAdapter(restaurantList,
-                                restaurantId -> {
-                                    db.collection("FoodPlaces").document(restaurantId).get()
-                                            .addOnSuccessListener(docSnapshot -> {
-                                                if (docSnapshot.exists()) {
-                                                    String restaurantName = docSnapshot.getString("name");
-                                                    String email = docSnapshot.getString("email");
-                                                    // Update approval status
-                                                    db.collection("FoodPlaces").document(restaurantId)
-                                                            .update("isApproved", true)
-                                                            .addOnSuccessListener(aVoid -> {
-                                                                Toast.makeText(this, "Restaurant approved", Toast.LENGTH_SHORT).show();
-                                                                // Show acceptance dialog
-                                                                loadPendingRestaurants();
-                                                            })
-                                                            .addOnFailureListener(e -> Toast.makeText(this, "Error approving: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-                                                } else {
-                                                    Toast.makeText(this, "Restaurant not found", Toast.LENGTH_SHORT).show();
-                                                }
-                                            })
-                                            .addOnFailureListener(e -> Toast.makeText(this, "Error fetching restaurant: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-                                },
-                                restaurantId -> showDeclineReasonDialog(this, restaurantId, id -> {
-                                    // No need to call delete here; declineRestaurant handles it
-                                    Log.d("AdminDashboard", "Decline initiated for restaurant: " + id);
-                                }));
-                        recyclerView.setAdapter(adapter);
-                        loadPendingRestaurants();
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Error verifying access", Toast.LENGTH_SHORT).show();
-                    finish();
-                });
-    }
 
     private void loadPendingRestaurants() {
         db.collection("FoodPlaces")

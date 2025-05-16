@@ -48,6 +48,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import java.io.IOException;
@@ -393,11 +394,6 @@ public class ProfileFragment extends Fragment {
             Log.d(TAG, "Addresses dropdown toggled: " + (isVisible ? "collapsed" : "expanded"));
         });
 
-        ImageView changeRestaurantName = view.findViewById(R.id.changeRestaurantName);
-        changeRestaurantName.setOnClickListener(v -> {
-            Log.d(TAG, "Change restaurant name clicked");
-            showChangeNameDialog();
-        });
 
         ImageView changeRestaurantNumber = view.findViewById(R.id.changeRestaurantNumber);
         changeRestaurantNumber.setOnClickListener(v -> {
@@ -562,6 +558,7 @@ public class ProfileFragment extends Fragment {
                             String name = documentSnapshot.getString("name");
                             String contactPhone = documentSnapshot.getString("contactPhone");
                             Map<String, Object> operatingHoursMap = (Map<String, Object>) documentSnapshot.get("operatingHours");
+                            String logoUrl = documentSnapshot.getString("logoUrl");
 
                             // Store original values
                             originalName = name != null ? name : "";
@@ -580,27 +577,15 @@ public class ProfileFragment extends Fragment {
                             // Load operating hours
                             loadOperatingHours(operatingHoursMap);
 
-                            // Load logo
-                            if (!isNetworkAvailable()) {
-                                Log.w(TAG, "No internet connection, loading default logo");
-                                Toast.makeText(getContext(), "No internet connection", Toast.LENGTH_SHORT).show();
-
+                            if (logoUrl != null && !logoUrl.isEmpty()) {
+                                originalLogoUrl = logoUrl;
+                                Glide.with(ProfileFragment.this)
+                                        .load(logoUrl)
+                                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                        .placeholder(R.drawable.white)
+                                        .into(restaurantLogo);
                             } else {
-                                String imagePath = "restaurant_logos/" + sanitizedName + "_logo.jpg";
-                                StorageReference storageReference = storage.getReference().child(imagePath);
-                                storageReference.getDownloadUrl()
-                                        .addOnSuccessListener(uri -> {
-                                            Log.d(TAG, "Loading logo from Storage: " + uri);
-                                            originalLogoUrl = uri.toString();
-                                            Glide.with(ProfileFragment.this)
-                                                    .load(uri)
-                                                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                                    .into(restaurantLogo);
-                                            loadLogoFromStorage(sanitizedName);
-                                        })
-                                        .addOnFailureListener(e -> {
-                                            Log.w(TAG, "Failed to load logo from Storage: " + imagePath, e);
-                                        });
+                                loadLogoFromStorage(sanitizedName);
                             }
 
                             db.collection("FoodPlaces").document(restaurantId).collection("Addresses").get()
@@ -731,8 +716,8 @@ public class ProfileFragment extends Fragment {
                     Glide.with(ProfileFragment.this)
                             .load(logoUrl)
                             .apply(new RequestOptions()
-                                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                                    .skipMemoryCache(true))
+                                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                    .error(R.drawable.white)) // Fallback image on error
                             .into(restaurantLogo);
                     // Update Firestore with the correct logoUrl
                     db.collection("FoodPlaces").document(restaurantId)
@@ -741,14 +726,13 @@ public class ProfileFragment extends Fragment {
                             .addOnFailureListener(e -> Log.e(TAG, "Failed to update logoUrl in Firestore", e));
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to load logo from Storage", e);
-                    Toast.makeText(getContext(), "No logo available", Toast.LENGTH_SHORT).show();
+                    Log.w(TAG, "Failed to load logo from Storage: " + e.getMessage());
                     Glide.with(ProfileFragment.this)
-                            .load(R.drawable.white)
+                            .load(R.drawable.white) // Use default logo on failure
                             .apply(new RequestOptions()
-                                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                                    .skipMemoryCache(true))
+                                    .diskCacheStrategy(DiskCacheStrategy.ALL))
                             .into(restaurantLogo);
+                    Toast.makeText(getContext(), "Unable to load logo", Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -996,17 +980,27 @@ public class ProfileFragment extends Fragment {
                                     .addOnSuccessListener(aVoid -> Log.d(TAG, "User profile picture URL updated: " + logoUrl))
                                     .addOnFailureListener(e -> Log.e(TAG, "Failed to update user profile picture URL", e));
                         }
+                        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                String token = task.getResult();
+                                updates.put("deviceToken", token); // Add to FoodPlaces document
+                                Log.d(TAG, "Saving deviceToken: " + token);
+                            } else {
+                                Log.e(TAG, "Failed to get FCM token", task.getException());
+                            }
+                            updateFirestore(restaurantRef, updates, updatedAddresses);
+                        });
                         // Update Firestore and refresh logo
                         updateFirestore(restaurantRef, updates, updatedAddresses);
                         if (isAdded()) {
-                            Log.d(TAG, "Refreshing logo in ProfileFragment with URL: " + logoUrl);
                             Glide.with(ProfileFragment.this)
-                                    .load(uri)
-                                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                    .placeholder(R.drawable.white)
+                                    .load(logoUrl)
+                                    .apply(new RequestOptions()
+                                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                            .error(R.drawable.white))
                                     .into(restaurantLogo);
                             logoUri = null;
-                            originalLogoUrl = logoUrl; // Update originalLogoUrl to prevent repeated change detection
+                            originalLogoUrl = logoUrl;
                         }
                     }))
                     .addOnFailureListener(e -> {
@@ -1089,51 +1083,6 @@ public class ProfileFragment extends Fragment {
 
         saveRestaurantChanges.setVisibility(hasChanges ? View.VISIBLE : View.GONE);
     }
-    private void showChangeNameDialog() {
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
-        builder.setTitle("Change Restaurant Name");
-
-        TextInputLayout inputLayout = new TextInputLayout(requireContext());
-        inputLayout.setHint("Enter new restaurant name");
-        inputLayout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
-
-        TextInputEditText input = new TextInputEditText(requireContext());
-        input.setText(restaurantNameDisplay.getText().toString());
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        inputLayout.addView(input);
-
-        int padding = (int) (16 * getResources().getDisplayMetrics().density); // 16dp padding
-        inputLayout.setPadding(padding, padding, padding, padding);
-
-        builder.setView(inputLayout);
-
-        builder.setPositiveButton("Confirm", (dialog, which) -> {
-            String newName = input.getText().toString().trim();
-            if (newName.isEmpty()) {
-                Toast.makeText(getContext(), "Restaurant name cannot be empty", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            DocumentReference restaurantRef = db.collection("FoodPlaces").document(restaurantId);
-            restaurantRef.update("name", newName)
-                    .addOnSuccessListener(aVoid -> {
-                        Log.d(TAG, "Restaurant name updated to: " + newName);
-                        restaurantNameDisplay.setText(newName);
-                        originalName = newName;
-                        Toast.makeText(getContext(), "Restaurant name updated", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Failed to update restaurant name", e);
-                        Toast.makeText(getContext(), "Failed to update name", Toast.LENGTH_SHORT).show();
-                    });
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-
-        builder.show();
-    }
-
-
-
     private void showChangePhoneDialog() {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
         builder.setTitle("Change Contact Phone");
