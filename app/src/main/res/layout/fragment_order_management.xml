@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#febf00"
+    android:background="@color/primary_color"
     android:padding="16dp">
 
 
@@ -14,7 +14,7 @@
         android:text="Order Management"
         android:textSize="32sp"
         android:gravity="center"
-        android:textColor="#F2E5BF"
+        android:textColor="@color/white"
         android:textStyle="bold"
         android:fontFamily="sans-serif-medium"/>
 

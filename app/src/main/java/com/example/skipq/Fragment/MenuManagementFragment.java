@@ -1,9 +1,14 @@
 package com.example.skipq.Fragment;
 
+import static com.google.android.material.internal.ViewUtils.dpToPx;
+
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,12 +19,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.Manifest;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -65,7 +72,7 @@ public class MenuManagementFragment extends Fragment {
     private CardView cardView;
     private FirebaseFirestore db;
     private String restaurantId;
-    private TextView itemImg, backButton;
+    private TextView itemImg;
     private boolean isUpdating = false;
     private String originalItemName;
     private Uri selectedImageUri;
@@ -100,7 +107,6 @@ public class MenuManagementFragment extends Fragment {
         itemImg = view.findViewById(R.id.item_img);
         addItemButton = view.findViewById(R.id.add_item_button);
         cardView = view.findViewById(R.id.cardView);
-        backButton = view.findViewById(R.id.backButton);
         availabilitySwitch = view.findViewById(R.id.availability_switch);
 
         selectedImageUri = null;
@@ -113,20 +119,18 @@ public class MenuManagementFragment extends Fragment {
         menuRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         menuRecyclerView.setAdapter(menuAdapter);
 
-        backButton.setVisibility(View.GONE);
 
         loadMenuItems();
 
         addItemButton.setOnClickListener(v -> showAddItemDialog());
 
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
 
-        backButton.setOnClickListener(v -> {
-            cardView.setVisibility(View.GONE);
-            backButton.setVisibility(View.GONE);
-            addItemButton.setText("Add Item");
-            clearInputs();
-            isUpdating = false;
+            }
         });
+
         dialogPickImageLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri != null) {
                 dialogSelectedImageUri = uri;
@@ -285,7 +289,6 @@ public class MenuManagementFragment extends Fragment {
                     loadMenuItems();
                     clearInputs();
                     cardView.setVisibility(View.GONE);
-                    backButton.setVisibility(View.GONE);
                     addItemButton.setText("Add Item");
                 })
                 .addOnFailureListener(e -> {
@@ -346,28 +349,20 @@ public class MenuManagementFragment extends Fragment {
         descriptionLayout.addView(descriptionInput);
         layout.addView(descriptionLayout);
 
-        // Image Selection
-        Button imageButton = new Button(requireContext());
-        imageButton.setText(item.getItemImg() != null && !item.getItemImg().isEmpty() ? "Image Loaded" : "Select Image");
-        Uri[] dialogSelectedImageUri = {null}; // Array to hold the selected image URI
+        LinearLayout imageContainer = new LinearLayout(requireContext());
+        imageContainer.setOrientation(LinearLayout.HORIZONTAL);
+        imageContainer.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
 
-        // Use the existing pickImageLauncher
-        imageButton.setOnClickListener(v -> {
-            String permission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ?
-                    Manifest.permission.READ_MEDIA_IMAGES : Manifest.permission.READ_EXTERNAL_STORAGE;
-            if (ContextCompat.checkSelfPermission(requireContext(), permission) == PackageManager.PERMISSION_GRANTED) {
-                pickImageLauncher.launch("image/*");
-            } else {
-                requestPermissionLauncher.launch(permission);
-            }
-        });
-        layout.addView(imageButton);
 
-        // Availability Switch
         SwitchMaterial availabilitySwitch = new SwitchMaterial(requireContext());
         availabilitySwitch.setText("Available");
         availabilitySwitch.setChecked(item.isAvailable());
+        availabilitySwitch.setThumbTintList(ColorStateList.valueOf(Color.WHITE));
+        availabilitySwitch.setTrackTintList(ColorStateList.valueOf(Color.parseColor("#FFA500"))); // Orange
         layout.addView(availabilitySwitch);
+
 
         // Set the dialog view
         builder.setView(layout);
@@ -380,7 +375,7 @@ public class MenuManagementFragment extends Fragment {
             boolean isAvailable = availabilitySwitch.isChecked();
 
             if (name.isEmpty() || price.isEmpty() || prepTime.isEmpty()) {
-                Toast.makeText(getContext(), "Name, price, and prep time are required", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Name, price, and prep time are required", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -390,14 +385,14 @@ public class MenuManagementFragment extends Fragment {
                     .get()
                     .addOnSuccessListener(documentSnapshot -> {
                         if (documentSnapshot.exists() && !sanitizedName.equals(item.getDocumentId())) {
-                            Toast.makeText(getContext(), "Item name already exists", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(requireContext(), "Item name already exists", Toast.LENGTH_SHORT).show();
                         } else {
-                            if (dialogSelectedImageUri[0] != null) {
+                            if (dialogSelectedImageUri != null) {
                                 try {
-                                    Uri compressedUri = compressImage(dialogSelectedImageUri[0]);
+                                    Uri compressedUri = compressImage(dialogSelectedImageUri);
                                     uploadImageAndUpdateItem(name, price, prepTime, description, compressedUri, isAvailable, item.getDocumentId());
                                 } catch (Exception e) {
-                                    Toast.makeText(getContext(), "Failed to compress image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(requireContext(), "Failed to compress image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                     updateItemInFirestore(name, price, prepTime, description, item.getItemImg(), isAvailable, item.getDocumentId());
                                 }
                             } else {
@@ -407,14 +402,14 @@ public class MenuManagementFragment extends Fragment {
                     })
                     .addOnFailureListener(e -> {
                         Log.e("MenuManagementFragment", "Failed to check item name", e);
-                        Toast.makeText(getContext(), "Failed to validate item name: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), "Failed to validate item name: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
         });
 
         builder.setNegativeButton("Cancel", (dialogInterface, which) -> dialogInterface.cancel());
 
         AlertDialog dialog = builder.create();
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.white);
+        dialog.getWindow().setBackgroundDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.dialog_background));
 
         dialog.show();
     }
@@ -456,12 +451,40 @@ public class MenuManagementFragment extends Fragment {
         descriptionLayout.addView(descriptionInput);
         layout.addView(descriptionLayout);
 
-        Button imageButton = new Button(requireContext());
-        imageButton.setText("Select Image");
-        layout.addView(imageButton);
+        // Create LinearLayout for TextView and ImageView (replacing single ImageView)
+        LinearLayout imageContainer = new LinearLayout(requireContext());
+        imageContainer.setOrientation(LinearLayout.HORIZONTAL);
+        imageContainer.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
 
-        imageButton.setOnClickListener(v -> {
-            currentImageButton = imageButton;
+// TextView for "Upload Logo"
+        TextView uploadTextView = new TextView(requireContext());
+        uploadTextView.setText("Upload Logo");
+        uploadTextView.setTextColor(ContextCompat.getColor(requireContext(), R.color.secondary_color));
+        uploadTextView.setTextSize(18);
+        uploadTextView.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        textParams.setMargins(dpToPx(100), dpToPx(16), 0, dpToPx(8));
+        uploadTextView.setLayoutParams(textParams);
+        imageContainer.addView(uploadTextView);
+
+// ImageView for logo
+        ImageView uploadImageView = new ImageView(requireContext());
+        uploadImageView.setId(R.id.upload_logo);
+        uploadImageView.setImageResource(R.drawable.upload);
+        uploadImageView.setLayoutParams(new LinearLayout.LayoutParams(dpToPx(50), dpToPx(50)));
+        uploadImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        uploadImageView.setContentDescription("Upload menu item image");
+        imageContainer.addView(uploadImageView);
+
+// Add image container to main layout
+        layout.addView(imageContainer);
+
+// Handle image selection on ImageView click
+        uploadImageView.setOnClickListener(v -> {
             String permission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ?
                     Manifest.permission.READ_MEDIA_IMAGES : Manifest.permission.READ_EXTERNAL_STORAGE;
 
@@ -471,10 +494,12 @@ public class MenuManagementFragment extends Fragment {
                 requestPermissionLauncher.launch(permission);
             }
         });
-
+        // Availability Switch
         SwitchMaterial availabilitySwitch = new SwitchMaterial(requireContext());
         availabilitySwitch.setText("Available");
         availabilitySwitch.setChecked(true);
+        availabilitySwitch.setThumbTintList(ColorStateList.valueOf(Color.WHITE));
+        availabilitySwitch.setTrackTintList(ColorStateList.valueOf(Color.parseColor("#FFA500"))); // Orange
         layout.addView(availabilitySwitch);
 
         builder.setView(layout);
@@ -518,11 +543,13 @@ public class MenuManagementFragment extends Fragment {
         builder.setNegativeButton("Cancel", (dialogInterface, which) -> dialogInterface.cancel());
 
         AlertDialog dialog = builder.create();
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.white);
+        dialog.getWindow().setBackgroundDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.dialog_background));
         dialog.show();
     }
 
-
+    private int dpToPx(int dp) {
+        return (int) (dp * requireContext().getResources().getDisplayMetrics().density);
+    }
     private void uploadImageAndUpdateItem(String name, String price, String prepTime, String description, Uri imageUri, boolean isAvailable, String originalDocumentId) {
         String sanitizedName = name.replaceAll("[^a-zA-Z0-9]", "_");
         StorageReference imageRef = storage.getReference().child("menu_images/" + restaurantId + "/" + sanitizedName + ".jpg");

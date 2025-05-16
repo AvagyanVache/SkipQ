@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
@@ -23,6 +24,11 @@ public class ItemDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_item_detail);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+            }
+        });
         prepTime = findViewById(R.id.PrepTime);
         itemName = findViewById(R.id.itemName);
         itemDescription = findViewById(R.id.itemDescription);
@@ -49,5 +55,9 @@ public class ItemDetailActivity extends AppCompatActivity {
         Glide.with(this)
                 .load(imageUrl)
                 .into(itemImage);
+    }
+    @Override
+    public void onBackPressed() {
+
     }
 }

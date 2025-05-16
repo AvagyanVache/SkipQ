@@ -25,6 +25,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -115,6 +116,12 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   cartList = new ArrayList<>(CartManager.getInstance().getCartList());
   db = FirebaseFirestore.getInstance();
 
+  requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+   @Override
+   public void handleOnBackPressed() {
+
+   }
+  });
   FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
   orderTypeRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
    if (checkedId == R.id.radioPickUp) {

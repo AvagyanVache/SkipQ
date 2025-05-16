@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -68,10 +69,18 @@ public class ChangePasswordActivity extends AppCompatActivity {
                     }
                 });
 
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+            }
+        });
 
 
             }
+    @Override
+    public void onBackPressed() {
 
+    }
             private void ResetPassword() {
                 btnReset.setVisibility(View.INVISIBLE);
 

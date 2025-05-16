@@ -24,6 +24,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -131,7 +132,11 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
             Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(pickIntent, PICK_IMAGE_REQUEST);
         });
-
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+            }
+        });
         addAddressButton.setOnClickListener(v -> {
             String addressText = addressInput.getText().toString().trim();
             if (!addressText.isEmpty()) {
@@ -168,7 +173,10 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
             }
         });
         }
+    @Override
+    public void onBackPressed() {
 
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -419,14 +427,11 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
                                     restaurantInfo.put("uid", uid);
                                     restaurantInfo.put("role", "restaurant");
                                     restaurantInfo.put("category", selectedCategory);
-                                    restaurantInfo.put("isApproved", false);
                                     restaurantInfo.put("contactPhone", phoneInput.getText().toString().trim());
                                     if (!apiLink.isEmpty()) {
                                         restaurantInfo.put("apiLink", apiLink);
-                                        restaurantInfo.put("isApproved", false);
-                                    } else {
-                                        restaurantInfo.put("isApproved", true); // Auto-approve if no API link
                                     }
+                                    restaurantInfo.put("isApproved", false);
                                     if (logoUrl != null) {
                                         restaurantInfo.put("logoUrl", logoUrl);
                                     }
@@ -583,15 +588,36 @@ public class RestaurantSignUpActivity2 extends AppCompatActivity {
             if (snapshot != null && snapshot.exists()) {
                 Boolean isApproved = snapshot.getBoolean("isApproved");
                 if (isApproved != null && isApproved) {
-                    Log.d("RestaurantSignUp", "Restaurant " + restaurantName + " approved, fetching menu");
-                    fetchMenuFromApiAndSave(restaurantName, apiLink, () -> {
-                        Log.d("RestaurantSignUp", "Menu fetch and save completed for " + restaurantName);
-                        runOnUiThread(() -> Toast.makeText(this, "Menu loaded for " + restaurantName, Toast.LENGTH_SHORT).show());
-                    });
+                    Log.d("RestaurantSignUp", "Restaurant " + restaurantName + " approved");
+                    // Remove the listener to prevent multiple triggers
                     restaurantRef.addSnapshotListener((s, ex) -> {}).remove();
+                    if (apiLink != null && !apiLink.isEmpty()) {
+                        // Fetch menu if apiLink is provided
+                        fetchMenuFromApiAndSave(restaurantName, apiLink, () -> {
+                            Log.d("RestaurantSignUp", "Menu fetch and save completed for " + restaurantName);
+                            runOnUiThread(() -> {
+                                Toast.makeText(this, "Menu loaded for " + restaurantName, Toast.LENGTH_SHORT).show();
+                                proceedToDashboard(restaurantName);
+                            });
+                        });
+                    } else {
+                        // No apiLink, proceed directly to dashboard
+                        runOnUiThread(() -> {
+                            Toast.makeText(this, "Restaurant approved: " + restaurantName, Toast.LENGTH_SHORT).show();
+                            proceedToDashboard(restaurantName);
+                        });
+                    }
                 }
             }
         });
+    }
+    private void proceedToDashboard(String restaurantName) {
+        Intent intent = new Intent(RestaurantSignUpActivity2.this, HomeActivity.class);
+        intent.putExtra("userRole", "restaurant");
+        intent.putExtra("restaurantId", restaurantName);
+        intent.putExtra("FRAGMENT_TO_LOAD", "RESTAURANT_DASHBOARD");
+        startActivity(intent);
+        finish();
     }
     private void proceedToPendingActivity(String restaurantName) {
         Intent intent = new Intent(RestaurantSignUpActivity2.this, RestaurantPendingActivity.class);

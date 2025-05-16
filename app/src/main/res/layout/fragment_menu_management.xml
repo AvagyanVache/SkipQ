@@ -4,8 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/background"
-    android:padding="8dp">
+    android:background="#febf00"
+    android:paddingBottom="?attr/actionBarSize"
+    >
 
 
 
@@ -30,17 +31,6 @@
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-medium"/>
             </LinearLayout>
-            <TextView
-                android:id="@+id/backButton"
-                android:layout_width="60dp"
-                android:layout_height="20dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/back_background"
-                android:text="Back"
-                android:gravity="center"
-                android:textColor="@color/white"
-                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/add_item_button"

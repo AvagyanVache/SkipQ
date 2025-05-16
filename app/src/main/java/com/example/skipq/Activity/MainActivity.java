@@ -13,6 +13,8 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -65,7 +67,11 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(this, "Notifications disabled. You may miss order updates.", Toast.LENGTH_LONG).show();
                     }
                 });
-
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+            }
+        });
         // Check notification permission on start
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -74,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Check if user is already logged in
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
             user.reload().addOnCompleteListener(task -> {
@@ -113,7 +118,10 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
     }
+    @Override
+    public void onBackPressed() {
 
+    }
     private void checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                 ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -213,13 +221,11 @@ public class MainActivity extends AppCompatActivity {
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         String role = documentSnapshot.getString("role");
+                        Log.d("MainActivity", "User role: " + role);
                         if ("admin".equals(role)) {
                             Intent intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
                             intent.putExtra("userRole", "admin");
-                            if (CheckBox.isChecked()) {
-                                DocumentReference userRef = db.collection("users").document(user.getUid());
-                                userRef.update("rememberMe", true, "email", user.getEmail());
-                            }
+                            updateRememberMe(user, intent);
                             startActivity(intent);
                             finish();
                         } else if ("restaurant".equals(role)) {
@@ -229,51 +235,62 @@ public class MainActivity extends AppCompatActivity {
                                         .addOnSuccessListener(restaurantSnapshot -> {
                                             if (restaurantSnapshot.exists()) {
                                                 Boolean isApproved = restaurantSnapshot.getBoolean("isApproved");
+                                                Log.d("MainActivity", "Restaurant " + restaurantId + " isApproved: " + isApproved);
+                                                Intent intent;
                                                 if (isApproved != null && isApproved) {
-                                                    Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                                                    intent = new Intent(MainActivity.this, HomeActivity.class);
                                                     intent.putExtra("userRole", "restaurant");
                                                     intent.putExtra("restaurantId", restaurantId);
                                                     intent.putExtra("FRAGMENT_TO_LOAD", "RESTAURANT_DASHBOARD");
-                                                    if (CheckBox.isChecked()) {
-                                                        DocumentReference restaurantRef = db.collection("FoodPlaces").document(restaurantId);
-                                                        restaurantRef.update("rememberMe", true, "email", user.getEmail());
-                                                    }
-                                                    startActivity(intent);
-                                                    finish();
                                                 } else {
-                                                    Intent intent = new Intent(MainActivity.this, RestaurantPendingActivity.class);
+                                                    intent = new Intent(MainActivity.this, RestaurantPendingActivity.class);
                                                     intent.putExtra("restaurantId", restaurantId);
-                                                    startActivity(intent);
-                                                    finish();
                                                 }
+                                                updateRememberMe(user, intent);
+                                                startActivity(intent);
+                                                finish();
                                             } else {
+                                                Log.e("MainActivity", "Restaurant document not found for ID: " + restaurantId);
                                                 Toast.makeText(MainActivity.this, "Restaurant not found", Toast.LENGTH_SHORT).show();
                                             }
                                         })
-                                        .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Error checking restaurant: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                                        .addOnFailureListener(e -> {
+                                            Log.e("MainActivity", "Error checking restaurant: " + e.getMessage(), e);
+                                            Toast.makeText(MainActivity.this, "Error checking restaurant: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                        });
                             } else {
+                                Log.e("MainActivity", "Restaurant ID not found for user: " + user.getUid());
                                 Toast.makeText(MainActivity.this, "Restaurant ID not found", Toast.LENGTH_SHORT).show();
                             }
                         } else if ("user".equals(role)) {
                             Intent intent = new Intent(MainActivity.this, HomeActivity.class);
                             intent.putExtra("userRole", "user");
-                            if (CheckBox.isChecked()) {
-                                DocumentReference userRef = db.collection("users").document(user.getUid());
-                                userRef.update("rememberMe", true, "email", user.getEmail());
-                            }
+                            updateRememberMe(user, intent);
                             startActivity(intent);
                             finish();
                         } else {
+                            Log.e("MainActivity", "Undefined role for user: " + user.getUid());
                             Toast.makeText(MainActivity.this, "Account role not defined", Toast.LENGTH_SHORT).show();
                         }
                     } else {
+                        Log.e("MainActivity", "User document not found for UID: " + user.getUid());
                         Toast.makeText(MainActivity.this, "Account not found", Toast.LENGTH_SHORT).show();
                     }
                 })
-                .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Error checking user role: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    Log.e("MainActivity", "Error checking user role: " + e.getMessage(), e);
+                    Toast.makeText(MainActivity.this, "Error checking user role: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
-
+    private void updateRememberMe(FirebaseUser user, Intent intent) {
+        if (CheckBox.isChecked()) {
+            db.collection("users").document(user.getUid())
+                    .update("rememberMe", true, "email", user.getEmail())
+                    .addOnSuccessListener(aVoid -> Log.d("MainActivity", "Updated rememberMe for user: " + user.getUid()))
+                    .addOnFailureListener(e -> Log.e("MainActivity", "Failed to update rememberMe: " + e.getMessage()));
+        }
+    }
 
 
     public void updateCart() {

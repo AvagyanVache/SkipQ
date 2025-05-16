@@ -24,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -108,8 +109,12 @@ public class ProfileFragment extends Fragment {
         storage = FirebaseStorage.getInstance();
         addresses = new ArrayList<>();
         addressIds = new ArrayList<>();
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
 
-        // Initialize logo picker
+            }
+        });
         logoPickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null) {
                 logoUri = result.getData().getData();
@@ -990,7 +995,7 @@ public class ProfileFragment extends Fragment {
                             }
                             updateFirestore(restaurantRef, updates, updatedAddresses);
                         });
-                        // Update Firestore and refresh logo
+
                         updateFirestore(restaurantRef, updates, updatedAddresses);
                         if (isAdded()) {
                             Glide.with(ProfileFragment.this)

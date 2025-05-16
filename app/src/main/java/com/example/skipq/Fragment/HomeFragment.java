@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.SearchView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -80,6 +81,12 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
                 searchBar.setIconified(true);
             }
             return false;
+        });
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+
+            }
         });
         setupCategoryList();
         fetchRestaurants(null);

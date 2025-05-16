@@ -50,15 +50,13 @@
         app:layout_constraintVertical_bias="0.119" />
     <LinearLayout
         android:id="@+id/linearLayout"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         android:orientation="horizontal"
-        android:gravity="end"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/ItemPhoto"
         app:layout_constraintTop_toBottomOf="@+id/item_name_text">
-
         <ImageView
             android:id="@+id/DeleteItem"
             android:layout_width="25dp"
@@ -67,7 +65,6 @@
             android:visibility="gone"
             app:srcCompat="@drawable/delete_order"
             app:tint="#FF0000" />
-
         <ImageView
             android:id="@+id/EditItem"
             android:layout_width="25dp"

@@ -1,5 +1,6 @@
 package com.example.skipq.Activity;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -58,11 +59,18 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                 }
             }
         });
-
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+            }
+        });
 
 
     }
+    @Override
+    public void onBackPressed() {
 
+    }
     private void ResetPassword() {
         btnReset.setVisibility(View.INVISIBLE);
 

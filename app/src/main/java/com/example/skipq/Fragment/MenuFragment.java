@@ -16,6 +16,8 @@ import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -93,6 +95,12 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
                 searchBar.setIconified(true);
             }
             return false;
+        });
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+
+            }
         });
 
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {

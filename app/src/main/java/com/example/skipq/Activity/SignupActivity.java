@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
@@ -43,7 +44,11 @@ public class SignupActivity extends AppCompatActivity {
         signupConfirmPassword = findViewById(R.id.signup_confirm_password);
         SignUpRestaurant = findViewById(R.id.SignUpRestaurant);
         signupButton = findViewById(R.id.SignUpButton);
-
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+            }
+        });
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
@@ -69,7 +74,10 @@ public class SignupActivity extends AppCompatActivity {
             startActivity(intent);
         });
     }
+    @Override
+    public void onBackPressed() {
 
+    }
     private boolean validateInput(String email, String password, String confirmPassword) {
         if (email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
             Toast.makeText(SignupActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();

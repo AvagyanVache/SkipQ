@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
@@ -52,10 +54,17 @@ public class RestaurantPendingActivity extends AppCompatActivity {
             finish();
             return;
         }
-
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+            }
+        });
         listenForApprovalStatus(user.getUid());
     }
+    @Override
+    public void onBackPressed() {
 
+    }
     private void listenForApprovalStatus(String uid) {
         DocumentReference restaurantRef = db.collection("FoodPlaces").document(restaurantId);
         listenerRegistration = restaurantRef.addSnapshotListener((snapshot, error) -> {
@@ -69,31 +78,33 @@ public class RestaurantPendingActivity extends AppCompatActivity {
                 String declineReason = snapshot.getString("declineReason");
                 String restaurantName = snapshot.getString("name");
                 String email = snapshot.getString("email");
+                String apiLink = snapshot.getString("apiLink");
 
                 if (isApproved != null && isApproved) {
-
-
-                    final ListenerRegistration[] menuListener = new ListenerRegistration[1];
-
-                    menuListener[0] = db.collection("FoodPlaces").document(restaurantId)
-                            .collection("Menu").document("DefaultMenu").collection("Items")
-                            .limit(1)
-                            .addSnapshotListener((menuSnapshot, menuError) -> {
-                                if (menuError != null) {
-                                    Log.e("RestaurantPending", "Error checking menu: " + menuError.getMessage(), menuError);
-
-                                    Toast.makeText(this, "Error fetching menu", Toast.LENGTH_SHORT).show();
-                                    return;
-                                }
-                                if (menuSnapshot != null && !menuSnapshot.isEmpty()) {
-
-                                    showAcceptanceDialog(restaurantName != null ? restaurantName : "Unknown Restaurant",
-                                            email != null ? email : "Unknown Email");
-                                    // Remove menu listener to prevent multiple triggers
-                                    menuListener[0].remove();
-                                }
-                            });
-
+                    if (apiLink != null && !apiLink.isEmpty()) {
+                        // Check for menu if apiLink exists
+                        final ListenerRegistration[] menuListener = new ListenerRegistration[1];
+                        menuListener[0] = db.collection("FoodPlaces").document(restaurantId)
+                                .collection("Menu").document("DefaultMenu").collection("Items")
+                                .limit(1)
+                                .addSnapshotListener((menuSnapshot, menuError) -> {
+                                    if (menuError != null) {
+                                        Log.e("RestaurantPending", "Error checking menu: " + menuError.getMessage(), menuError);
+                                        Toast.makeText(this, "Error fetching menu", Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
+                                    if (menuSnapshot != null && !menuSnapshot.isEmpty()) {
+                                        showAcceptanceDialog(restaurantName != null ? restaurantName : "Unknown Restaurant",
+                                                email != null ? email : "Unknown Email");
+                                        menuListener[0].remove();
+                                    }
+                                });
+                    } else {
+                        // No apiLink, proceed directly to acceptance dialog
+                        showAcceptanceDialog(restaurantName != null ? restaurantName : "Unknown Restaurant",
+                                email != null ? email : "Unknown Email");
+                        listenerRegistration.remove();
+                    }
                 } else if (declineReason != null) {
                     showDeclineReasonDialog(declineReason);
                 }
@@ -104,8 +115,6 @@ public class RestaurantPendingActivity extends AppCompatActivity {
             }
         });
     }
-
-    // Modified showAcceptanceDialog to navigate to dashboard on OK button press
     private void showAcceptanceDialog(String restaurantName, String email) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Restaurant Approved");
