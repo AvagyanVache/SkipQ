@@ -69,7 +69,8 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
  private ImageView profileIcon;
  private Button checkOutButton;
  private ImageView emptyCartImg;
- private TextView cartEmpty;
+ private TextView cartEmpty, cartEmpty2;
+ private Button searchFood;
  private View textInputLayoutPhone;
  private View textInputName;
  private View linearLayout;
@@ -101,6 +102,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   selectedLocationTextView = view.findViewById(R.id.selected_location);
   profileIcon = view.findViewById(R.id.profileIcon);
   cartEmpty = view.findViewById(R.id.cartEmpty);
+  cartEmpty2 = view.findViewById(R.id.cartEmpty2);
   textInputLayoutPhone = view.findViewById(R.id.textInputLayoutPhone);
   textInputName = view.findViewById(R.id.textInputName);
   linearLayout = view.findViewById(R.id.linearLayout);
@@ -112,6 +114,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   radioEatIn = view.findViewById(R.id.radioEatIn);
   orderTypeLabel = view.findViewById(R.id.orderTypeLabel);
   locationPhoto=view.findViewById(R.id.location);
+  searchFood=view.findViewById(R.id.searchFood);
   selectedLocationText=view.findViewById(R.id.selected_location_text);
   cartList = new ArrayList<>(CartManager.getInstance().getCartList());
   db = FirebaseFirestore.getInstance();
@@ -143,8 +146,12 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   adapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
 
 
-
-  profileIcon.setOnClickListener(v -> {
+  searchFood.setOnClickListener(v -> {
+   Intent intent = new Intent(getActivity(), HomeActivity.class);
+   intent.putExtra("FRAGMENT_TO_LOAD", "HOME");
+   intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+   startActivity(intent);
+  });  profileIcon.setOnClickListener(v -> {
    Intent intent = new Intent(getActivity(), HomeActivity.class);
    intent.putExtra("FRAGMENT_TO_LOAD", "PROFILE");
    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -160,7 +167,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   TextInputEditText nameInput = view.findViewById(R.id.userNameSurname);
 
   // Update UI casting on cart state
-  updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg, selectedLocationTextView);
+  updateCartVisibility(cartEmpty, cartEmpty2, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg, selectedLocationTextView, searchFood);
   // Load user data if authenticated
   if (currentUser != null) {
    setupProfileListener(currentUser);
@@ -556,12 +563,13 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   });
  }
 
- private void updateCartVisibility(TextView cartEmpty, View recyclerView,
+ private void updateCartVisibility(TextView cartEmpty, TextView cartEmpty2, View recyclerView,
                                    View textInputLayoutPhone, View textInputName,
                                    View linearLayout, Button checkOutButton,
-                                   ImageView emptyCartImg, TextView selectedLocationTextView) {
+                                   ImageView emptyCartImg, TextView selectedLocationTextView, Button searchFood) {
   if (cartList.isEmpty()) {
    cartEmpty.setVisibility(View.VISIBLE);
+   cartEmpty2.setVisibility(View.VISIBLE);
    emptyCartImg.setVisibility(View.VISIBLE);
    recyclerView.setVisibility(View.GONE);
    textInputLayoutPhone.setVisibility(View.GONE);
@@ -575,8 +583,10 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    orderTypeLabel.setVisibility(View.GONE);
    selectedLocationText.setVisibility(View.GONE);
    locationPhoto.setVisibility(View.GONE);
+   searchFood.setVisibility(View.VISIBLE);
   } else {
    cartEmpty.setVisibility(View.GONE);
+   cartEmpty2.setVisibility(View.GONE);
    emptyCartImg.setVisibility(View.GONE);
    recyclerView.setVisibility(View.VISIBLE);
    textInputLayoutPhone.setVisibility(View.VISIBLE);
@@ -588,6 +598,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    orderTypeRadioGroup.setVisibility(View.VISIBLE);
    selectedLocationText.setVisibility(View.VISIBLE);
    locationPhoto.setVisibility(View.VISIBLE);
+   searchFood.setVisibility(View.GONE);
    customerCountLayout.setVisibility(selectedOrderType.equals("Eat In") ? View.VISIBLE : View.GONE);
    customerCountInput.setVisibility(selectedOrderType.equals("Eat In") ? View.VISIBLE : View.GONE);
   }
@@ -607,7 +618,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   updateTimeTillReady(totalPrepTime);
   updateSelectedAddress();
   if (cartEmpty != null && textInputLayoutPhone != null && textInputName != null && linearLayout != null) {
-   updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg, selectedLocationTextView);
+   updateCartVisibility(cartEmpty,cartEmpty2, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg, selectedLocationTextView,searchFood);
   }
  }
 
@@ -631,7 +642,7 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   updateTotalPrice(CartManager.getInstance().getTotalPrice());
   updateTimeTillReady(CartManager.getInstance().getTotalPrepTime());
   updateSelectedAddress();
-  updateCartVisibility(cartEmpty, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg, selectedLocationTextView);
+  updateCartVisibility(cartEmpty, cartEmpty2, recyclerView, textInputLayoutPhone, textInputName, linearLayout, checkOutButton, emptyCartImg, selectedLocationTextView,searchFood);
  }
 
  @Override

@@ -1,174 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/mainLayout"
+    android:id="@+id/container_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_gravity="center_horizontal"
-    android:padding="4dp">
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@android:color/white">
 
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="360dp"
-        android:layout_height="85dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
-        android:background="@drawable/cat_background"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/frame_bg"
+        android:padding="8dp">
 
-    <ImageView
-        android:id="@+id/MenuItemPhoto"
-        android:layout_width="116dp"
-        android:layout_height="76dp"
-        android:layout_margin="5dp"
-        android:background="@drawable/white"
-        app:layout_constraintBottom_toBottomOf="@+id/imageView"
-        app:layout_constraintStart_toStartOf="@+id/imageView"
-        app:layout_constraintTop_toTopOf="@+id/imageView" />
-
-    <TextView
-        android:id="@+id/MenuItemTitle"
-        android:layout_width="111dp"
-        android:layout_height="23dp"
-        android:layout_marginEnd="56dp"
-        android:text="Item Name"
-        android:textColor="@color/black"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        app:layout_constraintBottom_toBottomOf="@+id/imageView"
-        app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintHorizontal_bias="0.367"
-        app:layout_constraintStart_toEndOf="@+id/MenuItemPhoto"
-        app:layout_constraintTop_toTopOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.119" />
-
-
-    <LinearLayout
-        android:layout_width="235dp"
-        android:layout_height="23dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/imageView"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
-        app:layout_constraintVertical_bias="0.368">
-
-        <TextView
-            android:id="@+id/MenuItemPrice"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="Item Price"
-            android:padding="2dp"
-            tools:layout_editor_absoluteX="128dp"
-            tools:layout_editor_absoluteY="72dp" />
-
-
+        <!-- Image Container -->
         <ImageView
-            android:id="@+id/imageView8"
-            android:layout_width="20dp"
-            android:layout_height="match_parent"
+            android:id="@+id/MenuItemPhoto"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+            android:background="@drawable/rounded_corners"
+            android:clipToOutline="true"
+            app:layout_constraintWidth_percent="0.9"
+            app:layout_constraintDimensionRatio="4:3"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-            app:srcCompat="@drawable/timer"
-            tools:layout_editor_absoluteX="224dp"
-            tools:layout_editor_absoluteY="76dp" />
-
+        <!-- Name and Description Container -->
         <TextView
-            android:id="@+id/PrepTime"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center_horizontal"
-            android:text="PrepTime"
-            android:padding="2dp"
-            tools:layout_editor_absoluteX="248dp"
-            tools:layout_editor_absoluteY="90dp" />
-
-        <TextView
-            android:id="@+id/AddToCart"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:background="@drawable/back_background"
-            android:backgroundTint="@color/primary_color"
-            android:gravity="center"
-            android:paddingLeft="2dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginLeft="3dp"
-            android:paddingTop="1dp"
-            android:paddingRight="2dp"
-            android:paddingBottom="1dp"
-            android:text="Add"
-            android:textColor="@color/white"
+            android:id="@+id/MenuItemTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Ordinary Burgers"
+            android:textColor="#FF101010"
+            android:textSize="16sp"
             android:textStyle="bold"
-            tools:layout_editor_absoluteX="334dp"
-            tools:layout_editor_absoluteY="87dp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/linearLayout2"
-        android:layout_width="234dp"
-        android:layout_height="23dp"
-        app:layout_constraintBottom_toBottomOf="@+id/imageView"
-        app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintHorizontal_bias="0.324"
-        app:layout_constraintStart_toEndOf="@+id/MenuItemPhoto"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.53">
+            android:gravity="center"
+            app:layout_constraintTop_toBottomOf="@id/MenuItemPhoto"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <TextView
             android:id="@+id/MenuItemDescription"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="30dp"
-            android:layout_marginRight="10dp"
-            android:gravity="center"
-            android:text="Item Description"
-            tools:layout_editor_absoluteX="246dp"
-            tools:layout_editor_absoluteY="44dp" />
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:background="@drawable/back_background"
-        android:paddingTop="1dp"
-        android:paddingLeft="2dp"
-        android:paddingRight="2dp"
-        android:paddingBottom="1dp"
-        android:backgroundTint="@color/primary_color"
-        >
-        <ImageView
-            android:id="@+id/ItemPlus"
-            android:layout_width="19dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-
-            app:layout_constraintVertical_bias="0.567"
-            app:srcCompat="@drawable/plus"
-            app:tint="@color/white" />
-
-        <TextView
-            android:id="@+id/ItemCount"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Very tasty burger"
+            android:textColor="#FF101010"
+            android:textSize="14sp"
             android:gravity="center"
-            android:text="00"
-            android:textColor="@color/white"
-            tools:layout_editor_absoluteX="300dp"
-            tools:layout_editor_absoluteY="50dp" />
+            app:layout_constraintTop_toBottomOf="@id/MenuItemTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-        <ImageView
-            android:id="@+id/ItemMinus"
-            android:layout_width="19dp"
+
+
+        <!-- Rate and Price Container -->
+        <LinearLayout
+            android:id="@+id/container_rate"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/MenuItemDescription">
 
-            app:layout_constraintVertical_bias="0.567"
-            app:srcCompat="@drawable/minus"
-            app:tint="@color/white" />
-    </LinearLayout>
-    </LinearLayout>
+            <ImageView
+                android:id="@+id/image_subtract"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/countdown" />
 
+            <TextView
+                android:id="@+id/PrepTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="5 min"
+                android:textColor="#FF101010"
+                android:textSize="12sp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+            <TextView
+                android:id="@+id/MenuItemPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="$17,230"
+                android:textColor="#FFFD5005"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

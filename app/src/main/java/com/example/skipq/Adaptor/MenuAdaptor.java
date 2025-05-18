@@ -92,7 +92,7 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
         }
         holder.menuItemPrice.setText(String.format("֏ %.2f", price));
         holder.prepTime.setText(MessageFormat.format("{0} min", menuItem.getPrepTime()));
-        holder.itemCount.setText(String.format("%02d", menuItem.getItemCount()));
+//        holder.itemCount.setText(String.format("%02d", menuItem.getItemCount()));
         // Load image from Firebase Storage URL
         if (menuItem.getItemImg() != null && !menuItem.getItemImg().isEmpty() && menuItem.getItemImg().startsWith("http")) {
             Glide.with(context)
@@ -107,10 +107,10 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
         holder.menuItemPhoto.setClipToOutline(true);
         holder.menuItemPhoto.setBackgroundResource(R.drawable.rounded_corners);
 
-        holder.plusButton.setVisibility(View.VISIBLE);
-        holder.minusButton.setVisibility(View.VISIBLE);
+      //  holder.plusButton.setVisibility(View.VISIBLE);
+       // holder.minusButton.setVisibility(View.VISIBLE);
 
-        holder.addToCart.setOnClickListener(v -> {
+        /*holder.addToCart.setOnClickListener(v -> {
             if (menuItem.getItemCount() > 0) {
                 onAddToCartListener.onAddToCart(menuItem);
             }
@@ -132,6 +132,8 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
             }
         });
 
+
+         */
         // Handle item click
         holder.itemView.setOnClickListener(v -> {
             if (itemClickListener != null) {
@@ -166,10 +168,10 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
             menuItemPhoto = itemView.findViewById(R.id.MenuItemPhoto);
             menuItemDescription = itemView.findViewById(R.id.MenuItemDescription);
             menuItemPrice = itemView.findViewById(R.id.MenuItemPrice);
-            itemCount = itemView.findViewById(R.id.ItemCount);
-            plusButton = itemView.findViewById(R.id.ItemPlus);
-            minusButton = itemView.findViewById(R.id.ItemMinus);
-            addToCart = itemView.findViewById(R.id.AddToCart);
+         //   itemCount = itemView.findViewById(R.id.ItemCount);
+          //  plusButton = itemView.findViewById(R.id.ItemPlus);
+           // minusButton = itemView.findViewById(R.id.ItemMinus);
+          //  addToCart = itemView.findViewById(R.id.AddToCart);
         }
     }
 }

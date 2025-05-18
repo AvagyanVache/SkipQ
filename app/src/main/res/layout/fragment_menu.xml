@@ -5,112 +5,154 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="?attr/actionBarSize"
-    android:background="@color/primary_color">
+   >
+    <ImageView
+        android:id="@+id/background_image"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:src="@drawable/background1"
+        android:scaleType="centerCrop"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+    <ImageView
+        android:id="@+id/backButton"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="30dp"
+        android:rotation="90"
+        android:tint="#FF5001"
+        app:layout_constraintEnd_toStartOf="@+id/select_location"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/drop_down"
+        tools:ignore="UseAppTint" />
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-
-        <ImageView
-            android:id="@+id/backButton"
-            android:layout_width="40dp"
-            android:layout_height="20dp"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="13dp"
-            android:background="@drawable/back_background"
-            app:srcCompat="@drawable/back_arrow"
-            app:tint="@color/white" />
-        <ImageView
-            android:id="@+id/restaurantInfo"
+            android:id="@+id/select_location"
             android:layout_width="wrap_content"
-            android:layout_height="25dp"
-            android:layout_marginLeft="280dp"
-            android:layout_marginTop="13dp"
-            app:srcCompat="@drawable/info"
-            app:tint="@color/white" />
-
-    </LinearLayout>
-
-
-    <fragment
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="170dp"
-        android:layout_marginTop="60dp"
-
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/address_dropdown_layout"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-        android:layout_width="379dp"
-        android:layout_height="54dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="16dp"
-        android:background="@color/white"
-
-        android:gravity="center"
-        android:hint="Select Address"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/map">
-
-        <AutoCompleteTextView
-            android:id="@+id/address_spinner"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
             android:gravity="center"
-            android:inputType="none"
-            android:textColor="@color/black" />
+        android:layout_marginTop="20dp"
+            android:padding="8dp"
+            android:background="?android:attr/selectableItemBackground"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-    </com.google.android.material.textfield.TextInputLayout>
+            <TextView
+                android:id="@+id/location_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select Location"
+                android:gravity="center"
+                android:layout_marginTop="10dp"
+                android:textSize="20sp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="10dp"
+                android:ellipsize="end"
+                android:maxLines="1" />
+
+            <ImageView
+                android:id="@+id/dropdownLocation"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:tint="#FF5001"
+                app:srcCompat="@drawable/drop_down"
+                tools:ignore="UseAppTint" />
+        </LinearLayout>
+
+
+    <ImageView
+        android:id="@+id/restaurantInfo"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="35dp"
+        android:layout_marginEnd="30dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.909"
+        app:layout_constraintStart_toEndOf="@+id/select_location"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/info"
+        app:tint="@color/black" />
+
     <TextView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:textColor="@android:color/black"
-        android:textSize="16sp" />
+            android:id="@+id/address_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            android:padding="12dp"
+            android:visibility="gone"
+            android:background="@drawable/rounded_corners"
+            android:text="Select an address"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:ellipsize="end"
+            android:maxLines="1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/select_location" />
+
+
+
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/mapCard"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginHorizontal="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="#FFFFFF"
+        app:strokeColor="#FF5001"
+        app:strokeWidth="2dp"
+        app:layout_constraintTop_toTopOf="@+id/background_image"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.9"
+        app:layout_constraintHeight_percent="0.25">
+
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </androidx.cardview.widget.CardView>
+
     <SearchView
         android:id="@+id/searchBar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:background="@drawable/white_bg"
+        android:background="@drawable/frame_bg"
         android:iconifiedByDefault="false"
         android:layout_marginTop="10dp"
         android:textColorHint="#808080"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/address_dropdown_layout" />
+        app:layout_constraintTop_toBottomOf="@+id/mapCard" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycleViewMenu"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_gravity="center"
         android:layout_marginTop="8dp"
+        android:layout_marginHorizontal="8dp"
         android:clipToPadding="false"
-        android:foregroundGravity="center"
-        android:gravity="center"
-        android:paddingBottom="100dp"
+        android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/searchBar"
-        />
-
+        app:layout_constraintTop_toBottomOf="@+id/searchBar" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

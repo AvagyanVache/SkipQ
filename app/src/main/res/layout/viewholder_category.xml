@@ -11,7 +11,7 @@
         android:id="@+id/imageView"
         android:layout_width="180dp"
         android:layout_height="75dp"
-        android:background="@drawable/cat_background"
+        android:background="@drawable/frame_bg"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

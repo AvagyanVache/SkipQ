@@ -51,7 +51,8 @@ import java.util.Set;
 public class YourOrderMainFragment extends Fragment {
     private RecyclerView recyclerView;
     private YourOrderMainAdaptor yourOrdersAdapter;
-    private TextView emptyOrderText, goShoppingText, currentOrdersText, orderHistoryText;
+    private TextView emptyOrderText, currentOrdersText, orderHistoryText;
+   private Button goShoppingText;
     private ArrayList<YourOrderMainDomain> groupedOrders;
     private FirebaseFirestore firestore;
     private String userId;

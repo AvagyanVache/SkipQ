@@ -5,9 +5,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="?attr/actionBarSize"
-
-    android:background="@color/primary_color">
-
+    >
+    <ImageView
+        android:id="@+id/background_image"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:src="@drawable/background1"
+        android:scaleType="centerCrop"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
     <ImageView
         android:id="@+id/profileIcon"
         android:layout_width="50dp"
@@ -27,7 +35,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="36dp"
         android:text="Your Orders"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:textSize="40dp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
@@ -48,18 +56,19 @@
         app:layout_constraintTop_toBottomOf="@+id/linearLayout5"
         app:layout_constraintVertical_bias="0.0" />
 
-    <TextView
+    <Button
         android:id="@+id/GoShopping"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="168dp"
-        android:text="Go Shopping"
-        android:textColor="@color/white"
-        android:textSize="20dp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:foregroundGravity="center"
+        android:text="Search Food"
+        android:visibility="gone"
+        android:layout_marginTop="90dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        android:backgroundTint="#FF5001"
+        app:layout_constraintTop_toBottomOf="@id/OrderEmptyText" />
+
 
     <ImageView
         android:id="@+id/OrderEmpty"
@@ -80,7 +89,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="268dp"
         android:text="No Current Orders:("
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:textSize="20dp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -110,9 +119,9 @@
             android:focusable="true"
             android:gravity="center"
             android:text="Current Orders"
-            android:textColor="@color/white"
+            android:textColor="@color/black"
             android:textSize="20dp"
-            android:textStyle="bold" />
+          />
 
         <TextView
             android:id="@+id/OrderHistory"
@@ -124,9 +133,9 @@
             android:focusable="true"
             android:gravity="center"
             android:text="Order History"
-            android:textColor="@color/white"
+            android:textColor="@color/black"
             android:textSize="20dp"
-            android:textStyle="bold" />
+           />
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

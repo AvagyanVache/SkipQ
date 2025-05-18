@@ -4,9 +4,20 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/primary_color">
+    android:paddingBottom="?attr/actionBarSize"
 
-    <!-- Guidelines for consistent margins -->
+    >
+
+    <ImageView
+        android:id="@+id/background_image"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:src="@drawable/background1"
+        android:scaleType="centerCrop"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_start"
         android:layout_width="wrap_content"
@@ -40,7 +51,7 @@
             android:padding="8dp"
             android:text="PatrastE"
             android:fontFamily="sans-serif-medium"
-            android:textColor="#FFFFFF"
+            android:textColor="#FF5001"
             android:textSize="24sp"
             android:textStyle="bold" />
 
@@ -59,7 +70,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:background="@drawable/white_bg"
+        android:background="@drawable/frame_bg"
         android:hint="Search here"
         android:iconifiedByDefault="false"
         android:textColorHint="#808080"
@@ -105,16 +116,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/orderCard" />
     <!-- Restaurants RecyclerView -->
+    <!-- Restaurants RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewRestaurants"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"
+        android:orientation="vertical"
         app:layout_constraintWidth_percent="0.92"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
         app:layout_constraintTop_toBottomOf="@id/recyclerViewCategories"
         app:layout_constraintBottom_toBottomOf="parent" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,8 +5,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="?attr/actionBarSize"
-    android:background="@color/primary_color">
-
+   >
+    <ImageView
+        android:id="@+id/background_image"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:src="@drawable/background1"
+        android:scaleType="centerCrop"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
     <LinearLayout
         android:id="@+id/title"
         android:layout_width="wrap_content"
@@ -23,7 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="My Cart"
-            android:textColor="@color/white"
+            android:textColor="@color/black"
             android:textSize="40sp"
             android:textStyle="bold" />
 
@@ -32,7 +41,7 @@
             android:layout_width="63dp"
             android:layout_height="52dp"
             app:srcCompat="@drawable/cart"
-            app:tint="@color/white" />
+            app:tint="@color/black" />
     </LinearLayout>
     <ImageView
         android:id="@+id/profileIcon"
@@ -66,7 +75,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="15dp"
-                 />
+                />
 
 
             <com.google.android.material.textfield.TextInputLayout
@@ -85,7 +94,7 @@
                         android:id="@+id/countryCodePicker"
                         android:layout_width="122dp"
                         android:layout_height="match_parent"
-                        android:background="@drawable/white_bg"
+                        android:background="@drawable/frame_bg"
                         android:gravity="center"
                         app:ccp_contentColor="@color/secondary_color"
                         app:ccp_defaultPhoneCode="374"
@@ -97,7 +106,7 @@
                         android:layout_width="275dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:background="@drawable/white_bg"
+                        android:background="@drawable/frame_bg"
                         android:hint="Phone Number"
                         android:inputType="phone"
                         android:textColorHint="@color/secondary_color" />
@@ -116,7 +125,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Enter your Name"
-                    android:background="@drawable/white_bg"
+                    android:background="@drawable/frame_bg"
                     android:textColorHint="@color/secondary_color"
                     android:inputType="textPersonName"/>
 
@@ -134,7 +143,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Choose Your Order Type"
-                    android:textColor="@color/white"
+                    android:textColor="@color/black"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:layout_gravity="center"
@@ -146,7 +155,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="10dp"
-                    android:background="@drawable/white_bg">
+                    android:background="@drawable/frame_bg">
 
                     <RadioButton
                         android:id="@+id/radioPickUp"
@@ -183,7 +192,7 @@
                     android:hint="Number of Customers"
                     android:textColor="@color/black"
                     android:textColorHint="@color/secondary_color"
-                    android:background="@drawable/white_bg" />
+                    android:background="@drawable/frame_bg" />
             </com.google.android.material.textfield.TextInputLayout>
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -196,7 +205,7 @@
                     android:layout_width="30dp"
                     android:layout_height="30dp"
                     android:src="@drawable/location"
-                    />
+                    app:tint="#FF5001" />
                 <TextView
                     android:id="@+id/selected_location_text"
                     android:layout_width="wrap_content"
@@ -205,7 +214,7 @@
                     android:gravity="center"
                     android:text="Selected Address"
                     android:textStyle="bold"
-                    android:textColor="@color/white"
+                    android:textColor="@color/black"
                     android:textSize="20sp"
                     />
             </LinearLayout>
@@ -216,13 +225,13 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:text="Selected Address"
-                android:textColor="@color/white"
+                android:textColor="@color/black"
                 android:textSize="20sp"/>
             <LinearLayout
                 android:id="@+id/linearLayout"
                 android:layout_width="280dp"
                 android:layout_height="wrap_content"
-                android:background="@drawable/order_summary_bg"
+                android:background="@drawable/frame_bg"
                 android:gravity="center"
                 android:layout_gravity="center"
                 android:orientation="vertical"
@@ -234,9 +243,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:text="Order Summary"
-                    android:textColor="@color/white"
+                    android:textColor="@color/black"
                     android:textSize="25sp"
-                    android:textStyle="bold" />
+                     />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -249,9 +258,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Discount"
-                        android:textColor="@color/white"
+                        android:textColor="@color/black"
                         android:textSize="20sp"
-                        android:textStyle="bold" />
+                         />
 
                     <TextView
                         android:id="@+id/Discount"
@@ -259,9 +268,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="120dp"
                         android:text="0%"
-                        android:textColor="@color/white"
+                        android:textColor="@color/black"
                         android:textSize="20sp"
-                        android:textStyle="bold" />
+                    />
                 </LinearLayout>
 
                 <LinearLayout
@@ -275,9 +284,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Time Till Ready"
-                        android:textColor="@color/white"
+                        android:textColor="@color/black"
                         android:textSize="18sp"
-                        android:textStyle="bold" />
+                         />
 
                     <TextView
                         android:id="@+id/TimeTillReady"
@@ -285,9 +294,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="40dp"
                         android:text="0 minutes"
-                        android:textColor="@color/white"
+                        android:textColor="@color/black"
                         android:textSize="18sp"
-                        android:textStyle="bold"
                         android:layout_marginLeft="20dp"/>
                 </LinearLayout>
 
@@ -302,9 +310,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Total"
-                        android:textColor="@color/white"
+                        android:textColor="@color/black"
                         android:textSize="20sp"
-                        android:textStyle="bold" />
+                       />
 
                     <TextView
                         android:id="@+id/totalPrice"
@@ -312,9 +320,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="150dp"
                         android:text="20$"
-                        android:textColor="@color/white"
+                        android:textColor="@color/black"
                         android:textSize="20sp"
-                        android:textStyle="bold" />
+                        />
                 </LinearLayout>
             </LinearLayout>
 
@@ -323,7 +331,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:backgroundTint="#E65100"
+                android:backgroundTint="#FF5001"
                 android:text="Check Out"
                 android:layout_gravity="center"
                 android:gravity="center"/>
@@ -348,12 +356,43 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Your Cart Is Empty"
-        android:textStyle="bold"
-        android:textColor="@color/white"
-        android:textSize="25sp"
         android:visibility="gone"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:textSize="25sp"
         app:layout_constraintTop_toBottomOf="@id/emptyCartImg"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+    <TextView
+        android:id="@+id/cartEmpty2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:foregroundGravity="center"
+       android:paddingBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:visibility="gone"
+        android:paddingTop="10dp"
+        android:gravity="center"
+        android:text="It seems like you dont have any items in cart"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        app:layout_constraintTop_toBottomOf="@id/cartEmpty"
+        app:layout_constraintBottom_toTopOf="@id/searchFood"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+    <Button
+        android:id="@+id/searchFood"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:foregroundGravity="center"
+        android:text="Search Food"
+        android:visibility="gone"
+        android:layout_marginTop="90dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:backgroundTint="#FF5001"
+        app:layout_constraintTop_toBottomOf="@id/cartEmpty" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
