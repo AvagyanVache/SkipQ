@@ -29,8 +29,8 @@
     </string-array>
     <string name="category_prompt">Select Category</string>
     <string-array name="restaurant_categories">
-        <item>Restaurant/Cafe</item>
-        <item>Coffeeshop</item>
+        <item>Cafe</item>
+        <item>Coffee</item>
         <item>Fastfood</item>
     </string-array>
 </resources>

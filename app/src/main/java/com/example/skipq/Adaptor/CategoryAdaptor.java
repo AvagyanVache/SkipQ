@@ -21,7 +21,7 @@ public class CategoryAdaptor extends RecyclerView.Adapter<CategoryAdaptor.ViewHo
     private final ArrayList<CategoryDomain> categoryDomains;
     private final Context context;
     private final CategoryClickListener categoryClickListener;
-
+    private int selectedPosition = 0;
     public CategoryAdaptor(Context context, ArrayList<CategoryDomain> categoryDomains, CategoryClickListener categoryClickListener) {
         this.categoryDomains = categoryDomains;
         this.context = context;
@@ -43,7 +43,16 @@ public class CategoryAdaptor extends RecyclerView.Adapter<CategoryAdaptor.ViewHo
         holder.categoryName.setText(category.getTitle());
         holder.categoryPic.setImageResource(category.getPic());
 
+        holder.categoryName.setVisibility(position == selectedPosition ? View.VISIBLE : View.GONE);
+        holder.mainLayout.setSelected(position == selectedPosition);
+
         holder.mainLayout.setOnClickListener(v -> {
+            int previousPosition = selectedPosition;
+            selectedPosition = holder.getAdapterPosition();
+
+            notifyItemChanged(previousPosition);
+            notifyItemChanged(selectedPosition);
+
             categoryClickListener.onCategoryClick(category.getTitle());
         });
     }

@@ -9,17 +9,27 @@
     tools:context=".Fragment.YourOrderFragment">
 
     <ImageView
+        android:id="@+id/background_image"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:src="@drawable/background1"
+        android:scaleType="centerCrop"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
         android:id="@+id/backButton"
-        android:layout_width="40dp"
-        android:layout_height="23dp"
+        android:layout_width="46dp"
+        android:layout_height="33dp"
         android:layout_marginTop="40dp"
-        android:background="@drawable/back_background"
+        android:rotation="90"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.035"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/back_arrow"
-        app:tint="@color/white" />
+        app:srcCompat="@drawable/drop_down" />
 
     <!--
         <TextView
@@ -46,7 +56,7 @@
         android:layout_marginTop="128dp"
         android:paddingLeft="20dp"
         android:text="Your order will be \n ready in"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:textSize="35dp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
@@ -69,8 +79,8 @@
                 android:layout_height="51dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginLeft="80dp"
-                android:src="@drawable/timer"
-                app:tint="@color/white"
+                android:src="@drawable/countdown"
+
                 tools:layout_editor_absoluteX="53dp"
                 tools:layout_editor_absoluteY="262dp" />
 
@@ -80,7 +90,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="0"
-                android:textColor="@color/white"
+                android:textColor="@color/black"
                 android:textSize="30dp"
                 android:textStyle="bold"
                 tools:layout_editor_absoluteX="160dp"
@@ -94,7 +104,7 @@
                 android:gravity="center"
                 android:layout_marginLeft="10dp"
                 android:text="Order Price"
-                android:textColor="@color/white"
+                android:textColor="@color/black"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 tools:layout_editor_absoluteX="215dp"

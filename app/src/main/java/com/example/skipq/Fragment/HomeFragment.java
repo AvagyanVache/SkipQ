@@ -128,7 +128,7 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         recyclerViewCategoryList.setLayoutManager(layoutManager);
 
-        String[] categoryNames = {"All", "Fastfood", "Restaurant/Cafe", "Coffeeshop"};
+        String[] categoryNames = {"All", "Fastfood", "Cafe", "Coffee"};
         for (int i = 0; i < categoryNames.length; i++) {
             categoryList.add(new CategoryDomain(categoryNames[i], categoryImg[i]));
         }
