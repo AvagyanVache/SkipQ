@@ -134,12 +134,26 @@ public class MenuAdaptor extends RecyclerView.Adapter<MenuAdaptor.ViewHolder> {
 
 
          */
-        // Handle item click
         holder.itemView.setOnClickListener(v -> {
+            animateClick(v);
             if (itemClickListener != null) {
                 itemClickListener.onItemClick(menuItem);
             }
         });
+
+    }
+    private void animateClick(View view) {
+        view.animate()
+                .scaleX(0.95f)
+                .scaleY(0.95f)
+                .setDuration(100)
+                .withEndAction(() -> {
+                    view.animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(100)
+                            .start();
+                }).start();
     }
 
     @Override

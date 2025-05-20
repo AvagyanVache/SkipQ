@@ -66,14 +66,13 @@ public class MenuManagementAdapter extends RecyclerView.Adapter<MenuManagementAd
         if (item.getItemImg() != null && !item.getItemImg().isEmpty() && item.getItemImg().startsWith("http")) {
             Glide.with(context)
                     .load(item.getItemImg())
-                    .placeholder(R.drawable.white)
                     .centerCrop()
-                    .error(R.drawable.white)
                     .into(holder.itemImage);
         } else {
             holder.itemImage.setImageResource(R.drawable.white);
         }
-
+        holder.itemImage.setClipToOutline(true);
+        holder.itemImage.setBackgroundResource(R.drawable.rounded_corners);
         if (position == selectedPosition) {
             holder.updateButton.setVisibility(View.VISIBLE);
             holder.deleteButton.setVisibility(View.VISIBLE);

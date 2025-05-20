@@ -27,6 +27,7 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:src="@drawable/back_btn"
+
         android:scaleType="centerInside"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -63,6 +64,7 @@
         app:layout_constraintTop_toBottomOf="@id/image_image" />
 
     <LinearLayout
+        android:id="@+id/linearLayout9"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
@@ -79,7 +81,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="100dp"
             android:text="$12,230"
-            android:textColor="#FD5005"
+            android:textColor="#FF5001"
             android:textSize="16sp"
             tools:layout_editor_absoluteX="16dp"
             tools:layout_editor_absoluteY="448dp" />
@@ -87,12 +89,12 @@
 
         <ImageView
             android:id="@+id/image_subtract"
-            android:layout_width="16dp"
+            android:layout_width="30dp"
             android:layout_height="match_parent"
             android:layout_marginLeft="20dp"
-
             android:scaleType="centerInside"
-            android:src="@drawable/countdown"
+            android:src="@drawable/countdown_icon"
+            app:tint="#FF5001"
             tools:layout_editor_absoluteX="8dp"
             tools:layout_editor_absoluteY="651dp" />
 
@@ -145,6 +147,7 @@
         android:layout_marginTop="4dp"
         android:ellipsize="end"
         android:maxLines="3"
+        android:gravity="center"
         android:text="Description will be displayed here"
         android:textColor="#FF878787"
         android:textSize="14sp"
@@ -154,65 +157,70 @@
         app:layout_constraintTop_toBottomOf="@id/text_description_title" />
 
     <LinearLayout
-        android:id="@+id/linearLayout8"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="50dp"
-        android:layout_marginBottom="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.178"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Item_Menu_Description">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.856">
 
-        <ImageView
-            android:id="@+id/ItemPlus"
-            android:layout_width="25dp"
-            android:layout_height="match_parent"
-            android:layout_marginTop="7dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/plus"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/MenuItem_ItemCount"
+        <LinearLayout
+            android:id="@+id/linearLayout8"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginTop="7dp"
-            android:layout_marginEnd="4dp"
-            android:maxLines="1"
-            android:text="4"
-            android:textColor="#FF101010"
-            android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/ItemMinus"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_marginLeft="80dp"
+            android:layout_marginTop="5dp"
 
-        <ImageView
-            android:id="@+id/ItemMinus"
-            android:layout_width="25dp"
-            android:layout_height="match_parent"
-            android:layout_marginTop="7dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/minus"
-            app:layout_constraintStart_toEndOf="@id/MenuItem_ItemCount"
-            app:layout_constraintTop_toTopOf="parent" />
+         >
+
+            <ImageView
+                android:id="@+id/ItemMinus"
+                android:layout_width="20dp"
+                android:layout_height="match_parent"
+                android:layout_marginTop="7dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/minus"
+                app:layout_constraintStart_toEndOf="@id/MenuItem_ItemCount"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="#FF5001" />
+
+            <TextView
+                android:id="@+id/MenuItem_ItemCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="7dp"
+                android:layout_marginEnd="4dp"
+                android:maxLines="1"
+                android:text="0"
+                android:textColor="#FF5001"
+                android:textSize="20sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/ItemMinus"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/ItemPlus"
+                android:layout_width="20dp"
+                android:layout_height="match_parent"
+                android:layout_marginTop="7dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/plus"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="#FF5001" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/addToCart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#FF5001"
+            android:text="Add to cart"
+            android:layout_marginLeft="50dp"
+ />
     </LinearLayout>
-
-    <Button
-        android:id="@+id/addToCart"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
-        android:backgroundTint="#FD5005"
-        android:text="Add to cart"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.753"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Item_Menu_Description" />
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>

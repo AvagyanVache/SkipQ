@@ -402,7 +402,6 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
    return;
   }
 
-  // Group items by restaurant
   Map<String, List<MenuDomain>> ordersByRestaurant = new HashMap<>();
   for (MenuDomain item : cartList) {
    if (item.getRestaurantId() == null || item.getRestaurantId().isEmpty()) {
@@ -414,80 +413,52 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
 
   if (ordersByRestaurant.size() > 1) {
    new AlertDialog.Builder(getContext())
-           .setTitle("Multiple Food Places")
-           .setMessage("You are trying to order items from different food places. This will create multiple orders. If you agree, click Continue.")
-           .setPositiveButton("Continue", (dialog, which) -> {
-            if (!isAdded() || getContext() == null) {
-             Log.w("CartFragment", "Fragment detached, skipping order processing");
-             return;
-            }
-            for (Map.Entry<String, List<MenuDomain>> entry : ordersByRestaurant.entrySet()) {
-             String restaurantId = entry.getKey();
-             List<MenuDomain> items = entry.getValue();
-             double totalPrice = items.stream().mapToDouble(item -> Double.parseDouble(item.getItemPrice()) * item.getItemCount()).sum();
-             int totalPrepTime = items.stream().mapToInt(MenuDomain::getPrepTime).sum();
-
-             YourOrderMainDomain order = new YourOrderMainDomain();
-             order.setTotalPrepTime(totalPrepTime);
-             order.setItems(new ArrayList<>(items));
-             if (selectedOrderType.equals("Eat In")) {
-              order.setCustomerCount(Integer.parseInt(customerCountInput.getText().toString().trim()));
-             } else {
-              order.setCustomerCount(1); // Default for Pick Up
-             }
-
-             saveOrderToFirestore(new ArrayList<>(items), restaurantId, totalPrice, totalPrepTime, order);
-            }
-            CartManager.getInstance().clearCart();
-            refreshCart();
-            Intent intent = new Intent(getContext(), HomeActivity.class);
-            intent.putExtra("FRAGMENT_TO_LOAD", "YOUR ORDER");
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
-           })
-           .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+           .setTitle("Can't place an order as items from different food places are added")
+           .setMessage("Please ensure all items in your cart are from the same restaurant to proceed with the order.")
+           .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
            .setCancelable(false)
            .show();
-  } else {
-   // Single order case
-   if (!isAdded() || getContext() == null) {
-    Log.w("CartFragment", "Fragment detached, skipping single order processing");
-    return;
-   }
-   String restaurantId = cartList.get(0).getRestaurantId();
-   double totalPrice = CartManager.getInstance().getTotalPrice();
-   int totalPrepTime = CartManager.getInstance().getTotalPrepTime();
-
-   SharedPreferences sharedPreferences = getContext().getSharedPreferences("cart_data", Context.MODE_PRIVATE);
-   SharedPreferences.Editor editor = sharedPreferences.edit();
-   Gson gson = new Gson();
-   String cartItemsJson = gson.toJson(cartList);
-   editor.putString("cartItems", cartItemsJson);
-   editor.putString("restaurantId", restaurantId);
-   editor.putFloat("totalPrice", (float) totalPrice);
-   editor.putInt("prepTime", totalPrepTime);
-   editor.putString("orderType", selectedOrderType);
-   editor.putInt("customerCount", selectedOrderType.equals("Eat In") ? Integer.parseInt(customerCountInput.getText().toString().trim()) : 1);
-   editor.apply();
-
-   YourOrderMainDomain order = new YourOrderMainDomain();
-   order.setTotalPrepTime(totalPrepTime);
-   order.setItems(new ArrayList<>(cartList));
-   order.setOrderType(selectedOrderType);
-   if (selectedOrderType.equals("Eat In")) {
-    order.setCustomerCount(Integer.parseInt(customerCountInput.getText().toString().trim()));
-   } else {
-    order.setCustomerCount(1); // Default for Pick Up
-   }
-   saveOrderToFirestore(new ArrayList<>(cartList), restaurantId, totalPrice, totalPrepTime, order);
-
-   CartManager.getInstance().clearCart();
-   refreshCart();
-   Intent intent = new Intent(getContext(), HomeActivity.class);
-   intent.putExtra("FRAGMENT_TO_LOAD", "YOUR ORDER");
-   intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-   startActivity(intent);
+   return; // Prevent order placement
   }
+
+  // Single order case
+  if (!isAdded() || getContext() == null) {
+   Log.w("CartFragment", "Fragment detached, skipping single order processing");
+   return;
+  }
+  String restaurantId = cartList.get(0).getRestaurantId();
+  double totalPrice = CartManager.getInstance().getTotalPrice();
+  int totalPrepTime = CartManager.getInstance().getTotalPrepTime();
+
+  SharedPreferences sharedPreferences = getContext().getSharedPreferences("cart_data", Context.MODE_PRIVATE);
+  SharedPreferences.Editor editor = sharedPreferences.edit();
+  Gson gson = new Gson();
+  String cartItemsJson = gson.toJson(cartList);
+  editor.putString("cartItems", cartItemsJson);
+  editor.putString("restaurantId", restaurantId);
+  editor.putFloat("totalPrice", (float) totalPrice);
+  editor.putInt("prepTime", totalPrepTime);
+  editor.putString("orderType", selectedOrderType);
+  editor.putInt("customerCount", selectedOrderType.equals("Eat In") ? Integer.parseInt(customerCountInput.getText().toString().trim()) : 1);
+  editor.apply();
+
+  YourOrderMainDomain order = new YourOrderMainDomain();
+  order.setTotalPrepTime(totalPrepTime);
+  order.setItems(new ArrayList<>(cartList));
+  order.setOrderType(selectedOrderType);
+  if (selectedOrderType.equals("Eat In")) {
+   order.setCustomerCount(Integer.parseInt(customerCountInput.getText().toString().trim()));
+  } else {
+   order.setCustomerCount(1); // Default for Pick Up
+  }
+  saveOrderToFirestore(new ArrayList<>(cartList), restaurantId, totalPrice, totalPrepTime, order);
+
+  CartManager.getInstance().clearCart();
+  refreshCart();
+  Intent intent = new Intent(getContext(), HomeActivity.class);
+  intent.putExtra("FRAGMENT_TO_LOAD", "YOUR ORDER");
+  intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+  startActivity(intent);
  }
 
  private void saveOrderToFirestore(ArrayList<MenuDomain> cartList, String restaurantId, double totalPrice, int prepTime, YourOrderMainDomain order) {

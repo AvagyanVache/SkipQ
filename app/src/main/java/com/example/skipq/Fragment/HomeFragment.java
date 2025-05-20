@@ -50,7 +50,7 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
     private final ArrayList<CategoryDomain> categoryList = new ArrayList<>();
     private final ArrayList<RestaurantDomain> restaurantList = new ArrayList<>();
 
-    private final int[] categoryImg = {R.drawable.white, R.drawable.fastfood, R.drawable.restaurant, R.drawable.coffee};
+    private final int[] categoryImg = {R.drawable.all, R.drawable.fastfood1, R.drawable.restaurant1, R.drawable.coffee1};
 
     private ImageView profileIcon;
 
@@ -135,7 +135,20 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
 
         CategoryAdaptor categoryAdaptor = new CategoryAdaptor(requireContext(), categoryList, this);
         recyclerViewCategoryList.setAdapter(categoryAdaptor);
+
+        int spacing = getResources().getDimensionPixelSize(R.dimen.category_spacing);
+        recyclerViewCategoryList.addItemDecoration(new RecyclerView.ItemDecoration() {
+            @Override
+            public void getItemOffsets(@NonNull android.graphics.Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+                int position = parent.getChildAdapterPosition(view);
+                if (position == 0) {
+                    outRect.left = spacing;
+                }
+                outRect.right = spacing;
+            }
+        });
     }
+
 
     private void fetchRestaurants(@Nullable String category) {
         db.collection("FoodPlaces")
@@ -174,10 +187,10 @@ public class HomeFragment extends Fragment implements CategoryAdaptor.CategoryCl
     }
     private int calculateSpanCount() {
         float screenWidthDp = getResources().getConfiguration().screenWidthDp;
-        int itemMinWidthDp = 180; // adjust as needed
-
+        int itemMinWidthDp = 160; // reduce to allow more columns on small screens
         return Math.max(2, Math.round(screenWidthDp / itemMinWidthDp));
     }
+
 
     @Override
     public void onCategoryClick(String category) {

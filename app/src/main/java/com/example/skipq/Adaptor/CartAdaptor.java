@@ -47,7 +47,7 @@ public class CartAdaptor extends RecyclerView.Adapter<CartAdaptor.ViewHolder> {
         String shortDescription = shortenDescription(fullDescription);
         holder.cartItemDescription.setText(shortDescription);
         holder.cartItemName.setText(cartItem.getItemName());
-        holder.cartItemCount.setText(String.format("%02d", cartItem.getItemCount()));
+        holder.cartItemCount.setText(String.valueOf(cartItem.getItemCount()));
         holder.cartItemPrice.setText(String.format("%.2f֏", Double.parseDouble(cartItem.getItemPrice())));
         holder.cartItemPrepTime.setText(MessageFormat.format("{0} min", cartItem.getPrepTime()));
 

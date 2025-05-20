@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +26,8 @@ public class ItemDetailsFragment extends Fragment {
     private MenuDomain menuItem;
     private TextView itemCountTextView;
     private int itemCount = 0;
+    private LinearLayout counterLayout;
+
 
     @Nullable
     @Override
@@ -53,6 +56,7 @@ public class ItemDetailsFragment extends Fragment {
         ImageView minusButton = view.findViewById(R.id.ItemMinus);
         itemCountTextView = view.findViewById(R.id.MenuItem_ItemCount);
         Button addToCartButton = view.findViewById(R.id.addToCart);
+        counterLayout = view.findViewById(R.id.linearLayout8);
 
         // Populate views with item data
         itemName.setText(menuItem.getItemName() != null ? menuItem.getItemName() : "N/A");
@@ -84,20 +88,29 @@ public class ItemDetailsFragment extends Fragment {
         });
 
         minusButton.setOnClickListener(v -> {
-            if (itemCount > 0) {
+            if (itemCount > 1) {
                 itemCount--;
                 itemCountTextView.setText(String.valueOf(itemCount));
+            } else if (itemCount == 1) {
+                itemCount--;
+                itemCountTextView.setText(String.valueOf(itemCount));
+
             }
         });
 
-        // Add to cart button click listener
         addToCartButton.setOnClickListener(v -> {
             if (CartManager.getInstance().getSelectedAddress() == null) {
                 Toast.makeText(getContext(), "Please select a restaurant address", Toast.LENGTH_SHORT).show();
                 return;
             }
+            if (itemCount < 1) {
+                Toast.makeText(getContext(), "Please select at least 1 item", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            // Create a copy of the menu item with the selected quantity
+            itemCount = 1;
+            itemCountTextView.setText(String.valueOf(itemCount));
+
             MenuDomain cartItem = new MenuDomain();
             cartItem.setItemName(menuItem.getItemName());
             cartItem.setItemDescription(menuItem.getItemDescription());
@@ -140,8 +153,6 @@ public class ItemDetailsFragment extends Fragment {
                 }
             }
 
-            // Navigate back to MenuFragment
-            requireActivity().getSupportFragmentManager().popBackStack();
         });
 
         // Back button click listener
