@@ -63,7 +63,6 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
                         @Override
                         public boolean onLoadFailed(@androidx.annotation.Nullable com.bumptech.glide.load.engine.GlideException e, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
                             Log.e("RestaurantAdaptor", "Failed to load logo from URL: " + imageUrl, e);
-                            // Fallback to Storage
                             loadLogoFromStorage(sanitizedName, holder.restaurantImage, restaurant.getName());
                             return true;
                         }
@@ -80,7 +79,23 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
         }
         holder.restaurantImage.setClipToOutline(true);
         holder.restaurantImage.setBackgroundResource(R.drawable.rounded_corners);
-        holder.itemView.setOnClickListener(v -> listener.onItemClick(restaurant));
+        holder.itemView.setOnClickListener(v -> {
+            animateClick(v);
+            listener.onItemClick(restaurant);
+        });
+    }
+    private void animateClick(View view) {
+        view.animate()
+                .scaleX(0.95f)
+                .scaleY(0.95f)
+                .setDuration(100)
+                .withEndAction(() -> {
+                    view.animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(100)
+                            .start();
+                }).start();
     }
 
     private void loadLogoFromStorage(String sanitizedName, ImageView imageView, String restaurantName) {

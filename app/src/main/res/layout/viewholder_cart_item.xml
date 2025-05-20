@@ -111,8 +111,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:background="@drawable/back_background"
-            android:backgroundTint="#FF5001"
             android:paddingLeft="2dp"
             android:paddingTop="1dp"
             android:paddingRight="2dp"
@@ -121,31 +119,33 @@
             >
 
             <ImageView
-                android:id="@+id/CartItemPlus"
+                android:id="@+id/CartItemMinus"
                 android:layout_width="19dp"
                 android:layout_height="wrap_content"
                 app:layout_constraintVertical_bias="0.567"
-                app:srcCompat="@drawable/plus"
-                app:tint="@color/white" />
+                app:srcCompat="@drawable/minus"
+                app:tint="@color/primary_color" />
 
             <TextView
                 android:id="@+id/CartItemCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="00"
-                android:textColor="@color/white"
+                android:text="0"
+                android:layout_marginLeft="3dp"
+                android:layout_marginRight="3dp"
+                android:textColor="@color/primary_color"
                 tools:layout_editor_absoluteX="300dp"
                 tools:layout_editor_absoluteY="50dp" />
 
             <ImageView
-                android:id="@+id/CartItemMinus"
+                android:id="@+id/CartItemPlus"
                 android:layout_width="19dp"
                 android:layout_height="wrap_content"
 
                 app:layout_constraintVertical_bias="0.567"
-                app:srcCompat="@drawable/minus"
-                app:tint="@color/white" />
+                app:srcCompat="@drawable/plus"
+                app:tint="@color/primary_color" />
+
         </LinearLayout>
 
     </LinearLayout>

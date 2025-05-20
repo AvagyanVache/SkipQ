@@ -54,8 +54,6 @@ public class OrderManagementAdapter extends RecyclerView.Adapter<OrderManagement
                     .addOnSuccessListener(uri -> {
                         Glide.with(holder.itemView.getContext())
                                 .load(uri.toString())
-                                .placeholder(R.drawable.white)
-                                .error(R.drawable.white)
                                 .centerCrop()
                                 .into(holder.restaurantPhoto);
                     })

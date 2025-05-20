@@ -44,7 +44,7 @@ public class YourOrderAdaptor extends RecyclerView.Adapter<YourOrderAdaptor.View
         holder.itemDescription.setText(shortDescription);
 
         holder.itemPrepTime.setText(MessageFormat.format("{0} min", item.getPrepTime()));
-        holder.itemCount.setText(String.format("%02d", item.getItemCount()));
+        holder.itemCount.setText(String.valueOf(item.getItemCount()));
         double price = 0.0;
         try {
             price = Double.parseDouble(item.getItemPrice() != null ? item.getItemPrice() : "0");

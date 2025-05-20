@@ -8,13 +8,13 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="@android:color/white">
+    android:background="@drawable/frame_bg"
+    app:cardElevation="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/frame_bg"
+        android:background="@drawable/ripple_effect"
         android:padding="8dp">
 
         <!-- Image Container -->
@@ -84,7 +84,8 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:scaleType="centerInside"
-                android:src="@drawable/countdown" />
+                android:src="@drawable/countdown_icon"
+                android:tint="#FFFD5005"/>
 
             <TextView
                 android:id="@+id/PrepTime"

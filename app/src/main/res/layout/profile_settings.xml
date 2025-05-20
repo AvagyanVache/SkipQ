@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/img_rectangle"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/background1" />
+
+    <ImageView
+        android:id="@+id/back"
+        android:layout_width="35dp"
+        android:layout_height="39dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="30dp"
+        android:rotation="180"
+        android:src="@drawable/right_arrow"
+        app:tint="@color/black" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingTop="50dp">
+
+        <!-- Settings Title -->
+        <TextView
+            android:id="@+id/settingsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="50dp"
+            android:text="Settings"
+            android:textColor="@color/black"
+            android:textSize="27sp"
+            android:textStyle="bold" />
+
+        <!-- Language Section -->
+        <RelativeLayout
+            android:id="@+id/languageSection"
+            android:layout_width="match_parent"
+            android:layout_height="63dp"
+            android:layout_marginBottom="20dp">
+
+            <ImageView
+                android:id="@+id/languageIcon"
+                android:layout_width="50dp"
+                android:layout_height="40dp"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="35dp"
+                android:layout_centerVertical="true"
+                android:src="@drawable/language_icon"
+                app:tint="@color/black" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/languageIcon"
+                android:layout_centerVertical="true"
+                android:orientation="vertical"
+                android:layout_marginStart="20dp">
+
+                <TextView
+                    android:id="@+id/languageLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Language"
+                    android:textColor="@color/black"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/languageText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="English"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/changeLanguage"
+                android:layout_width="35dp"
+                android:layout_height="39dp"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="20dp"
+                android:layout_centerVertical="true"
+                android:src="@drawable/right_arrow"
+                app:tint="@color/black" />
+        </RelativeLayout>
+
+        <ImageView
+            android:id="@+id/divider4"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/frame_bg" />
+
+        <!-- Password Section -->
+        <RelativeLayout
+            android:id="@+id/passwordSection"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginBottom="20dp">
+
+            <ImageView
+                android:id="@+id/passwordIcon"
+                android:layout_width="50dp"
+                android:layout_height="40dp"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="35dp"
+                android:layout_centerVertical="true"
+                android:src="@drawable/password"
+                app:tint="@color/black" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/passwordIcon"
+                android:layout_centerVertical="true"
+                android:orientation="vertical"
+                android:layout_marginStart="20dp">
+
+                <TextView
+                    android:id="@+id/passwordLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Password"
+                    android:textColor="@color/black"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/passwordText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Change Password"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/changePassword"
+                android:layout_width="35dp"
+                android:layout_height="39dp"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="20dp"
+                android:layout_centerVertical="true"
+                android:src="@drawable/right_arrow"
+                app:tint="@color/black" />
+        </RelativeLayout>
+
+        <ImageView
+            android:id="@+id/divider5"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/frame_bg" />
+
+        <!-- Delete Account Section -->
+        <RelativeLayout
+            android:id="@+id/deleteAccountSection"
+            android:layout_width="match_parent"
+            android:layout_height="57dp">
+
+            <ImageView
+                android:id="@+id/deleteIcon"
+                android:layout_width="45dp"
+                android:layout_height="35dp"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="35dp"
+                android:layout_centerVertical="true"
+                android:src="@drawable/delete_icon"
+                app:tint="@color/black" />
+
+            <TextView
+                android:id="@+id/deleteLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/deleteIcon"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="20dp"
+                android:text="Delete account"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/deleteAccount"
+                android:layout_width="35dp"
+                android:layout_height="39dp"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="20dp"
+                android:layout_centerVertical="true"
+                android:src="@drawable/right_arrow"
+                app:tint="@color/black" />
+        </RelativeLayout>
+    </LinearLayout>
+</FrameLayout>

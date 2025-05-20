@@ -71,8 +71,10 @@ public class ProfileFragment extends Fragment {
     private FirebaseFirestore db;
     private FirebaseStorage storage;
     // User-specific views
-    private TextView userNameSurname, userEmail, userPhoneNumber, profileTitle;
+  //  private TextView userNameSurname, userEmail, userPhoneNumber, profileTitle;
     private ImageView profilePicture;
+    private TextView userNameSurname;
+    private TextView profileTitle;
     private TextView restaurantNameDisplay, restaurantPhoneDisplay;
     private ImageView restaurantLogo;
     private CheckBox mondayCheckbox, tuesdayCheckbox, wednesdayCheckbox, thursdayCheckbox, fridayCheckbox, saturdayCheckbox, sundayCheckbox;
@@ -152,11 +154,31 @@ public class ProfileFragment extends Fragment {
         restaurantId = intent.getStringExtra("restaurantId");
         Log.d(TAG, "UserRole: " + userRole + ", RestaurantId: " + restaurantId);
 
-        // Initialize views
+
+
         profileTitle = view.findViewById(R.id.profileTitle);
         userNameSurname = view.findViewById(R.id.UserNameSurname);
-        userEmail = view.findViewById(R.id.UserEmail);
-        userPhoneNumber = view.findViewById(R.id.userPhoneNumber);
+        profilePicture = view.findViewById(R.id.profilePicture);
+        btnLogout = view.findViewById(R.id.btnLogout);
+
+        profilePicture.setOnClickListener(v -> {
+            Log.d(TAG, "Profile picture clicked");
+            checkAndRequestImagePermission();
+        });
+
+        btnLogout.setOnClickListener(v -> {
+            mAuth.signOut();
+            Toast.makeText(getContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
+            Intent intent1 = new Intent(requireActivity(), MainActivity.class);
+            intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent1);
+            requireActivity().finish();
+        });
+
+        // Initialize views
+        profileTitle = view.findViewById(R.id.profileTitle);
+       userNameSurname = view.findViewById(R.id.UserNameSurname);
+
         profilePicture = view.findViewById(R.id.profilePicture);
         restaurantProfileSection = view.findViewById(R.id.restaurantProfileSection);
         restaurantLogo = view.findViewById(R.id.restaurantLogo);
@@ -201,17 +223,53 @@ public class ProfileFragment extends Fragment {
         setupOperatingHoursTextWatcher(saturdayHours);
         setupOperatingHoursTextWatcher(sundayHours);
 
+        ImageView settingsRedirect = view.findViewById(R.id.SettingsRedirect);
+        settingsRedirect.setOnClickListener(v -> {
+            Log.d(TAG, "Settings redirect clicked");
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frame_layout, new ProfileSettingsFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+
+        ImageView accountRedirect = view.findViewById(R.id.AccountRedirect);
+        accountRedirect.setOnClickListener(v -> {
+            Log.d(TAG, "Account redirect clicked");
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frame_layout, new ProfileAccountFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+        ImageView AboutDeveloperRedirect = view.findViewById(R.id.AboutDeveloperRedirect);
+        AboutDeveloperRedirect.setOnClickListener(v -> {
+            Log.d(TAG, "About Developer clicked");
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frame_layout, new AboutDeveloperFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });ImageView FAQRedirect = view.findViewById(R.id.FAQ_Redirect);
+        FAQRedirect.setOnClickListener(v -> {
+            Log.d(TAG, "FAQ Fragment clicked");
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frame_layout, new FAQFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
 
         // Setup UI based on role
         if ("restaurant".equals(userRole)) {
             setupRestaurantProfile(view);
-        } else {
-            setupUserProfile(view);
         }
+        loadUserData();
 
         return view;
     }
 
+/*
     private void setupUserProfile(View view) {
         Log.d(TAG, "Setting up user profile");
         profileTitle.setText("Your Profile");
@@ -219,9 +277,9 @@ public class ProfileFragment extends Fragment {
         userNameSurname.setVisibility(View.VISIBLE);
         userEmail.setVisibility(View.VISIBLE);
         userPhoneNumber.setVisibility(View.VISIBLE);
-        profilePicture.setVisibility(View.VISIBLE);
-        view.findViewById(R.id.userProfileSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.aboutMeSection).setVisibility(View.VISIBLE);
+
+
+     view.findViewById(R.id.aboutMeSection).setVisibility(View.VISIBLE);
         view.findViewById(R.id.emailSection).setVisibility(View.VISIBLE);
         view.findViewById(R.id.phoneSection).setVisibility(View.VISIBLE);
         view.findViewById(R.id.paymentSection).setVisibility(View.VISIBLE);
@@ -234,8 +292,10 @@ public class ProfileFragment extends Fragment {
         view.findViewById(R.id.divider3).setVisibility(View.VISIBLE);
         view.findViewById(R.id.divider4).setVisibility(View.VISIBLE);
         view.findViewById(R.id.divider5).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.divider6).setVisibility(View.VISIBLE);
+        //view.findViewById(R.id.divider6).setVisibility(View.VISIBLE);
         restaurantProfileSection.setVisibility(View.GONE);
+
+
 
         profilePicture.setOnClickListener(v -> {
             Log.d(TAG, "Profile picture clicked");
@@ -285,16 +345,11 @@ public class ProfileFragment extends Fragment {
         });
 
         loadUserData();
+*/
 
-        btnLogout.setOnClickListener(v -> {
-            mAuth.signOut();
-            Toast.makeText(getContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(requireActivity(), MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            requireActivity().finish();
-        });
-    }
+
+
+
 
     private void setupOperatingHoursCheckbox(CheckBox checkBox, EditText hoursField) {
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -351,16 +406,19 @@ public class ProfileFragment extends Fragment {
         view.findViewById(R.id.divider7).setVisibility(View.VISIBLE);
         view.findViewById(R.id.divider8).setVisibility(View.VISIBLE);
         view.findViewById(R.id.divider7).setVisibility(View.VISIBLE);
+        /*
         userNameSurname.setVisibility(View.GONE);
         userEmail.setVisibility(View.GONE);
         userPhoneNumber.setVisibility(View.GONE);
+
+         */
         profilePicture.setVisibility(View.GONE);
         view.findViewById(R.id.userProfileSection).setVisibility(View.GONE);
         view.findViewById(R.id.aboutMeSection).setVisibility(View.GONE);
         view.findViewById(R.id.emailSection).setVisibility(View.GONE);
         view.findViewById(R.id.phoneSection).setVisibility(View.GONE);
         view.findViewById(R.id.paymentSection).setVisibility(View.GONE);
-        view.findViewById(R.id.settingsSection).setVisibility(View.GONE);
+      //  view.findViewById(R.id.settingsSection).setVisibility(View.GONE);
         view.findViewById(R.id.languageSection).setVisibility(View.GONE);
         view.findViewById(R.id.passwordSection).setVisibility(View.VISIBLE);
         view.findViewById(R.id.deleteAccountSection).setVisibility(View.VISIBLE);
@@ -369,7 +427,7 @@ public class ProfileFragment extends Fragment {
         view.findViewById(R.id.divider3).setVisibility(View.GONE);
         view.findViewById(R.id.divider4).setVisibility(View.VISIBLE);
         view.findViewById(R.id.divider5).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.divider6).setVisibility(View.VISIBLE);
+       // view.findViewById(R.id.divider6).setVisibility(View.VISIBLE);
 
         LinearLayout operatingHoursSection = view.findViewById(R.id.operatingHoursSection);
         ImageView dropdownOperatingHours = view.findViewById(R.id.dropdownOperatingHours);
@@ -474,13 +532,12 @@ public class ProfileFragment extends Fragment {
                     .addOnSuccessListener(documentSnapshot -> {
                         if (documentSnapshot.exists() && isAdded()) {
                             String name = documentSnapshot.getString("name");
-                            String email = documentSnapshot.getString("email");
-                            String phone = documentSnapshot.getString("phoneNumber");
                             String profilePictureUrl = documentSnapshot.getString("profilePictureUrl");
 
+                            // Set user name
                             userNameSurname.setText(name != null ? name : "Name Surname");
-                            userEmail.setText(email != null ? email : "Gmail@gmail.com");
-                            userPhoneNumber.setText(phone != null ? phone : "+123-456-7890");
+
+                            // Load profile picture
                             if (profilePictureUrl != null && !profilePictureUrl.isEmpty()) {
                                 Glide.with(this)
                                         .load(profilePictureUrl)
@@ -492,7 +549,7 @@ public class ProfileFragment extends Fragment {
                                         .transform(new CircleCrop())
                                         .into(profilePicture);
                             }
-                            Log.d(TAG, "User data loaded: name=" + name + ", email=" + email + ", profilePictureUrl=" + profilePictureUrl);
+                            Log.d(TAG, "User data loaded: name=" + name + ", profilePictureUrl=" + profilePictureUrl);
                         } else {
                             Log.w(TAG, "User document does not exist");
                         }
@@ -507,7 +564,37 @@ public class ProfileFragment extends Fragment {
             Log.w(TAG, "No user logged in or fragment not attached");
         }
     }
+    private void checkAndRequestImagePermission() {
+        String permission;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permission = Manifest.permission.READ_MEDIA_IMAGES;
+        } else {
+            permission = Manifest.permission.READ_EXTERNAL_STORAGE;
+        }
 
+        if (ContextCompat.checkSelfPermission(requireContext(), permission) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), permission)) {
+                Toast.makeText(requireContext(), "Permission is needed to access your photos", Toast.LENGTH_LONG).show();
+            }
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{permission}, 100);
+        } else {
+            openImagePicker();
+        }
+    }
+    private void openImagePicker() {
+        Intent pickIntent = new Intent(Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        Intent getContentIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        getContentIntent.setType("image/*");
+        Intent chooserIntent = Intent.createChooser(pickIntent, "Select Image");
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{getContentIntent});
+
+        if (chooserIntent.resolveActivity(requireActivity().getPackageManager()) != null) {
+            profilePicturePickerLauncher.launch(chooserIntent);
+        } else {
+            Toast.makeText(getContext(), "No gallery app available", Toast.LENGTH_SHORT).show();
+        }
+    }
     private boolean isNetworkAvailable() {
         ConnectivityManager cm = (ConnectivityManager) requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();

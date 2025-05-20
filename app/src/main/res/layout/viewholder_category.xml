@@ -5,7 +5,7 @@
     android:id="@+id/mainLayout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="@drawable/category_background_selector"
+    android:background="@drawable/ripple_effect"
     android:padding="4dp">
 
     <ImageView
@@ -21,15 +21,14 @@
 
     <ImageView
         android:id="@+id/CategoryImageView"
-        android:layout_width="43dp"
-        android:layout_height="25dp"
+        android:layout_width="46dp"
+        android:layout_height="32dp"
         android:foregroundGravity="center"
 
-        app:layout_constraintBottom_toBottomOf="@+id/imageView"
-        app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintHorizontal_bias="0.518"
-        app:layout_constraintStart_toStartOf="@+id/imageView"
-        app:layout_constraintTop_toTopOf="@+id/imageView" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/CategoryTextView"
@@ -45,7 +44,7 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintHorizontal_bias="0.545"
         app:layout_constraintStart_toStartOf="@+id/imageView"
-        app:layout_constraintTop_toBottomOf="@+id/CategoryImageView" />
+        app:layout_constraintTop_toBottomOf="@+id/CategoryImageView"
+        app:layout_constraintVertical_bias="0.0" />
 </androidx.constraintlayout.widget.ConstraintLayout>
