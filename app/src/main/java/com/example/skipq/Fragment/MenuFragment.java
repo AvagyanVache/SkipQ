@@ -380,6 +380,7 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
             String selectedAddress = adapter.getItem(which);
             addressText.setText(selectedAddress);
             locationText.setText(selectedAddress);
+            locationText.setMaxWidth((int) (selectLocation.getWidth() * 0.8));
             RestaurantAddress restaurantAddress = addressList.get(which);
             CartManager.getInstance().setSelectedAddress(
                     restaurantAddress.getAddress(),

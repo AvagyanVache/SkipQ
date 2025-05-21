@@ -67,7 +67,7 @@ public class FAQFragment extends Fragment {
         // Sample FAQ 1
         faqQuestions.add("How do I reset my password?");
         List<String> answer1 = new ArrayList<>();
-        answer1.add("To reset your password, go to Profile -> Settings -> Change Password and click Reset Password. After that email an to change your passoword will be sent to you");
+        answer1.add("To reset your password, go to Profile -> Settings -> Change Password and click Reset Password. After that an email to change your passoword will be sent to you");
         faqAnswers.put(faqQuestions.get(0), answer1);
 
         // Sample FAQ 2

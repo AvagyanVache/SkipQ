@@ -92,7 +92,7 @@
 
                     <com.hbb20.CountryCodePicker
                         android:id="@+id/countryCodePicker"
-                        android:layout_width="122dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:background="@drawable/frame_bg"
                         android:gravity="center"
@@ -195,136 +195,140 @@
                     android:background="@drawable/frame_bg" />
             </com.google.android.material.textfield.TextInputLayout>
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginTop="10dp">
+                android:layout_marginTop="10dp"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
 
-                <ImageView
-                    android:id="@+id/location"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:src="@drawable/location"
-                    app:tint="#FF5001" />
-                <TextView
-                    android:id="@+id/selected_location_text"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/location"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/location"
+                        app:tint="#FF5001" />
+
+                    <TextView
+                        android:id="@+id/selected_location_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:gravity="center"
+                        android:text="Selected Address"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:textSize="20sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/selected_location"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
                     android:gravity="center"
                     android:text="Selected Address"
-                    android:textStyle="bold"
                     android:textColor="@color/black"
-                    android:textSize="20sp"
-                    />
-            </LinearLayout>
-            <TextView
-                android:id="@+id/selected_location"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:text="Selected Address"
-                android:textColor="@color/black"
-                android:textSize="20sp"/>
-            <LinearLayout
-                android:id="@+id/linearLayout"
-                android:layout_width="280dp"
-                android:layout_height="wrap_content"
-                android:background="@drawable/frame_bg"
-                android:gravity="center"
-                android:layout_gravity="center"
-                android:orientation="vertical"
-                android:padding="12dp">
-
-                <TextView
-                    android:id="@+id/textViewOrderSummary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="Order Summary"
-                    android:textColor="@color/black"
-                    android:textSize="25sp"
-                     />
+                    android:textSize="20sp" />
 
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:id="@+id/linearLayout"
+                    android:layout_width="280dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:orientation="horizontal">
+                    android:background="@drawable/frame_bg"
+                    android:orientation="vertical"
+                    android:layout_marginTop="16dp"
+                    android:padding="12dp">
 
                     <TextView
-                        android:id="@+id/textViewDiscount"
+                        android:id="@+id/textViewOrderSummary"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Discount"
+                        android:layout_gravity="center"
+                        android:text="Order Summary"
                         android:textColor="@color/black"
-                        android:textSize="20sp"
-                         />
+                        android:textSize="25sp" />
 
-                    <TextView
-                        android:id="@+id/Discount"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="120dp"
-                        android:text="0%"
-                        android:textColor="@color/black"
-                        android:textSize="20sp"
-                    />
-                </LinearLayout>
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:orientation="horizontal">
+                        <TextView
+                            android:id="@+id/textViewDiscount"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Discount"
+                            android:textColor="@color/black"
+                            android:textSize="20sp" />
 
-                    <TextView
-                        android:id="@+id/textViewReadyTime"
-                        android:layout_width="wrap_content"
+                        <TextView
+                            android:id="@+id/Discount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0%"
+                            android:textColor="@color/black"
+                            android:textSize="20sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Time Till Ready"
-                        android:textColor="@color/black"
-                        android:textSize="18sp"
-                         />
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/TimeTillReady"
-                        android:layout_width="wrap_content"
+                        <TextView
+                            android:id="@+id/textViewReadyTime"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Time Till Ready"
+                            android:textColor="@color/black"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/TimeTillReady"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 minutes"
+                            android:textColor="@color/black"
+                            android:textSize="18sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="40dp"
-                        android:text="0 minutes"
-                        android:textColor="@color/black"
-                        android:textSize="18sp"
-                        android:layout_marginLeft="20dp"/>
-                </LinearLayout>
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:orientation="horizontal">
+                        <TextView
+                            android:id="@+id/textViewTotal"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Total"
+                            android:textColor="@color/black"
+                            android:textSize="20sp" />
 
-                    <TextView
-                        android:id="@+id/textViewTotal"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Total"
-                        android:textColor="@color/black"
-                        android:textSize="20sp"
-                       />
-
-                    <TextView
-                        android:id="@+id/totalPrice"
-                        android:layout_width="71dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="150dp"
-                        android:text="20$"
-                        android:textColor="@color/black"
-                        android:textSize="20sp"
-                        />
+                        <TextView
+                            android:id="@+id/totalPrice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="20$"
+                            android:textColor="@color/black"
+                            android:textSize="20sp" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
+
 
             <Button
                 android:id="@+id/CheckOutbutton"

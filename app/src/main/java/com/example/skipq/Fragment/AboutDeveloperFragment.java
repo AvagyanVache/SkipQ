@@ -34,7 +34,7 @@ public class AboutDeveloperFragment extends Fragment {
         gmailText.setText("awagyan.wache@gmail.com");
         phoneNumberText.setText("+37455252592");
         telegramProfile.setText("Telegram");
-        linkedinProfile.setText("LinkedIn Profile");
+        linkedinProfile.setText("LinkedIn");
 
         // Back button click listener
         backButton.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());

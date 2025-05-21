@@ -15,16 +15,17 @@
 
     <ImageView
         android:id="@+id/back"
-        android:layout_width="35dp"
-        android:layout_height="39dp"
+        android:layout_width="43dp"
+        android:layout_height="43dp"
         android:rotation="180"
         android:src="@drawable/right_arrow"
+        android:background="@drawable/ripple_effect"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.042"
+        app:layout_constraintHorizontal_bias="0.07"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.174"
+        app:layout_constraintVertical_bias="0.109"
         app:tint="@color/black" />
 
     <TextView
@@ -48,6 +49,7 @@
         android:layout_height="100dp"
         android:clickable="true"
         android:focusable="true"
+        android:layout_marginTop="220dp"
         android:scaleType="centerCrop"
         android:src="@drawable/admin_pic"
         android:background="@drawable/frame_bg"
@@ -96,10 +98,10 @@
         android:orientation="horizontal"
         android:gravity="center"
         android:layout_marginTop="10dp"
+        android:background="@drawable/ripple_effect"
         app:layout_constraintTop_toBottomOf="@id/PhoneNumber"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
             android:id="@+id/telegram"
@@ -108,6 +110,7 @@
             android:clickable="true"
             android:focusable="true"
             android:scaleType="centerCrop"
+            android:background="@drawable/ripple_effect"
             android:src="@drawable/telegram"
             android:layout_marginEnd="8dp" />
 
@@ -116,10 +119,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="My Telegram"
+            android:text="Telegram"
             android:textColor="@color/black"
             android:textSize="20sp"
             android:autoLink="web"
+            android:background="@drawable/ripple_effect"
             android:focusable="true"
             android:linksClickable="true" />
     </LinearLayout>
@@ -128,35 +132,35 @@
         android:id="@+id/linkedin_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         android:gravity="center"
+        android:background="@drawable/ripple_effect"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.504"
+        app:layout_constraintHorizontal_bias="0.487"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/telegram_container"
-        app:layout_constraintVertical_bias="0.035">
+        app:layout_constraintTop_toBottomOf="@+id/telegram_container">
 
         <ImageView
             android:id="@+id/linkedin"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginEnd="8dp"
             android:clickable="true"
             android:focusable="true"
             android:scaleType="centerCrop"
-            android:src="@drawable/linkedin" />
+            android:background="@drawable/ripple_effect"
+            android:src="@drawable/linkedin1" />
 
         <TextView
             android:id="@+id/LinkedInProfile"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="My LinkedIn Profile"
-            android:textColor="@color/black"
-            android:textSize="20sp"
             android:clickable="true"
-            android:focusable="true" />
-
+            android:focusable="true"
+            android:text="LinkedIn"
+            android:background="@drawable/ripple_effect"
+            android:textSize="20sp" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
