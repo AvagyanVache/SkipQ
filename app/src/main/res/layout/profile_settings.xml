@@ -9,14 +9,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:src="@drawable/background1" />
+        android:src="@drawable/background4" />
 
     <ImageView
         android:id="@+id/back"
         android:layout_width="35dp"
         android:layout_height="39dp"
         android:layout_marginStart="30dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="50dp"
         android:rotation="180"
         android:src="@drawable/right_arrow"
         app:tint="@color/black" />
@@ -51,7 +51,7 @@
                 android:layout_width="50dp"
                 android:layout_height="40dp"
                 android:layout_alignParentStart="true"
-                android:layout_marginStart="35dp"
+                android:layout_marginStart="75dp"
                 android:layout_centerVertical="true"
                 android:src="@drawable/language_icon"
                 app:tint="@color/black" />
@@ -93,15 +93,6 @@
                 app:tint="@color/black" />
         </RelativeLayout>
 
-        <ImageView
-            android:id="@+id/divider4"
-            android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginBottom="20dp"
-            android:background="@drawable/frame_bg" />
-
         <!-- Password Section -->
         <RelativeLayout
             android:id="@+id/passwordSection"
@@ -114,7 +105,7 @@
                 android:layout_width="50dp"
                 android:layout_height="40dp"
                 android:layout_alignParentStart="true"
-                android:layout_marginStart="35dp"
+                android:layout_marginStart="75dp"
                 android:layout_centerVertical="true"
                 android:src="@drawable/password"
                 app:tint="@color/black" />
@@ -156,14 +147,6 @@
                 app:tint="@color/black" />
         </RelativeLayout>
 
-        <ImageView
-            android:id="@+id/divider5"
-            android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginBottom="20dp"
-            android:background="@drawable/frame_bg" />
 
         <!-- Delete Account Section -->
         <RelativeLayout
@@ -176,7 +159,7 @@
                 android:layout_width="45dp"
                 android:layout_height="35dp"
                 android:layout_alignParentStart="true"
-                android:layout_marginStart="35dp"
+                android:layout_marginStart="75dp"
                 android:layout_centerVertical="true"
                 android:src="@drawable/delete_icon"
                 app:tint="@color/black" />

@@ -10,7 +10,7 @@
         android:id="@+id/background_image"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:src="@drawable/background1"
+        android:src="@drawable/background4"
         android:scaleType="centerCrop"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -24,13 +24,11 @@
         android:layout_height="40dp"
         android:layout_marginStart="20dp"
         android:layout_marginTop="30dp"
-        android:rotation="90"
         android:background="@drawable/ripple_effect"
-        android:tint="#FF5001"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/drop_down"
-        tools:ignore="UseAppTint" />
+        app:srcCompat="@drawable/back_btn"
+        />
 
     <LinearLayout
         android:id="@+id/select_location"
@@ -53,6 +51,7 @@
             android:layout_weight="1"
             android:text="Select Location"
             android:gravity="center"
+            android:textColor="@color/black"
             android:layout_marginTop="10dp"
             android:textSize="20sp"
             android:layout_marginEnd="8dp"
@@ -64,10 +63,10 @@
             android:id="@+id/dropdownLocation"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:tint="#FF5001"
+            android:rotation="270"
             android:background="@drawable/ripple_effect"
-            app:srcCompat="@drawable/drop_down"
-            tools:ignore="UseAppTint" />
+            app:srcCompat="@drawable/back_btn"
+  />
     </LinearLayout>
 
     <ImageView

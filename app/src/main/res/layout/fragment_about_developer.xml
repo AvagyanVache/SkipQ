@@ -9,7 +9,7 @@
         android:id="@+id/background_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/background1"
+        android:src="@drawable/background4"
         android:scaleType="centerCrop" />
 
 

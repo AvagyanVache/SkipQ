@@ -7,7 +7,7 @@
         android:id="@+id/img_rectangle"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/background1"
+        android:background="@drawable/background4"
         android:scaleType="centerCrop" />
     <ImageView
         android:id="@+id/back"
@@ -50,6 +50,7 @@
             android:id="@+id/emailIcon"
             android:layout_width="30dp"
             android:layout_height="30dp"
+            android:layout_marginStart="80dp"
             android:src="@drawable/email"
             app:tint="@color/black" />
 
@@ -80,13 +81,6 @@
     </LinearLayout>
 
 
-    <ImageView
-        android:id="@+id/divider1"
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:layout_gravity="center"
-        android:layout_marginBottom="160dp"
-        android:background="@drawable/frame_bg" />
 
     <!-- User Phone Section -->
 
@@ -103,6 +97,7 @@
             android:id="@+id/phoneIcon"
             android:layout_width="30dp"
             android:layout_height="30dp"
+            android:layout_marginStart="80dp"
             android:src="@drawable/phone_icon"
             app:tint="@color/black" />
 
@@ -132,13 +127,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/divider2"
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:layout_gravity="center"
-        android:layout_marginBottom="80dp"
-        android:background="@drawable/frame_bg" />
+
 
     <LinearLayout
         android:id="@+id/paymentSection"
@@ -153,6 +142,7 @@
             android:id="@+id/paymentIcon"
             android:layout_width="30dp"
             android:layout_height="30dp"
+            android:layout_marginStart="80dp"
             android:src="@drawable/payment_icon"
             app:tint="@color/black" />
 
@@ -190,10 +180,4 @@
     </LinearLayout>
 
 
-    <ImageView
-        android:id="@+id/divider3"
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:layout_gravity="center"
-        android:background="@drawable/frame_bg" />
 </FrameLayout>

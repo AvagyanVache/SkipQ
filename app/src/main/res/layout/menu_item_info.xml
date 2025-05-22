@@ -7,14 +7,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="?attr/actionBarSize"
-    android:padding="8dp">
+>
 
     <ImageView
         android:id="@+id/background_image"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:src="@drawable/background1"
+        android:src="@drawable/background4"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -27,7 +27,6 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:src="@drawable/back_btn"
-
         android:scaleType="centerInside"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -81,7 +80,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="100dp"
             android:text="$12,230"
-            android:textColor="#FF5001"
+            android:textColor="@color/primary_color"
             android:textSize="16sp"
             tools:layout_editor_absoluteX="16dp"
             tools:layout_editor_absoluteY="448dp" />
@@ -91,10 +90,10 @@
             android:id="@+id/image_subtract"
             android:layout_width="30dp"
             android:layout_height="match_parent"
-            android:layout_marginLeft="20dp"
+            android:layout_marginLeft="50dp"
             android:scaleType="centerInside"
             android:src="@drawable/countdown_icon"
-            app:tint="#FF5001"
+            app:tint="@color/primary_color"
             tools:layout_editor_absoluteX="8dp"
             tools:layout_editor_absoluteY="651dp" />
 
@@ -184,7 +183,7 @@
                 android:src="@drawable/minus"
                 app:layout_constraintStart_toEndOf="@id/MenuItem_ItemCount"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="#FF5001" />
+                app:tint="@color/primary_color" />
 
             <TextView
                 android:id="@+id/MenuItem_ItemCount"
@@ -195,7 +194,7 @@
                 android:layout_marginEnd="4dp"
                 android:maxLines="1"
                 android:text="0"
-                android:textColor="#FF5001"
+                android:textColor="@color/primary_color"
                 android:textSize="20sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@id/ItemMinus"
@@ -210,7 +209,7 @@
                 android:src="@drawable/plus"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="#FF5001" />
+                app:tint="@color/primary_color" />
 
         </LinearLayout>
 
@@ -218,7 +217,7 @@
             android:id="@+id/addToCart"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="#FF5001"
+            android:backgroundTint="@color/primary_color"
             android:text="Add to cart"
             android:layout_marginLeft="50dp"
  />

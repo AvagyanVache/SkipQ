@@ -71,7 +71,7 @@ public class ProfileFragment extends Fragment {
     private FirebaseFirestore db;
     private FirebaseStorage storage;
     // User-specific views
-  //  private TextView userNameSurname, userEmail, userPhoneNumber, profileTitle;
+    //  private TextView userNameSurname, userEmail, userPhoneNumber, profileTitle;
     private ImageView profilePicture;
     private TextView userNameSurname;
     private TextView profileTitle;
@@ -154,39 +154,17 @@ public class ProfileFragment extends Fragment {
         restaurantId = intent.getStringExtra("restaurantId");
         Log.d(TAG, "UserRole: " + userRole + ", RestaurantId: " + restaurantId);
 
-
-
+        // Initialize views
         profileTitle = view.findViewById(R.id.profileTitle);
         userNameSurname = view.findViewById(R.id.UserNameSurname);
         profilePicture = view.findViewById(R.id.profilePicture);
         btnLogout = view.findViewById(R.id.btnLogout);
-
-        profilePicture.setOnClickListener(v -> {
-            Log.d(TAG, "Profile picture clicked");
-            checkAndRequestImagePermission();
-        });
-
-        btnLogout.setOnClickListener(v -> {
-            mAuth.signOut();
-            Toast.makeText(getContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
-            Intent intent1 = new Intent(requireActivity(), MainActivity.class);
-            intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent1);
-            requireActivity().finish();
-        });
-
-        // Initialize views
-        profileTitle = view.findViewById(R.id.profileTitle);
-       userNameSurname = view.findViewById(R.id.UserNameSurname);
-
-        profilePicture = view.findViewById(R.id.profilePicture);
         restaurantProfileSection = view.findViewById(R.id.restaurantProfileSection);
         restaurantLogo = view.findViewById(R.id.restaurantLogo);
         addressesContainer = view.findViewById(R.id.addressesContainer);
         addressesSection = view.findViewById(R.id.addressesSection);
         saveRestaurantChanges = view.findViewById(R.id.saveRestaurantChanges);
         addAddressButton = view.findViewById(R.id.addAddressButton);
-        btnLogout = view.findViewById(R.id.btnLogout);
         restaurantNameDisplay = view.findViewById(R.id.RestaurantName);
         restaurantPhoneDisplay = view.findViewById(R.id.RestaurantPhone);
 
@@ -205,23 +183,27 @@ public class ProfileFragment extends Fragment {
         saturdayHours = view.findViewById(R.id.saturdayHours);
         sundayHours = view.findViewById(R.id.sundayHours);
 
-// Setup operating hours checkboxes
-        setupOperatingHoursCheckbox(mondayCheckbox, mondayHours);
-        setupOperatingHoursCheckbox(tuesdayCheckbox, tuesdayHours);
-        setupOperatingHoursCheckbox(wednesdayCheckbox, wednesdayHours);
-        setupOperatingHoursCheckbox(thursdayCheckbox, thursdayHours);
-        setupOperatingHoursCheckbox(fridayCheckbox, fridayHours);
-        setupOperatingHoursCheckbox(saturdayCheckbox, saturdayHours);
-        setupOperatingHoursCheckbox(sundayCheckbox, sundayHours);
+        // Setup UI based on role
+        if ("restaurant".equals(userRole)) {
+            setupRestaurantProfile(view);
+        } else {
+            setupUserProfile(view);
+        }
 
-// Setup text watchers for operating hours
-        setupOperatingHoursTextWatcher(mondayHours);
-        setupOperatingHoursTextWatcher(tuesdayHours);
-        setupOperatingHoursTextWatcher(wednesdayHours);
-        setupOperatingHoursTextWatcher(thursdayHours);
-        setupOperatingHoursTextWatcher(fridayHours);
-        setupOperatingHoursTextWatcher(saturdayHours);
-        setupOperatingHoursTextWatcher(sundayHours);
+        // Setup click listeners
+        profilePicture.setOnClickListener(v -> {
+            Log.d(TAG, "Profile picture clicked");
+            checkAndRequestImagePermission();
+        });
+
+        btnLogout.setOnClickListener(v -> {
+            mAuth.signOut();
+            Toast.makeText(getContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
+            Intent intent1 = new Intent(requireActivity(), MainActivity.class);
+            intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent1);
+            requireActivity().finish();
+        });
 
         ImageView settingsRedirect = view.findViewById(R.id.SettingsRedirect);
         settingsRedirect.setOnClickListener(v -> {
@@ -242,6 +224,7 @@ public class ProfileFragment extends Fragment {
                     .addToBackStack(null)
                     .commit();
         });
+
         ImageView AboutDeveloperRedirect = view.findViewById(R.id.AboutDeveloperRedirect);
         AboutDeveloperRedirect.setOnClickListener(v -> {
             Log.d(TAG, "About Developer clicked");
@@ -250,7 +233,9 @@ public class ProfileFragment extends Fragment {
                     .replace(R.id.frame_layout, new AboutDeveloperFragment())
                     .addToBackStack(null)
                     .commit();
-        });ImageView FAQRedirect = view.findViewById(R.id.FAQ_Redirect);
+        });
+
+        ImageView FAQRedirect = view.findViewById(R.id.FAQ_Redirect);
         FAQRedirect.setOnClickListener(v -> {
             Log.d(TAG, "FAQ Fragment clicked");
             requireActivity().getSupportFragmentManager()
@@ -260,45 +245,95 @@ public class ProfileFragment extends Fragment {
                     .commit();
         });
 
-        // Setup UI based on role
-        if ("restaurant".equals(userRole)) {
-            setupRestaurantProfile(view);
-        }
         loadUserData();
-
         return view;
     }
 
-/*
     private void setupUserProfile(View view) {
         Log.d(TAG, "Setting up user profile");
         profileTitle.setText("Your Profile");
         profileTitle.setVisibility(View.VISIBLE);
         userNameSurname.setVisibility(View.VISIBLE);
-        userEmail.setVisibility(View.VISIBLE);
-        userPhoneNumber.setVisibility(View.VISIBLE);
-
-
-     view.findViewById(R.id.aboutMeSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.emailSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.phoneSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.paymentSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.settingsSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.languageSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.passwordSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.deleteAccountSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.divider1).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.divider2).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.divider3).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.divider4).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.divider5).setVisibility(View.VISIBLE);
-        //view.findViewById(R.id.divider6).setVisibility(View.VISIBLE);
+        profilePicture.setVisibility(View.VISIBLE);
+        view.findViewById(R.id.userProfileSection).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.menuSection).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.btnLogout).setVisibility(View.VISIBLE);
         restaurantProfileSection.setVisibility(View.GONE);
+    }
 
+    private void setupRestaurantProfile(View view) {
+        Log.d(TAG, "Setting up restaurant profile");
+        profileTitle.setText("Restaurant Profile");
+        profileTitle.setVisibility(View.VISIBLE);
+        restaurantProfileSection.setVisibility(View.VISIBLE);
+        view.findViewById(R.id.RestaurantNameSection).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.RestaurantPhoneSection).setVisibility(View.VISIBLE);
+        restaurantLogo.setVisibility(View.VISIBLE);
+        addressesSection.setVisibility(View.VISIBLE);
+        view.findViewById(R.id.divider7).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.divider8).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.operatingHoursSection).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.addressesSection).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.saveRestaurantChanges).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.btnLogout).setVisibility(View.VISIBLE);
+        userNameSurname.setVisibility(View.GONE);
+        profilePicture.setVisibility(View.GONE);
+        view.findViewById(R.id.userProfileSection).setVisibility(View.GONE);
+        view.findViewById(R.id.menuSection).setVisibility(View.GONE);
 
+        // Setup operating hours checkboxes
+        setupOperatingHoursCheckbox(mondayCheckbox, mondayHours);
+        setupOperatingHoursCheckbox(tuesdayCheckbox, tuesdayHours);
+        setupOperatingHoursCheckbox(wednesdayCheckbox, wednesdayHours);
+        setupOperatingHoursCheckbox(thursdayCheckbox, thursdayHours);
+        setupOperatingHoursCheckbox(fridayCheckbox, fridayHours);
+        setupOperatingHoursCheckbox(saturdayCheckbox, saturdayHours);
+        setupOperatingHoursCheckbox(sundayCheckbox, sundayHours);
 
-        profilePicture.setOnClickListener(v -> {
-            Log.d(TAG, "Profile picture clicked");
+        // Setup text watchers for operating hours
+        setupOperatingHoursTextWatcher(mondayHours);
+        setupOperatingHoursTextWatcher(tuesdayHours);
+        setupOperatingHoursTextWatcher(wednesdayHours);
+        setupOperatingHoursTextWatcher(thursdayHours);
+        setupOperatingHoursTextWatcher(fridayHours);
+        setupOperatingHoursTextWatcher(saturdayHours);
+        setupOperatingHoursTextWatcher(sundayHours);
+
+        LinearLayout operatingHoursSection = view.findViewById(R.id.operatingHoursSection);
+        ImageView dropdownOperatingHours = view.findViewById(R.id.dropdownOperatingHours);
+        ImageView dropdownAddresses = view.findViewById(R.id.dropdownAddresses);
+
+        for (int i = 1; i < operatingHoursSection.getChildCount(); i++) {
+            operatingHoursSection.getChildAt(i).setVisibility(View.GONE);
+        }
+
+        // Setup dropdown for operating hours
+        dropdownOperatingHours.setOnClickListener(v -> {
+            boolean isVisible = operatingHoursSection.getChildAt(1).getVisibility() == View.VISIBLE;
+            for (int i = 1; i < operatingHoursSection.getChildCount(); i++) {
+                operatingHoursSection.getChildAt(i).setVisibility(isVisible ? View.GONE : View.VISIBLE);
+            }
+            dropdownOperatingHours.animate().rotation(isVisible ? 0 : 180).setDuration(200).start();
+            Log.d(TAG, "Operating hours dropdown toggled: " + (isVisible ? "collapsed" : "expanded"));
+        });
+
+        // Setup dropdown for addresses
+        dropdownAddresses.setOnClickListener(v -> {
+            boolean isVisible = addressesContainer.getVisibility() == View.VISIBLE;
+            addressesContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+            addAddressButton.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+            dropdownAddresses.animate().rotation(isVisible ? 0 : 180).setDuration(200).start();
+            Log.d(TAG, "Addresses dropdown toggled: " + (isVisible ? "collapsed" : "expanded"));
+        });
+
+        ImageView changeRestaurantNumber = view.findViewById(R.id.changeRestaurantNumber);
+        changeRestaurantNumber.setOnClickListener(v -> {
+            Log.d(TAG, "Change restaurant phone clicked");
+            showChangePhoneDialog();
+        });
+
+        restaurantLogo.setOnClickListener(v -> {
+            Log.d(TAG, "Restaurant logo clicked");
             String permission;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 permission = Manifest.permission.READ_MEDIA_IMAGES;
@@ -312,45 +347,29 @@ public class ProfileFragment extends Fragment {
                 }
                 Log.d(TAG, "Requesting permission: " + permission);
                 ActivityCompat.requestPermissions(requireActivity(),
-                        new String[]{permission}, 100);
+                        new String[]{permission}, 101);
             } else {
-                Log.d(TAG, "Launching gallery picker");
+                Log.d(TAG, "Launching gallery picker for logo");
                 Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                Intent getContentIntent = new Intent(Intent.ACTION_GET_CONTENT);
-                getContentIntent.setType("image/*");
-                Intent chooserIntent = Intent.createChooser(pickIntent, "Select Image");
-                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{getContentIntent});
-                if (chooserIntent.resolveActivity(requireActivity().getPackageManager()) != null) {
-                    profilePicturePickerLauncher.launch(chooserIntent);
-                } else {
-                    Log.e(TAG, "No app available to handle image picking");
-                    Toast.makeText(getContext(), "No gallery app available", Toast.LENGTH_SHORT).show();
-                }
+                logoPickerLauncher.launch(pickIntent);
             }
         });
 
-        // Setup navigation for password and delete account
-        ImageView changePassword = view.findViewById(R.id.changePassword);
-        changePassword.setOnClickListener(v -> {
-            Log.d(TAG, "Change password clicked");
-            Intent intent = new Intent(requireActivity(), ChangePasswordActivity.class);
-            startActivity(intent);
+        addAddressButton.setOnClickListener(v -> {
+            Log.d(TAG, "Add address button clicked");
+            addNewAddressField();
+            addressesContainer.setVisibility(View.VISIBLE);
+            addAddressButton.setVisibility(View.VISIBLE);
+            dropdownAddresses.setRotation(180);
         });
 
-        ImageView deleteAccount = view.findViewById(R.id.deleteAccount);
-        deleteAccount.setOnClickListener(v -> {
-            Log.d(TAG, "Delete account clicked");
-            Intent intent = new Intent(requireActivity(), DeleteAccountActivity.class);
-            startActivity(intent);
+        saveRestaurantChanges.setOnClickListener(v -> {
+            Log.d(TAG, "Save changes button clicked");
+            saveRestaurantChanges();
         });
 
-        loadUserData();
-*/
-
-
-
-
-
+        loadRestaurantData();
+    }
     private void setupOperatingHoursCheckbox(CheckBox checkBox, EditText hoursField) {
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             hoursField.setEnabled(isChecked);
@@ -390,139 +409,6 @@ public class ProfileFragment extends Fragment {
         } else {
             Toast.makeText(getContext(), "Permission denied to access images", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    private void setupRestaurantProfile(View view) {
-        Log.d(TAG, "Setting up restaurant profile");
-        profileTitle.setText("Restaurant Profile");
-        profileTitle.setVisibility(View.VISIBLE);
-        restaurantProfileSection.setVisibility(View.VISIBLE);
-        view.findViewById(R.id.RestaurantNameSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.RestaurantPhoneSection).setVisibility(View.VISIBLE);
-        restaurantLogo.setVisibility(View.VISIBLE);
-        addressesSection.setVisibility(View.VISIBLE);
-        view.findViewById(R.id.RestaurantNameSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.RestaurantPhoneSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.divider7).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.divider8).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.divider7).setVisibility(View.VISIBLE);
-        /*
-        userNameSurname.setVisibility(View.GONE);
-        userEmail.setVisibility(View.GONE);
-        userPhoneNumber.setVisibility(View.GONE);
-
-         */
-        profilePicture.setVisibility(View.GONE);
-        view.findViewById(R.id.userProfileSection).setVisibility(View.GONE);
-        view.findViewById(R.id.aboutMeSection).setVisibility(View.GONE);
-        view.findViewById(R.id.emailSection).setVisibility(View.GONE);
-        view.findViewById(R.id.phoneSection).setVisibility(View.GONE);
-        view.findViewById(R.id.paymentSection).setVisibility(View.GONE);
-      //  view.findViewById(R.id.settingsSection).setVisibility(View.GONE);
-        view.findViewById(R.id.languageSection).setVisibility(View.GONE);
-        view.findViewById(R.id.passwordSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.deleteAccountSection).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.divider1).setVisibility(View.GONE);
-        view.findViewById(R.id.divider2).setVisibility(View.GONE);
-        view.findViewById(R.id.divider3).setVisibility(View.GONE);
-        view.findViewById(R.id.divider4).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.divider5).setVisibility(View.VISIBLE);
-       // view.findViewById(R.id.divider6).setVisibility(View.VISIBLE);
-
-        LinearLayout operatingHoursSection = view.findViewById(R.id.operatingHoursSection);
-        ImageView dropdownOperatingHours = view.findViewById(R.id.dropdownOperatingHours);
-        ImageView dropdownAddresses = view.findViewById(R.id.dropdownAddresses);
-        for (int i = 1; i < operatingHoursSection.getChildCount(); i++) {
-            operatingHoursSection.getChildAt(i).setVisibility(View.GONE);
-        }
-
-        // Setup dropdown for operating hours
-        dropdownOperatingHours.setOnClickListener(v -> {
-            boolean isVisible = operatingHoursSection.getChildAt(1).getVisibility() == View.VISIBLE;
-            for (int i = 1; i < operatingHoursSection.getChildCount(); i++) {
-                operatingHoursSection.getChildAt(i).setVisibility(isVisible ? View.GONE : View.VISIBLE);
-            }
-            // Rotate dropdown icon
-            dropdownOperatingHours.animate().rotation(isVisible ? 0 : 180).setDuration(200).start();
-            Log.d(TAG, "Operating hours dropdown toggled: " + (isVisible ? "collapsed" : "expanded"));
-        });
-
-        // Setup dropdown for addresses
-        dropdownAddresses.setOnClickListener(v -> {
-            boolean isVisible = addressesContainer.getVisibility() == View.VISIBLE;
-            addressesContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
-            addAddressButton.setVisibility(isVisible ? View.GONE : View.VISIBLE);
-            // Rotate dropdown icon
-            dropdownAddresses.animate().rotation(isVisible ? 0 : 180).setDuration(200).start();
-            Log.d(TAG, "Addresses dropdown toggled: " + (isVisible ? "collapsed" : "expanded"));
-        });
-
-
-        ImageView changeRestaurantNumber = view.findViewById(R.id.changeRestaurantNumber);
-        changeRestaurantNumber.setOnClickListener(v -> {
-            Log.d(TAG, "Change restaurant phone clicked");
-            showChangePhoneDialog();
-        });
-        restaurantLogo.setOnClickListener(v -> {
-            Log.d(TAG, "Restaurant logo clicked");
-            String permission;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                permission = Manifest.permission.READ_MEDIA_IMAGES;
-            } else {
-                permission = Manifest.permission.READ_EXTERNAL_STORAGE;
-            }
-            if (ContextCompat.checkSelfPermission(requireContext(), permission)
-                    != PackageManager.PERMISSION_GRANTED) {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), permission)) {
-                    Toast.makeText(requireContext(), "Permission is needed to access your photos", Toast.LENGTH_LONG).show();
-                }
-                Log.d(TAG, "Requesting permission: " + permission);
-                ActivityCompat.requestPermissions(requireActivity(),
-                        new String[]{permission}, 101);
-            } else {
-                Log.d(TAG, "Launching gallery picker for logo");
-                Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                logoPickerLauncher.launch(pickIntent);
-            }
-        });
-        ImageView changePassword = view.findViewById(R.id.changePassword);
-        changePassword.setOnClickListener(v -> {
-            Log.d(TAG, "Change password clicked");
-            Intent intent = new Intent(requireActivity(), ChangePasswordActivity.class);
-            startActivity(intent);
-        });
-
-        ImageView deleteAccount = view.findViewById(R.id.deleteAccount);
-        deleteAccount.setOnClickListener(v -> {
-            Log.d(TAG, "Delete account clicked");
-            Intent intent = new Intent(requireActivity(), DeleteAccountActivity.class);
-            startActivity(intent);
-        });
-
-        loadRestaurantData();
-
-        addAddressButton.setOnClickListener(v -> {
-            Log.d(TAG, "Add address button clicked");
-            addNewAddressField();
-            addressesContainer.setVisibility(View.VISIBLE);
-            addAddressButton.setVisibility(View.VISIBLE);
-            dropdownAddresses.setRotation(180);
-        });
-
-        saveRestaurantChanges.setOnClickListener(v -> {
-            Log.d(TAG, "Save changes button clicked");
-            saveRestaurantChanges();
-        });
-
-        btnLogout.setOnClickListener(v -> {
-            Log.d(TAG, "Logout button clicked");
-            mAuth.signOut();
-            Toast.makeText(getContext(), "Logged out successfully", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(requireActivity(), MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            requireActivity().finish();
-        });
     }
 
     private void loadUserData() {
@@ -862,9 +748,9 @@ public class ProfileFragment extends Fragment {
                 1.0f));
         addressInput.setText(addressText);
         addressInput.setHint("Address (e.g., 1 Northern Ave, Yerevan)");
-        addressInput.setTextColor(getResources().getColor(android.R.color.white));
+        addressInput.setTextColor(getResources().getColor(android.R.color.black));
         addressInput.setHintTextColor(0xB0FFFFFF);
-        addressInput.setBackgroundTintList(getResources().getColorStateList(android.R.color.white));
+        addressInput.setBackgroundTintList(getResources().getColorStateList(android.R.color.black));
 
         TextView coordinatesText = new TextView(getContext());
         coordinatesText.setLayoutParams(new LinearLayout.LayoutParams(
@@ -872,7 +758,7 @@ public class ProfileFragment extends Fragment {
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 1.0f));
         coordinatesText.setText(String.format(Locale.US, "Lat: %.6f, Lon: %.6f", latitude, longitude));
-        coordinatesText.setTextColor(getResources().getColor(android.R.color.white));
+        coordinatesText.setTextColor(getResources().getColor(android.R.color.black));
         coordinatesText.setPadding(8, 0, 8, 0);
 
         inputRow.addView(addressInput);
@@ -890,7 +776,7 @@ public class ProfileFragment extends Fragment {
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
         availabilityToggle.setText("Available");
-        availabilityToggle.setTextColor(getResources().getColor(android.R.color.white));
+        availabilityToggle.setTextColor(getResources().getColor(android.R.color.black));
         availabilityToggle.setChecked(isAvailable);
         availabilityToggle.setPadding(8, 0, 8, 0);
         availabilityToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -907,7 +793,7 @@ public class ProfileFragment extends Fragment {
                 LinearLayout.LayoutParams.WRAP_CONTENT));
         deleteButton.setText("Delete");
         deleteButton.setTextColor(getResources().getColor(android.R.color.white));
-        deleteButton.setBackgroundTintList(getResources().getColorStateList(android.R.color.holo_red_light));
+        deleteButton.setBackgroundTintList(getResources().getColorStateList(android.R.color.holo_orange_dark));
         deleteButton.setPadding(8, 0, 8, 0);
         deleteButton.setTextSize(12);
         deleteButton.setOnClickListener(v -> {

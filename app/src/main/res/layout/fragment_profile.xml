@@ -10,7 +10,7 @@
         android:id="@+id/background_image"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:src="@drawable/background1"
+        android:src="@drawable/background4"
         android:scaleType="centerCrop"
         android:contentDescription="Background image"
         app:layout_constraintTop_toTopOf="parent"
@@ -70,45 +70,50 @@
             android:textColor="@color/black"
             android:textSize="14sp" />
 
-        <RelativeLayout
+        <!-- Restaurant Name Section -->
+        <LinearLayout
             android:id="@+id/RestaurantNameSection"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="10dp">
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="35dp"
+            android:paddingEnd="20dp">
 
             <ImageView
                 android:id="@+id/NameIcon"
-                android:layout_width="55dp"
-                android:layout_height="46dp"
-                android:layout_marginStart="45dp"
-                android:layout_marginTop="15dp"
+                android:layout_width="50dp"
+                android:layout_height="40dp"
                 android:src="@drawable/name_icon"
                 android:contentDescription="Name icon"
                 app:tint="@color/black" />
 
-            <TextView
-                android:id="@+id/RestaurantNameLabel"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="70dp"
-                android:layout_marginTop="5dp"
-                android:gravity="center"
-                android:text="Restaurant Name"
-                android:textColor="@color/black"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                android:layout_weight="1"
+                android:layout_marginStart="20dp"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/RestaurantName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="120dp"
-                android:layout_marginTop="35dp"
-                android:text="My Restaurant"
-                android:textColor="@color/black"
-                android:textSize="15sp" />
-        </RelativeLayout>
+                <TextView
+                    android:id="@+id/RestaurantNameLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Restaurant Name"
+                    android:textColor="@color/black"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/RestaurantName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="My Restaurant"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+            </LinearLayout>
+        </LinearLayout>
 
         <ImageView
             android:id="@+id/divider7"
@@ -118,55 +123,58 @@
             android:background="@drawable/frame_bg"
             android:contentDescription="Divider" />
 
-        <RelativeLayout
+        <!-- Restaurant Phone Section -->
+        <LinearLayout
             android:id="@+id/RestaurantPhoneSection"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center">
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginBottom="10dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="35dp"
+            android:paddingEnd="20dp">
 
             <ImageView
                 android:id="@+id/RestaurantPhoneIcon"
-                android:layout_width="55dp"
-                android:layout_height="45dp"
-                android:layout_marginStart="40dp"
-                android:layout_marginTop="10dp"
+                android:layout_width="50dp"
+                android:layout_height="40dp"
                 android:src="@drawable/phone_icon"
                 android:contentDescription="Phone icon"
                 app:tint="@color/black" />
 
-            <TextView
-                android:id="@+id/RestaurantPhoneLabel"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
-                android:layout_marginTop="10dp"
-                android:gravity="center"
-                android:text="Contact Phone"
-                android:textColor="@color/black"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                android:layout_weight="1"
+                android:layout_marginStart="20dp"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/RestaurantPhone"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="40dp"
-                android:layout_marginTop="25dp"
-                android:gravity="center"
-                android:text="+123-456-7890"
-                android:textColor="@color/black"
-                android:textSize="15sp" />
+                <TextView
+                    android:id="@+id/RestaurantPhoneLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Contact Phone"
+                    android:textColor="@color/black"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/RestaurantPhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+123-456-7890"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+            </LinearLayout>
 
             <ImageView
                 android:id="@+id/changeRestaurantNumber"
                 android:layout_width="35dp"
                 android:layout_height="39dp"
-                android:layout_marginStart="310dp"
-                android:layout_marginTop="10dp"
                 android:src="@drawable/right_arrow"
                 android:contentDescription="Change phone number"
                 app:tint="@color/black" />
-        </RelativeLayout>
+        </LinearLayout>
 
         <ImageView
             android:id="@+id/divider8"
@@ -230,7 +238,7 @@
                     android:hint="e.g., 09:00-17:00"
                     android:inputType="text"
                     android:textColor="@color/black"
-                    android:textColorHint="#B0FFFFFF" />
+                    android:textColorHint="@color/black" />
             </LinearLayout>
 
             <LinearLayout
@@ -257,7 +265,7 @@
                     android:hint="e.g., 09:00-17:00"
                     android:inputType="text"
                     android:textColor="@color/black"
-                    android:textColorHint="#B0FFFFFF" />
+                    android:textColorHint="@color/black" />
             </LinearLayout>
 
             <LinearLayout
@@ -284,7 +292,7 @@
                     android:hint="e.g., 09:00-17:00"
                     android:inputType="text"
                     android:textColor="@color/black"
-                    android:textColorHint="#B0FFFFFF" />
+                    android:textColorHint="@color/black" />
             </LinearLayout>
 
             <LinearLayout
@@ -311,7 +319,7 @@
                     android:hint="e.g., 09:00-17:00"
                     android:inputType="text"
                     android:textColor="@color/black"
-                    android:textColorHint="#B0FFFFFF" />
+                    android:textColorHint="@color/black" />
             </LinearLayout>
 
             <LinearLayout
@@ -338,7 +346,7 @@
                     android:hint="e.g., 09:00-17:00"
                     android:inputType="text"
                     android:textColor="@color/black"
-                    android:textColorHint="#B0FFFFFF" />
+                    android:textColorHint="@color/black" />
             </LinearLayout>
 
             <LinearLayout
@@ -365,7 +373,7 @@
                     android:hint="e.g., 09:00-17:00"
                     android:inputType="text"
                     android:textColor="@color/black"
-                    android:textColorHint="#B0FFFFFF" />
+                    android:textColorHint="@color/black" />
             </LinearLayout>
 
             <LinearLayout
@@ -392,7 +400,7 @@
                     android:hint="e.g., 09:00-17:00"
                     android:inputType="text"
                     android:textColor="@color/black"
-                    android:textColorHint="#B0FFFFFF" />
+                    android:textColorHint="@color/black" />
             </LinearLayout>
         </LinearLayout>
 
@@ -450,9 +458,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:backgroundTint="#FF5001"
                 android:layout_marginTop="10dp"
                 android:text="Add Address"
-                android:textColor="@color/black"
+                android:textColor="@color/white"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -462,8 +471,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="20dp"
+            android:backgroundTint="#FF5001"
             android:text="Save Changes"
-            android:textColor="@color/black"
+            android:textColor="@color/white"
             android:visibility="gone" />
     </LinearLayout>
 
@@ -532,7 +542,7 @@
                 android:id="@+id/Settings"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
+                android:layout_marginStart="8dp"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
                 android:text="Settings"
@@ -569,7 +579,7 @@
                 android:id="@+id/Account"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="18dp"
+                android:layout_marginStart="8dp"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
                 android:text="Account"
@@ -595,8 +605,8 @@
 
             <ImageView
                 android:id="@+id/AboutDeveloperIcon"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="16dp"
                 android:scaleType="centerInside"
                 android:src="@drawable/about_developer"
@@ -632,8 +642,8 @@
 
             <ImageView
                 android:id="@+id/FAQ_Icon"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="16dp"
                 android:scaleType="centerInside"
                 android:src="@drawable/question_icon"

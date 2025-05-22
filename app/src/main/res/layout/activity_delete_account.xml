@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="@drawable/background"
+    android:background="@drawable/background4"
     tools:context=".Activity.SignupActivity">
 
 
@@ -25,6 +25,7 @@
             android:paddingHorizontal="12dp"
             android:paddingVertical="6dp"
             android:text="Back"
+            android:layout_marginLeft="40dp"
             android:textColor="@color/white"
             android:textStyle="bold"
             android:gravity="center" />
@@ -39,10 +40,11 @@
             android:gravity="center"
             android:layout_gravity="center"
             android:textSize="45sp"
-            android:textColor="#F2E5BF"
+            android:layout_marginLeft="20dp"
+            android:textColor="@color/black"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
-            android:paddingLeft="40dp"/>
+        />
 </LinearLayout>
 
     </LinearLayout>

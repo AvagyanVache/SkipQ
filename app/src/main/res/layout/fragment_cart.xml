@@ -10,7 +10,7 @@
         android:id="@+id/background_image"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:src="@drawable/background1"
+        android:src="@drawable/background4"
         android:scaleType="centerCrop"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -118,18 +118,24 @@
                 android:id="@+id/textInputName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="15dp">
+                android:padding="15dp"
+                android:hint="Enter your Name"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                app:boxBackgroundMode="outline"
+                app:boxStrokeColor="@color/secondary_color"
+                app:boxCornerRadiusTopStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusBottomEnd="8dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/userNameSurname"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Enter your Name"
-                    android:background="@drawable/frame_bg"
-                    android:textColorHint="@color/secondary_color"
-                    android:inputType="textPersonName"/>
-
+                android:inputType="textPersonName"
+                    android:textColorHint="@color/secondary_color" />
             </com.google.android.material.textfield.TextInputLayout>
+
             <!-- Order Type Section -->
             <LinearLayout
                 android:id="@+id/orderTypeSection"
@@ -335,7 +341,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:backgroundTint="#FF5001"
+                android:backgroundTint="@color/primary_color"
                 android:text="Check Out"
                 android:layout_gravity="center"
                 android:gravity="center"/>
@@ -395,7 +401,7 @@
         android:layout_marginTop="90dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:backgroundTint="#FF5001"
+        android:backgroundTint="@color/primary_color"
         app:layout_constraintTop_toBottomOf="@id/cartEmpty" />
 
 

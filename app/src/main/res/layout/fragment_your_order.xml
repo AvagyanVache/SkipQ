@@ -11,24 +11,27 @@
         android:id="@+id/background_image"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:src="@drawable/background1"
         android:scaleType="centerCrop"
-        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/background4"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
     <ImageView
         android:id="@+id/backButton"
         android:layout_width="46dp"
         android:layout_height="33dp"
         android:layout_marginTop="40dp"
-        android:rotation="90"
+        android:rotation="180"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.035"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/drop_down" />
+
+        app:srcCompat="@drawable/right_arrow" />
 
     <!--
         <TextView

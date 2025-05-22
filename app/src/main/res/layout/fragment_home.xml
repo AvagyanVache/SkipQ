@@ -12,7 +12,7 @@
         android:id="@+id/background_image"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:src="@drawable/background1"
+        android:src="@drawable/background4"
         android:scaleType="centerCrop"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -51,7 +51,7 @@
             android:padding="8dp"
             android:text="PatrastE"
             android:fontFamily="sans-serif-medium"
-            android:textColor="#FF5001"
+            android:textColor="@color/black"
             android:textSize="24sp"
             android:textStyle="bold" />
 
