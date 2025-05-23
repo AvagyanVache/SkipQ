@@ -61,7 +61,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="20dp"
                 android:text="Welcome"
-                android:textColor="@color/secondary_color"
+                android:textColor="@color/black"
                 android:textSize="32sp"
                 android:textStyle="bold" />
 
@@ -115,10 +115,18 @@
                     android:layout_alignParentTop="true"
                     android:layout_gravity="center"
                     android:layout_marginStart="0dp"
-                    android:layout_marginTop="13dp"
                     android:alpha="0.7"
                     android:text="Remember me" />
-
+                <!-- Add this Button below your existing LoginButton in activity_main.xml -->
+                <Button
+                    android:id="@+id/testUserButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Test User"
+                    android:layout_marginTop="40dp"
+                    android:layout_gravity="center"
+                    android:backgroundTint="@color/primary_color"
+                    android:textColor="#FFFFFF" />
                 <TextView
                     android:id="@+id/forgot_password"
                     android:layout_width="wrap_content"

@@ -30,6 +30,8 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import java.util.HashMap;
+
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView signupRedirectText;
     private TextView forgotPassword;
     private FirebaseFirestore db;
+    private Button testUserButton;
     private ActivityResultLauncher<String> requestPermissionLauncher;
 
     @Override
@@ -58,8 +61,10 @@ public class MainActivity extends AppCompatActivity {
         signupRedirectText = findViewById(R.id.SignUpRedirectText);
         CheckBox = findViewById(R.id.checkbox);
         forgotPassword = findViewById(R.id.forgot_password);
+        testUserButton = findViewById(R.id.testUserButton);
 
-        // Request notification permission for Android 13+
+        testUserButton.setOnClickListener(view -> signInTestUser());
+
         requestPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
@@ -136,7 +141,61 @@ public class MainActivity extends AppCompatActivity {
                     .show();
         }
     }
+    private void signInTestUser() {
+        String testEmail = "individualproject2025@gmail.com";
+        String testPassword = "Samsung2025";
 
+        mAuth.signInWithEmailAndPassword(testEmail, testPassword)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null && user.isEmailVerified()) {
+                            Toast.makeText(MainActivity.this, "Test user login successful", Toast.LENGTH_SHORT).show();
+                            checkUserRole(user);
+                            registerDeviceToken(user.getUid());
+                        } else {
+                            createTestUser(testEmail, testPassword);
+                        }
+                    } else {
+                        createTestUser(testEmail, testPassword);
+                    }
+                });
+    }
+
+    private void createTestUser(String email, String password) {
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null) {
+                            // Auto-verify email for test user
+                            user.updateEmail(email).addOnCompleteListener(verifyTask -> {
+                                if (verifyTask.isSuccessful()) {
+                                    // Simulate email verification (for testing purposes)
+                                    db.collection("users").document(user.getUid())
+                                            .set(new HashMap<String, Object>() {{
+                                                put("email", email);
+                                                put("role", "user"); // Default role; adjust as needed
+                                                put("rememberMe", false);
+                                            }})
+                                            .addOnSuccessListener(aVoid -> {
+                                                Toast.makeText(MainActivity.this, "Test user created and logged in", Toast.LENGTH_SHORT).show();
+                                                checkUserRole(user);
+                                                registerDeviceToken(user.getUid());
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                Toast.makeText(MainActivity.this, "Failed to create test user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            });
+                                } else {
+                                    Toast.makeText(MainActivity.this, "Failed to set email: " + verifyTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    } else {
+                        Toast.makeText(MainActivity.this, "Failed to create test user: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
     private void registerDeviceToken(String userId) {
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
             if (!task.isSuccessful()) {

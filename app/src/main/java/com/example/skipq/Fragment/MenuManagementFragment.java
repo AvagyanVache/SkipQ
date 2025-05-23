@@ -460,7 +460,7 @@ public class MenuManagementFragment extends Fragment {
 
 // TextView for "Upload Logo"
         TextView uploadTextView = new TextView(requireContext());
-        uploadTextView.setText("Upload Logo");
+        uploadTextView.setText("Upload Item Photo");
         uploadTextView.setTextColor(ContextCompat.getColor(requireContext(), R.color.secondary_color));
         uploadTextView.setTextSize(18);
         uploadTextView.setTypeface(null, Typeface.BOLD);
@@ -499,12 +499,13 @@ public class MenuManagementFragment extends Fragment {
         availabilitySwitch.setText("Available");
         availabilitySwitch.setChecked(true);
         availabilitySwitch.setThumbTintList(ColorStateList.valueOf(Color.WHITE));
-        availabilitySwitch.setTrackTintList(ColorStateList.valueOf(Color.parseColor("#FFA500"))); // Orange
+        availabilitySwitch.setTrackTintList(ColorStateList.valueOf(Color.parseColor("#FFA500")));
         layout.addView(availabilitySwitch);
 
         builder.setView(layout);
 
         builder.setPositiveButton("Add", (dialogInterface, which) -> {
+            Toast.makeText(getContext(), "Adding Item To Your Menu...", Toast.LENGTH_SHORT).show();
             String name = nameInput.getText().toString().trim();
             String price = priceInput.getText().toString().trim();
             String prepTime = prepTimeInput.getText().toString().trim();
