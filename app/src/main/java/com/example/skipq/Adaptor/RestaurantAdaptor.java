@@ -19,6 +19,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.ViewHolder> {
 
@@ -129,11 +130,11 @@ public class RestaurantAdaptor extends RecyclerView.Adapter<RestaurantAdaptor.Vi
     public int getItemCount() {
         return restaurantDomains.size();
     }
-    public void updateList(ArrayList<RestaurantDomain> newList) {
-        this.restaurantDomains.clear();
-        this.restaurantDomains.addAll(newList);
+    public void updateList(List<RestaurantDomain> newList) {
+        this.restaurantList = new ArrayList<>(newList);
         notifyDataSetChanged();
     }
+
 
 
 

@@ -4,13 +4,16 @@ import android.Manifest;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SearchView;
@@ -22,6 +25,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -88,6 +92,89 @@ public class MenuFragment extends Fragment implements OnMapReadyCallback {
         addressText = view.findViewById(R.id.address_text); // Updated to TextView
         selectLocation = view.findViewById(R.id.select_location);
         locationText = view.findViewById(R.id.location_text);
+        ImageView dropdownLocation = view.findViewById(R.id.dropdownLocation);
+
+        // Scale UI elements based on screen width
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        int screenWidth = displayMetrics.widthPixels;
+        float density = displayMetrics.density;
+        float scaleFactor = screenWidth / (360 * density); // Reference width: 360dp (typical phone)
+
+        // Scale SearchView padding and text size
+        if (searchBar != null) {
+            int baseSearchPaddingPx = (int) (8 * density); // Base padding: 8dp
+            int scaledSearchPaddingPx = (int) (baseSearchPaddingPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            searchBar.setPadding(scaledSearchPaddingPx, scaledSearchPaddingPx, scaledSearchPaddingPx, scaledSearchPaddingPx);
+            EditText searchEditText = searchBar.findViewById(androidx.appcompat.R.id.search_src_text);
+            if (searchEditText != null) {
+                float baseSearchTextSizeSp = 16; // Default SearchView text size
+                float scaledSearchTextSizeSp = baseSearchTextSizeSp * Math.min(scaleFactor, 1.5f); // Cap at 1.5x
+                searchEditText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSearchTextSizeSp);
+            }
+        }
+
+        // Scale Back Button (if present)
+        if (backButton != null) {
+            int baseBackButtonSizePx = (int) (30 * density); // Base size: 30dp (adjust if different)
+            int scaledBackButtonSizePx = (int) (baseBackButtonSizePx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            ViewGroup.LayoutParams backButtonParams = backButton.getLayoutParams();
+            backButtonParams.width = scaledBackButtonSizePx;
+            backButtonParams.height = scaledBackButtonSizePx;
+            backButton.setLayoutParams(backButtonParams);
+        } else {
+            Log.w("MenuFragment", "backButton not found in layout");
+        }
+
+        // Scale Select Location LinearLayout
+        if (selectLocation != null) {
+            int baseSelectLocationPaddingPx = (int) (8 * density); // Base padding: 8dp
+            int scaledSelectLocationPaddingPx = (int) (baseSelectLocationPaddingPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            selectLocation.setPadding(scaledSelectLocationPaddingPx, scaledSelectLocationPaddingPx, scaledSelectLocationPaddingPx, scaledSelectLocationPaddingPx);
+            int baseSelectLocationMarginTopPx = (int) (20 * density); // Base margin: 20dp
+            int scaledSelectLocationMarginTopPx = (int) (baseSelectLocationMarginTopPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            ConstraintLayout.LayoutParams selectLocationParams = (ConstraintLayout.LayoutParams) selectLocation.getLayoutParams();
+            selectLocationParams.topMargin = scaledSelectLocationMarginTopPx;
+            selectLocation.setLayoutParams(selectLocationParams);
+        }
+
+        // Scale Location TextView
+        if (locationText != null) {
+            float baseLocationTextSizeSp = 20; // Base text size from XML
+            float scaledLocationTextSizeSp = baseLocationTextSizeSp * Math.min(scaleFactor, 1.5f); // Cap at 1.5x
+            locationText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledLocationTextSizeSp);
+            int baseLocationMarginPx = (int) (10 * density); // Base margins: 10dp (top, bottom)
+            int scaledLocationMarginPx = (int) (baseLocationMarginPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            LinearLayout.LayoutParams locationTextParams = (LinearLayout.LayoutParams) locationText.getLayoutParams();
+            locationTextParams.topMargin = scaledLocationMarginPx;
+            locationTextParams.bottomMargin = scaledLocationMarginPx;
+            locationText.setLayoutParams(locationTextParams);
+        }
+
+        // Scale Dropdown Location ImageView
+        if (dropdownLocation != null) {
+            int baseDropdownSizePx = (int) (30 * density); // Base size: 30dp
+            int scaledDropdownSizePx = (int) (baseDropdownSizePx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            ViewGroup.LayoutParams dropdownParams = dropdownLocation.getLayoutParams();
+            dropdownParams.width = scaledDropdownSizePx;
+            dropdownParams.height = scaledDropdownSizePx;
+            dropdownLocation.setLayoutParams(dropdownParams);
+        }
+
+        // Scale Restaurant Info ImageView
+        if (restaurantInfo != null) {
+            int baseRestaurantInfoSizePx = (int) (30 * density); // Base size: 30dp
+            int scaledRestaurantInfoSizePx = (int) (baseRestaurantInfoSizePx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            int baseRestaurantInfoMarginPx = (int) (20 * density); // Base margin: 20dp (end)
+            int scaledRestaurantInfoMarginPx = (int) (baseRestaurantInfoMarginPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            int baseRestaurantInfoMarginTopPx = (int) (35 * density); // Base margin: 35dp (top)
+            int scaledRestaurantInfoMarginTopPx = (int) (baseRestaurantInfoMarginTopPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            ConstraintLayout.LayoutParams restaurantInfoParams = (ConstraintLayout.LayoutParams) restaurantInfo.getLayoutParams();
+            restaurantInfoParams.width = scaledRestaurantInfoSizePx;
+            restaurantInfoParams.height = scaledRestaurantInfoSizePx;
+            restaurantInfoParams.rightMargin = scaledRestaurantInfoMarginPx;
+            restaurantInfoParams.topMargin = scaledRestaurantInfoMarginTopPx;
+            restaurantInfo.setLayoutParams(restaurantInfoParams);
+        }
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         if (mapFragment == null) {

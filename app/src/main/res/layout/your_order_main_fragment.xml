@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="?attr/actionBarSize"
-    >
+    android:paddingBottom="?attr/actionBarSize">
+
     <ImageView
         android:id="@+id/background_image"
         android:layout_width="0dp"
@@ -16,127 +15,126 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
     <ImageView
         android:id="@+id/profileIcon"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_marginTop="36dp"
-        android:background="@drawable/profile_picture"
-        android:padding="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.9"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+    android:layout_marginTop="36dp"
+    android:background="@drawable/profile_picture"
+    android:padding="4dp"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.9"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textView3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="36dp"
-        android:text="Your Orders"
-      android:textColor="@color/black"
-        android:textSize="40dp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.461"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    android:text="Your Orders"
+    android:textColor="@color/black"
+    android:textSize="40sp"
+    android:textStyle="bold"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.461"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/YourOrderMainRecycleView"
-        android:layout_width="397dp"
-        android:layout_height="507dp"
-        android:layout_marginTop="60dp"
-        android:clipToPadding="false"
-        android:paddingBottom="68dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout5"
-        app:layout_constraintVertical_bias="0.0" />
+        android:layout_width="0dp"
+    android:layout_height="0dp"
+    android:layout_marginTop="60dp"
+    android:clipToPadding="false"
+    android:paddingBottom="68dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/linearLayout5" />
 
     <Button
         android:id="@+id/GoShopping"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:foregroundGravity="center"
         android:text="Search Food"
         android:visibility="gone"
         android:layout_marginTop="90dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:backgroundTint="@color/primary_color"
-        app:layout_constraintTop_toBottomOf="@id/OrderEmptyText" />
+    android:padding="12dp"
+    android:textSize="16sp"
+    android:backgroundTint="@color/primary_color"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@id/OrderEmptyText" />
 
     <ImageView
         android:id="@+id/OrderEmpty"
         android:layout_width="225dp"
-        android:layout_height="223dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.417"
-        app:srcCompat="@drawable/empty_list" />
-
+    android:layout_height="223dp"
+    android:visibility="gone"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.497"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintVertical_bias="0.417"
+    app:srcCompat="@drawable/empty_list" />
 
     <TextView
         android:id="@+id/OrderEmptyText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="268dp"
-        android:text="No Current Orders:("
-        android:textColor="@color/black"
-        android:textSize="20dp"
-        android:visibility="gone"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent" />
+    android:text="No Current Orders:("
+    android:textColor="@color/black"
+    android:textSize="20sp"
+    android:visibility="gone"
+    android:textStyle="bold"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.497"
+    app:layout_constraintStart_toStartOf="parent" />
 
     <LinearLayout
         android:id="@+id/linearLayout5"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="100dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/CurrentOrders"
-            android:layout_width="166dp"
-            android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="Current Orders"
-            android:textColor="@color/black"
-            android:textSize="20dp"
-          />
+    <TextView
+        android:id="@+id/CurrentOrders"
+        android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:background="?attr/selectableItemBackgroundBorderless"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:text="Current Orders"
+    android:textColor="@color/black"
+    android:textSize="20sp"
+    android:padding="8dp" />
+    <TextView
+        android:id="@+id/OrderHistory"
+        android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:layout_marginStart="16dp"
+    android:background="?attr/selectableItemBackgroundBorderless"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:text="Order History"
+    android:textColor="@color/black"
+    android:textSize="20sp"
+    android:padding="8dp"/>
 
-        <TextView
-            android:id="@+id/OrderHistory"
-            android:layout_width="160dp"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="30dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="Order History"
-            android:textColor="@color/black"
-            android:textSize="20dp"
-           />
-
-    </LinearLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>

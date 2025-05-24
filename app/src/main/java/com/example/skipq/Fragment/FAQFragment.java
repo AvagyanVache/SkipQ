@@ -2,6 +2,8 @@ package com.example.skipq.Fragment;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +37,7 @@ public class FAQFragment extends Fragment {
 
         // Find the ExpandableListView
         faqExpandableListView = view.findViewById(R.id.faqExpandableListView);
-
+        scaleUIElements(view);
         // Initialize FAQ data
         initializeFAQData();
 
@@ -58,7 +60,40 @@ public class FAQFragment extends Fragment {
 
         return view;
     }
+    private void scaleUIElements(View view) {
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        int screenWidth = displayMetrics.widthPixels;
+        float density = displayMetrics.density;
+        float scaleFactor = Math.min(screenWidth / (360 * density), 1.5f); // Reference width: 360dp, cap at 1.5x
 
+        // Scale Back Button
+        if (backButton != null) {
+            ViewGroup.LayoutParams params = backButton.getLayoutParams();
+            params.width = (int) (32 * density * scaleFactor);
+            params.height = (int) (32 * density * scaleFactor);
+            ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) backButton.getLayoutParams();
+            marginParams.leftMargin = (int) (16 * density * scaleFactor);
+            marginParams.topMargin = (int) (40 * density * scaleFactor);
+            backButton.setLayoutParams(params);
+        }
+
+        // Scale FAQ Header
+        TextView faqHeader = view.findViewById(R.id.faqHeader);
+        if (faqHeader != null) {
+            faqHeader.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28 * scaleFactor);
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) faqHeader.getLayoutParams();
+            params.bottomMargin = (int) (24 * density * scaleFactor);
+            faqHeader.setLayoutParams(params);
+        }
+
+        // Scale ExpandableListView
+        if (faqExpandableListView != null) {
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) faqExpandableListView.getLayoutParams();
+            params.topMargin = (int) (30 * density * scaleFactor);
+            params.bottomMargin = (int) (30 * density * scaleFactor);
+            faqExpandableListView.setLayoutParams(params);
+        }
+    }
     private void initializeFAQData() {
         // Initialize FAQ questions and answers (replace with your actual FAQs)
         faqQuestions = new ArrayList<>();
@@ -167,7 +202,7 @@ public class FAQFragment extends Fragment {
             answerTextView.setText(answers.get(questions.get(groupPosition)).get(childPosition));
             answerTextView.setTextSize(16);
             answerTextView.setPadding(48, 16, 32, 16);
-            answerTextView.setTextColor(context.getResources().getColor(android.R.color.darker_gray));
+            answerTextView.setTextColor(context.getResources().getColor(android.R.color.black));
 
             return convertView;
         }

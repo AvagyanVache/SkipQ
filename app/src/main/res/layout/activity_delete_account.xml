@@ -10,47 +10,56 @@
     tools:context=".Activity.SignupActivity">
 
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="28dp">
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp">
 
         <TextView
             android:id="@+id/backButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/back_background"
+            android:backgroundTint="@color/primary_color"
+            android:gravity="center"
             android:paddingHorizontal="12dp"
             android:paddingVertical="6dp"
             android:text="Back"
-            android:layout_marginLeft="40dp"
             android:textColor="@color/white"
             android:textStyle="bold"
-            android:gravity="center" />
-<LinearLayout
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center">
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="PatrastE"
-            android:gravity="center"
-            android:layout_gravity="center"
-            android:textSize="45sp"
-            android:layout_marginLeft="20dp"
-            android:textColor="@color/black"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium"
-        />
-</LinearLayout>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.164"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    </LinearLayout>
+        <TextView
+            android:id="@+id/text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:text="PatrastE"
+            android:textColor="@color/black"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.57"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/cardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -66,16 +75,18 @@
             android:padding="28dp">
 
             <TextView
+                android:id="@+id/title"
                 android:layout_width="401dp"
                 android:layout_height="wrap_content"
                 android:text="Do you want to permanently delete you account?"
-                android:textColor="@color/secondary_color"
+                android:textColor="@color/black"
                 android:textSize="30sp"
                 android:textStyle="bold" />
 
 
             <TextView
-                android:id="@+id/textView4"
+
+                android:id="@+id/subtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="For your safety re-enter the password so we know it's you" />

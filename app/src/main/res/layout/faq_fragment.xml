@@ -1,45 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
- >
+    android:layout_height="match_parent">
 
+    <ImageView
+        android:id="@+id/background_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/background4" />
 
     <ImageView
         android:id="@+id/back"
-        android:layout_width="35dp"
-        android:layout_height="39dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="40dp"
         android:rotation="180"
         android:src="@drawable/right_arrow"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.042"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.143"
         app:tint="@color/black" />
-    <TextView
-        android:id="@+id/faqHeader"
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:text="Frequently Asked Questions"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:paddingBottom="16dp" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="40dp"
+        android:paddingHorizontal="16dp">
 
-    <!-- ExpandableListView -->
-    <ExpandableListView
-        android:id="@+id/faqExpandableListView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:dividerHeight="1dp"
-        android:groupIndicator="@null"
-        />
+        <TextView
+            android:id="@+id/faqHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="24dp"
+            android:text="Frequently Asked Questions"
+            android:textColor="@color/black"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
+        <ExpandableListView
+            android:id="@+id/faqExpandableListView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:dividerHeight="2dp"
+            android:groupIndicator="@null"
+            android:paddingVertical="12dp" />
 
-</LinearLayout>
+    </LinearLayout>
+</FrameLayout>

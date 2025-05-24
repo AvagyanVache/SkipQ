@@ -8,7 +8,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Base64;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
+import android.widget.LinearLayout;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -83,6 +86,132 @@ public class YourOrderMainFragment extends Fragment {
         orderHistoryText = view.findViewById(R.id.OrderHistory);
         profileIcon = view.findViewById(R.id.profileIcon);
         emptyOrderText=view.findViewById(R.id.OrderEmptyText);
+        TextView titleText = view.findViewById(R.id.textView3);
+        LinearLayout tabLayout = view.findViewById(R.id.linearLayout5);
+
+        // Scale UI elements based on screen width
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        int screenWidth = displayMetrics.widthPixels;
+        float density = displayMetrics.density;
+        float scaleFactor = screenWidth / (360 * density); // Reference width: 360dp (typical phone)
+
+        // Scale Profile Icon
+        if (profileIcon != null) {
+            int baseIconSizePx = (int) (50 * density); // Base size: 50dp
+            int scaledIconSizePx = (int) (baseIconSizePx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            int baseIconPaddingPx = (int) (4 * density); // Base padding: 4dp
+            int scaledIconPaddingPx = (int) (baseIconPaddingPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            int baseIconMarginTopPx = (int) (36 * density); // Base margin: 36dp
+            int scaledIconMarginTopPx = (int) (baseIconMarginTopPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            ViewGroup.LayoutParams iconParams = profileIcon.getLayoutParams();
+            iconParams.width = scaledIconSizePx;
+            iconParams.height = scaledIconSizePx;
+            profileIcon.setLayoutParams(iconParams);
+            profileIcon.setPadding(scaledIconPaddingPx, scaledIconPaddingPx, scaledIconPaddingPx, scaledIconPaddingPx);
+            ConstraintLayout.LayoutParams iconConstraintParams = (ConstraintLayout.LayoutParams) profileIcon.getLayoutParams();
+            iconConstraintParams.topMargin = scaledIconMarginTopPx;
+            profileIcon.setLayoutParams(iconConstraintParams);
+        }
+
+        // Scale Title TextView (Your Orders)
+        if (titleText != null) {
+            float baseTitleTextSizeSp = 40; // Base size: 40sp
+            float scaledTitleTextSizeSp = baseTitleTextSizeSp * Math.min(scaleFactor, 1.5f); // Cap at 1.5x
+            titleText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledTitleTextSizeSp);
+            int baseTitleMarginTopPx = (int) (36 * density); // Base margin: 36dp
+            int scaledTitleMarginTopPx = (int) (baseTitleMarginTopPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            ConstraintLayout.LayoutParams titleParams = (ConstraintLayout.LayoutParams) titleText.getLayoutParams();
+            titleParams.topMargin = scaledTitleMarginTopPx;
+            titleText.setLayoutParams(titleParams);
+        }
+
+        // Scale Tab Layout (LinearLayout5)
+        if (tabLayout != null) {
+            int baseTabPaddingPx = (int) (16 * density); // Base padding: 16dp
+            int scaledTabPaddingPx = (int) (baseTabPaddingPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            int baseTabMarginTopPx = (int) (100 * density); // Base margin: 100dp
+            int scaledTabMarginTopPx = (int) (baseTabMarginTopPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            tabLayout.setPadding(scaledTabPaddingPx, scaledTabPaddingPx, scaledTabPaddingPx, scaledTabPaddingPx);
+            ConstraintLayout.LayoutParams tabParams = (ConstraintLayout.LayoutParams) tabLayout.getLayoutParams();
+            tabParams.topMargin = scaledTabMarginTopPx;
+            tabLayout.setLayoutParams(tabParams);
+        }
+
+        // Scale CurrentOrders TextView
+        if (currentOrdersText != null) {
+            float baseTabTextSizeSp = 20; // Base size: 20sp
+            float scaledTabTextSizeSp = baseTabTextSizeSp * Math.min(scaleFactor, 1.5f); // Cap at 1.5x
+            int baseTabPaddingPx = (int) (8 * density); // Base padding: 8dp
+            int scaledTabPaddingPx = (int) (baseTabPaddingPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            currentOrdersText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledTabTextSizeSp);
+            currentOrdersText.setPadding(scaledTabPaddingPx, scaledTabPaddingPx, scaledTabPaddingPx, scaledTabPaddingPx);
+        }
+
+        // Scale OrderHistory TextView
+        if (orderHistoryText != null) {
+            float baseTabTextSizeSp = 20; // Base size: 20sp
+            float scaledTabTextSizeSp = baseTabTextSizeSp * Math.min(scaleFactor, 1.5f); // Cap at 1.5x
+            int baseTabPaddingPx = (int) (8 * density); // Base padding: 8dp
+            int scaledTabPaddingPx = (int) (baseTabPaddingPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            int baseTabMarginStartPx = (int) (16 * density); // Base margin: 16dp
+            int scaledTabMarginStartPx = (int) (baseTabMarginStartPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            orderHistoryText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledTabTextSizeSp);
+            orderHistoryText.setPadding(scaledTabPaddingPx, scaledTabPaddingPx, scaledTabPaddingPx, scaledTabPaddingPx);
+            LinearLayout.LayoutParams historyParams = (LinearLayout.LayoutParams) orderHistoryText.getLayoutParams();
+            historyParams.leftMargin = scaledTabMarginStartPx;
+            orderHistoryText.setLayoutParams(historyParams);
+        }
+
+        // Scale RecyclerView
+        if (recyclerView != null) {
+            int baseRecyclerMarginTopPx = (int) (60 * density); // Base margin: 60dp
+            int scaledRecyclerMarginTopPx = (int) (baseRecyclerMarginTopPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            int baseRecyclerPaddingBottomPx = (int) (68 * density); // Base padding: 68dp
+            int scaledRecyclerPaddingBottomPx = (int) (baseRecyclerPaddingBottomPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            ConstraintLayout.LayoutParams recyclerParams = (ConstraintLayout.LayoutParams) recyclerView.getLayoutParams();
+            recyclerParams.topMargin = scaledRecyclerMarginTopPx;
+            recyclerView.setLayoutParams(recyclerParams);
+            recyclerView.setPadding(0, 0, 0, scaledRecyclerPaddingBottomPx);
+        }
+
+        // Scale OrderEmpty ImageView
+        if (emptyOrder != null) {
+            int baseEmptyImageWidthPx = (int) (225 * density); // Base size: 225dp
+            int scaledEmptyImageWidthPx = (int) (baseEmptyImageWidthPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            int baseEmptyImageHeightPx = (int) (223 * density); // Base size: 223dp
+            int scaledEmptyImageHeightPx = (int) (baseEmptyImageHeightPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            ViewGroup.LayoutParams emptyImageParams = emptyOrder.getLayoutParams();
+            emptyImageParams.width = scaledEmptyImageWidthPx;
+            emptyImageParams.height = scaledEmptyImageHeightPx;
+            emptyOrder.setLayoutParams(emptyImageParams);
+        }
+
+        // Scale OrderEmptyText TextView
+        if (emptyOrderText != null) {
+            float baseEmptyTextSizeSp = 20; // Base size: 20sp
+            float scaledEmptyTextSizeSp = baseEmptyTextSizeSp * Math.min(scaleFactor, 1.5f); // Cap at 1.5x
+            int baseEmptyTextMarginBottomPx = (int) (268 * density); // Base margin: 268dp
+            int scaledEmptyTextMarginBottomPx = (int) (baseEmptyTextMarginBottomPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            emptyOrderText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledEmptyTextSizeSp);
+            ConstraintLayout.LayoutParams emptyTextParams = (ConstraintLayout.LayoutParams) emptyOrderText.getLayoutParams();
+            emptyTextParams.bottomMargin = scaledEmptyTextMarginBottomPx;
+            emptyOrderText.setLayoutParams(emptyTextParams);
+        }
+
+        // Scale GoShopping Button
+        if (goShoppingText != null) {
+            float baseButtonTextSizeSp = 16; // Base size: 16sp
+            float scaledButtonTextSizeSp = baseButtonTextSizeSp * Math.min(scaleFactor, 1.5f); // Cap at 1.5x
+            int baseButtonPaddingPx = (int) (12 * density); // Base padding: 12dp
+            int scaledButtonPaddingPx = (int) (baseButtonPaddingPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            int baseButtonMarginTopPx = (int) (90 * density); // Base margin: 90dp
+            int scaledButtonMarginTopPx = (int) (baseButtonMarginTopPx * Math.min(scaleFactor, 1.5f)); // Cap at 1.5x
+            goShoppingText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledButtonTextSizeSp);
+            goShoppingText.setPadding(scaledButtonPaddingPx, scaledButtonPaddingPx, scaledButtonPaddingPx, scaledButtonPaddingPx);
+            ConstraintLayout.LayoutParams buttonParams = (ConstraintLayout.LayoutParams) goShoppingText.getLayoutParams();
+            buttonParams.topMargin = scaledButtonMarginTopPx;
+            goShoppingText.setLayoutParams(buttonParams);
+        }
 
         db = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();

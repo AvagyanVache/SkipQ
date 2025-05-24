@@ -11,7 +11,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -183,7 +185,8 @@ public class ProfileFragment extends Fragment {
         saturdayHours = view.findViewById(R.id.saturdayHours);
         sundayHours = view.findViewById(R.id.sundayHours);
 
-        // Setup UI based on role
+        scaleUIElements(view);
+
         if ("restaurant".equals(userRole)) {
             setupRestaurantProfile(view);
         } else {
@@ -248,6 +251,114 @@ public class ProfileFragment extends Fragment {
         loadUserData();
         return view;
     }
+    private void scaleUIElements(View view) {
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        int screenWidth = displayMetrics.widthPixels;
+        float density = displayMetrics.density;
+        float scaleFactor = Math.min(screenWidth / (360 * density), 1.5f); // Reference width: 360dp, cap at 1.5x
+
+        // Scale Profile Title
+        if (profileTitle != null) {
+            profileTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28 * scaleFactor);
+            ViewGroup.MarginLayoutParams titleParams = (ViewGroup.MarginLayoutParams) profileTitle.getLayoutParams();
+            titleParams.topMargin = (int) (8 * density * scaleFactor);
+            profileTitle.setLayoutParams(titleParams);
+        }
+
+        // Scale User Profile Section
+        if (profilePicture != null) {
+            ViewGroup.LayoutParams picParams = profilePicture.getLayoutParams();
+            picParams.width = (int) (120 * density * scaleFactor);
+            picParams.height = (int) (120 * density * scaleFactor);
+            profilePicture.setLayoutParams(picParams);
+        }
+        if (userNameSurname != null) {
+            userNameSurname.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22 * scaleFactor);
+            ViewGroup.MarginLayoutParams nameParams = (ViewGroup.MarginLayoutParams) userNameSurname.getLayoutParams();
+            nameParams.topMargin = (int) (8 * density * scaleFactor);
+            userNameSurname.setLayoutParams(nameParams);
+        }
+
+        // Scale Restaurant Profile Section
+        if (restaurantLogo != null) {
+            ViewGroup.LayoutParams logoParams = restaurantLogo.getLayoutParams();
+            logoParams.width = (int) (120 * density * scaleFactor);
+            logoParams.height = (int) (120 * density * scaleFactor);
+            restaurantLogo.setLayoutParams(logoParams);
+        }
+        if (restaurantNameDisplay != null) {
+            restaurantNameDisplay.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16 * scaleFactor);
+        }
+        if (restaurantPhoneDisplay != null) {
+            restaurantPhoneDisplay.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16 * scaleFactor);
+        }
+
+        // Scale Operating Hours
+        CheckBox[] checkboxes = {mondayCheckbox, tuesdayCheckbox, wednesdayCheckbox, thursdayCheckbox, fridayCheckbox, saturdayCheckbox, sundayCheckbox};
+        EditText[] hoursFields = {mondayHours, tuesdayHours, wednesdayHours, thursdayHours, fridayHours, saturdayHours, sundayHours};
+        for (CheckBox checkbox : checkboxes) {
+            if (checkbox != null) {
+                checkbox.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16 * scaleFactor);
+            }
+        }
+        for (EditText hoursField : hoursFields) {
+            if (hoursField != null) {
+                hoursField.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16 * scaleFactor);
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) hoursField.getLayoutParams();
+                params.leftMargin = (int) (12 * density * scaleFactor);
+                hoursField.setLayoutParams(params);
+            }
+        }
+
+        // Scale Buttons
+        if (saveRestaurantChanges != null) {
+            saveRestaurantChanges.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16 * scaleFactor);
+            saveRestaurantChanges.setPadding(
+                    (int) (12 * density * scaleFactor),
+                    (int) (12 * density * scaleFactor),
+                    (int) (12 * density * scaleFactor),
+                    (int) (12 * density * scaleFactor)
+            );
+        }
+        if (addAddressButton != null) {
+            addAddressButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16 * scaleFactor);
+            addAddressButton.setPadding(
+                    (int) (12 * density * scaleFactor),
+                    (int) (12 * density * scaleFactor),
+                    (int) (12 * density * scaleFactor),
+                    (int) (12 * density * scaleFactor)
+            );
+        }
+        if (btnLogout != null) {
+            btnLogout.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16 * scaleFactor);
+            btnLogout.setPadding(
+                    (int) (12 * density * scaleFactor),
+                    (int) (12 * density * scaleFactor),
+                    (int) (12 * density * scaleFactor),
+                    (int) (12 * density * scaleFactor)
+            );
+        }
+
+        // Scale Menu Section Icons and Text
+        int[] iconIds = {R.id.SettingsIcon, R.id.AccountIcon, R.id.AboutDeveloperIcon, R.id.FAQ_Icon, R.id.SettingsRedirect, R.id.AccountRedirect, R.id.AboutDeveloperRedirect, R.id.FAQ_Redirect};
+        int[] textIds = {R.id.Settings, R.id.Account, R.id.About_Developer, R.id.FAQ};
+        for (int iconId : iconIds) {
+            ImageView icon = view.findViewById(iconId);
+            if (icon != null) {
+                ViewGroup.LayoutParams params = icon.getLayoutParams();
+                params.width = (int) ((iconId == R.id.SettingsRedirect || iconId == R.id.AccountRedirect || iconId == R.id.AboutDeveloperRedirect || iconId == R.id.FAQ_Redirect ? 32 : 36) * density * scaleFactor);
+                params.height = (int) ((iconId == R.id.SettingsRedirect || iconId == R.id.AccountRedirect || iconId == R.id.AboutDeveloperRedirect || iconId == R.id.FAQ_Redirect ? 32 : 36) * density * scaleFactor);
+                icon.setLayoutParams(params);
+            }
+        }
+        for (int textId : textIds) {
+            TextView text = view.findViewById(textId);
+            if (text != null) {
+                text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18 * scaleFactor);
+            }
+        }
+    }
+
 
     private void setupUserProfile(View view) {
         Log.d(TAG, "Setting up user profile");

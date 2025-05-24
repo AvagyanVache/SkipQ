@@ -9,7 +9,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +31,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -118,7 +121,223 @@ public class CartFragment extends Fragment implements CartAdaptor.OnCartUpdatedL
   selectedLocationText=view.findViewById(R.id.selected_location_text);
   cartList = new ArrayList<>(CartManager.getInstance().getCartList());
   db = FirebaseFirestore.getInstance();
+  DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+  int screenWidth = displayMetrics.widthPixels;
+  float density = displayMetrics.density;
+  float scaleFactor = screenWidth / (360 * density); // Reference width: 360dp
+  int targetWidthPx = (int) (screenWidth * 0.75); // Target width: 75% of screen
 
+  // Scale Profile Icon
+  if (profileIcon != null) {
+   int baseIconSizePx = (int) (40 * density);
+   int scaledIconSizePx = (int) (baseIconSizePx * Math.min(scaleFactor, 1.5f));
+   int baseIconPaddingPx = (int) (4 * density);
+   int scaledIconPaddingPx = (int) (baseIconPaddingPx * Math.min(scaleFactor, 1.5f));
+   int baseIconMarginTopPx = (int) (16 * density);
+   int scaledIconMarginTopPx = (int) (baseIconMarginTopPx * Math.min(scaleFactor, 1.5f));
+
+   ViewGroup.LayoutParams iconParams = profileIcon.getLayoutParams();
+   iconParams.width = scaledIconSizePx;
+   iconParams.height = scaledIconSizePx;
+   profileIcon.setLayoutParams(iconParams);
+   profileIcon.setPadding(scaledIconPaddingPx, scaledIconPaddingPx, scaledIconPaddingPx, scaledIconPaddingPx);
+   ConstraintLayout.LayoutParams iconConstraintParams = (ConstraintLayout.LayoutParams) profileIcon.getLayoutParams();
+   iconConstraintParams.topMargin = scaledIconMarginTopPx;
+   profileIcon.setLayoutParams(iconConstraintParams);
+  }
+
+  // Scale Title Layout
+  LinearLayout titleLayout = view.findViewById(R.id.title);
+  if (titleLayout != null) {
+   int baseTitleMarginTopPx = (int) (60 * density);
+   int scaledTitleMarginTopPx = (int) (baseTitleMarginTopPx * Math.min(scaleFactor, 1.5f));
+   ConstraintLayout.LayoutParams titleParams = (ConstraintLayout.LayoutParams) titleLayout.getLayoutParams();
+   titleParams.topMargin = scaledTitleMarginTopPx;
+   titleLayout.setLayoutParams(titleParams);
+  }
+
+  // Scale Title Text
+  TextView titleText = view.findViewById(R.id.textView);
+  if (titleText != null) {
+   float baseTitleTextSizeSp = 40;
+   float scaledTitleTextSizeSp = baseTitleTextSizeSp * Math.min(scaleFactor, 1.5f);
+   titleText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledTitleTextSizeSp);
+  }
+
+  // Scale Cart Icon
+  ImageView cartIcon = view.findViewById(R.id.imageView2);
+  if (cartIcon != null) {
+   int baseCartIconWidthPx = (int) (63 * density);
+   int scaledCartIconWidthPx = (int) (baseCartIconWidthPx * Math.min(scaleFactor, 1.5f));
+   int baseCartIconHeightPx = (int) (52 * density);
+   int scaledCartIconHeightPx = (int) (baseCartIconHeightPx * Math.min(scaleFactor, 1.5f));
+
+   ViewGroup.LayoutParams cartIconParams = cartIcon.getLayoutParams();
+   cartIconParams.width = scaledCartIconWidthPx;
+   cartIconParams.height = scaledCartIconHeightPx;
+   cartIcon.setLayoutParams(cartIconParams);
+  }
+
+  // Scale Empty Cart Image
+  if (emptyCartImg != null) {
+   int baseEmptyImageWidthPx = (int) (150 * density);
+   int scaledEmptyImageWidthPx = (int) (baseEmptyImageWidthPx * Math.min(scaleFactor, 1.5f));
+   int baseEmptyImageHeightPx = (int) (150 * density);
+   int scaledEmptyImageHeightPx = (int) (baseEmptyImageHeightPx * Math.min(scaleFactor, 1.5f));
+
+   ViewGroup.LayoutParams emptyImageParams = emptyCartImg.getLayoutParams();
+   emptyImageParams.width = scaledEmptyImageWidthPx;
+   emptyImageParams.height = scaledEmptyImageHeightPx;
+   emptyCartImg.setLayoutParams(emptyImageParams);
+  }
+
+  // Scale Empty Cart Text
+  if (cartEmpty != null) {
+   float baseEmptyTextSizeSp = 25;
+   float scaledEmptyTextSizeSp = baseEmptyTextSizeSp * Math.min(scaleFactor, 1.5f);
+   cartEmpty.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledEmptyTextSizeSp);
+  }
+
+  // Scale Empty Cart Subtext
+  if (cartEmpty2 != null) {
+   float baseEmptySubtextSizeSp = 18;
+   float scaledEmptySubtextSizeSp = baseEmptySubtextSizeSp * Math.min(scaleFactor, 1.5f);
+   cartEmpty2.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledEmptySubtextSizeSp);
+  }
+
+  // Scale Search Food Button
+  if (searchFood != null) {
+   float baseButtonTextSizeSp = 16;
+   float scaledButtonTextSizeSp = baseButtonTextSizeSp * Math.min(scaleFactor, 1.5f);
+   int baseButtonMarginTopPx = (int) (90 * density);
+   int scaledButtonMarginTopPx = (int) (baseButtonMarginTopPx * Math.min(scaleFactor, 1.5f));
+   searchFood.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledButtonTextSizeSp);
+   ConstraintLayout.LayoutParams buttonParams = (ConstraintLayout.LayoutParams) searchFood.getLayoutParams();
+   buttonParams.topMargin = scaledButtonMarginTopPx;
+   searchFood.setLayoutParams(buttonParams);
+  }
+
+  // Scale Order Type Label
+  if (orderTypeLabel != null) {
+   float baseLabelTextSizeSp = 20;
+   float scaledLabelTextSizeSp = baseLabelTextSizeSp * Math.min(scaleFactor, 1.5f);
+   orderTypeLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledLabelTextSizeSp);
+  }
+
+  // Scale Radio Buttons
+  if (radioPickUp != null && radioEatIn != null) {
+   float baseRadioTextSizeSp = 16;
+   float scaledRadioTextSizeSp = baseRadioTextSizeSp * Math.min(scaleFactor, 1.5f);
+   radioPickUp.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledRadioTextSizeSp);
+   radioEatIn.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledRadioTextSizeSp);
+  }
+
+  // Scale Location Text
+  if (selectedLocationText != null && selectedLocationTextView != null) {
+   float baseLocationTextSizeSp = 20;
+   float scaledLocationTextSizeSp = baseLocationTextSizeSp * Math.min(scaleFactor, 1.5f);
+   selectedLocationText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledLocationTextSizeSp);
+   selectedLocationTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledLocationTextSizeSp);
+  }
+
+  // Scale Location Icon
+  if (locationPhoto != null) {
+   int baseLocationIconSizePx = (int) (30 * density);
+   int scaledLocationIconSizePx = (int) (baseLocationIconSizePx * Math.min(scaleFactor, 1.5f));
+
+   ViewGroup.LayoutParams locationIconParams = locationPhoto.getLayoutParams();
+   locationIconParams.width = scaledLocationIconSizePx;
+   locationIconParams.height = scaledLocationIconSizePx;
+   locationPhoto.setLayoutParams(locationIconParams);
+  }
+
+  // Scale Order Summary Text
+  TextView orderSummaryText = view.findViewById(R.id.textViewOrderSummary);
+  if (orderSummaryText != null) {
+   float baseSummaryTextSizeSp = 25;
+   float scaledSummaryTextSizeSp = baseSummaryTextSizeSp * Math.min(scaleFactor, 1.5f);
+   orderSummaryText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSummaryTextSizeSp);
+  }
+
+  // Scale Summary Items Text
+  TextView discountText = view.findViewById(R.id.textViewDiscount);
+  TextView discountValue = view.findViewById(R.id.Discount);
+  TextView readyTimeText = view.findViewById(R.id.textViewReadyTime);
+  TextView readyTimeValue = view.findViewById(R.id.TimeTillReady);
+  TextView totalText = view.findViewById(R.id.textViewTotal);
+  TextView totalValue = view.findViewById(R.id.totalPrice);
+
+  if (discountText != null && discountValue != null && readyTimeText != null &&
+          readyTimeValue != null && totalText != null && totalValue != null) {
+   float baseSummaryItemTextSizeSp = 20;
+   float scaledSummaryItemTextSizeSp = baseSummaryItemTextSizeSp * Math.min(scaleFactor, 1.5f);
+   float baseTimeTextSizeSp = 18;
+   float scaledTimeTextSizeSp = baseTimeTextSizeSp * Math.min(scaleFactor, 1.5f);
+
+   discountText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSummaryItemTextSizeSp);
+   discountValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSummaryItemTextSizeSp);
+   totalText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSummaryItemTextSizeSp);
+   totalValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSummaryItemTextSizeSp);
+   readyTimeText.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledTimeTextSizeSp);
+   readyTimeValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledTimeTextSizeSp);
+  }
+
+  // Scale Checkout Button
+  if (checkOutButton != null) {
+   float baseCheckoutTextSizeSp = 16;
+   float scaledCheckoutTextSizeSp = baseCheckoutTextSizeSp * Math.min(scaleFactor, 1.5f);
+   int baseCheckoutMarginTopPx = (int) (20 * density);
+   int scaledCheckoutMarginTopPx = (int) (baseCheckoutMarginTopPx * Math.min(scaleFactor, 1.5f));
+   checkOutButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledCheckoutTextSizeSp);
+   LinearLayout.LayoutParams checkoutParams = (LinearLayout.LayoutParams) checkOutButton.getLayoutParams();
+   checkoutParams.topMargin = scaledCheckoutMarginTopPx;
+   checkoutParams.width = targetWidthPx; // Set to 75% of screen width
+   checkOutButton.setLayoutParams(checkoutParams);
+  }
+
+  // Scale RecyclerView
+  if (recyclerView != null) {
+   ViewGroup.LayoutParams recyclerParams = recyclerView.getLayoutParams();
+   recyclerParams.width = targetWidthPx; // Set to 75% of screen width
+   recyclerView.setLayoutParams(recyclerParams);
+  }
+
+  // Scale TextInputLayoutPhone
+  if (textInputLayoutPhone != null) {
+   ViewGroup.LayoutParams phoneLayoutParams = textInputLayoutPhone.getLayoutParams();
+   phoneLayoutParams.width = targetWidthPx; // Set to 75% of screen width
+   textInputLayoutPhone.setLayoutParams(phoneLayoutParams);
+  }
+
+  // Scale TextInputName
+  if (textInputName != null) {
+   ViewGroup.LayoutParams nameLayoutParams = textInputName.getLayoutParams();
+   nameLayoutParams.width = targetWidthPx; // Set to 75% of screen width
+   textInputName.setLayoutParams(nameLayoutParams);
+  }
+
+  // Scale Order Type Section
+  LinearLayout orderTypeSection = view.findViewById(R.id.orderTypeSection);
+  if (orderTypeSection != null) {
+   ViewGroup.LayoutParams orderTypeParams = orderTypeSection.getLayoutParams();
+   orderTypeParams.width = targetWidthPx; // Set to 75% of screen width
+   orderTypeSection.setLayoutParams(orderTypeParams);
+  }
+
+  // Scale Customer Count Layout
+  if (customerCountLayout != null) {
+   ViewGroup.LayoutParams customerCountParams = customerCountLayout.getLayoutParams();
+   customerCountParams.width = targetWidthPx; // Set to 75% of screen width
+   customerCountLayout.setLayoutParams(customerCountParams);
+  }
+
+  // Scale LinearLayout (Order Summary)
+  if (linearLayout != null) {
+   ViewGroup.LayoutParams linearLayoutParams = linearLayout.getLayoutParams();
+   linearLayoutParams.width = targetWidthPx; // Set to 75% of screen width
+   linearLayout.setLayoutParams(linearLayoutParams);
+
+  }
   requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
    @Override
    public void handleOnBackPressed() {

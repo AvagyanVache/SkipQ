@@ -44,6 +44,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
+            android:id="@+id/patrastEText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -53,15 +54,15 @@
             android:fontFamily="sans-serif-medium"
             android:textColor="@color/black"
             android:textSize="24sp"
-            android:textStyle="bold" />
+        android:textStyle="bold" />
 
         <ImageView
             android:id="@+id/profileIcon"
             android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/profile_picture"
-            android:padding="4dp"
-            android:contentDescription="Profile Icon" />
+        android:layout_height="40dp"
+        android:background="@drawable/profile_picture"
+        android:padding="4dp"
+        android:contentDescription="Profile Icon" />
     </LinearLayout>
 
     <!-- Search Bar -->
@@ -75,10 +76,10 @@
         android:iconifiedByDefault="false"
         android:textColorHint="#808080"
         android:padding="8dp"
-        app:layout_constraintWidth_percent="0.92"
-        app:layout_constraintStart_toStartOf="@id/guideline_start"
-        app:layout_constraintEnd_toEndOf="@id/guideline_end"
-        app:layout_constraintTop_toBottomOf="@id/topBar" />
+    app:layout_constraintWidth_percent="0.92"
+    app:layout_constraintStart_toStartOf="@id/guideline_start"
+    app:layout_constraintEnd_toEndOf="@id/guideline_end"
+    app:layout_constraintTop_toBottomOf="@id/topBar" />
 
     <!-- Order Card -->
     <androidx.cardview.widget.CardView
@@ -94,16 +95,16 @@
         app:layout_constraintTop_toBottomOf="@id/searchBar">
 
         <TextView
+            android:id="@+id/orderCardText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp"
-            android:gravity="center"
-            android:text="Order and save your time\nwith one click"
-            android:textAlignment="center"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+        android:gravity="center"
+        android:text="Order and save your time\nwith one click"
+        android:textAlignment="center"
+        android:textSize="16sp"
+        android:textStyle="bold" />
     </androidx.cardview.widget.CardView>
-
     <!-- Categories RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewCategories"

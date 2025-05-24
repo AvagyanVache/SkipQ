@@ -9,7 +9,9 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,7 +71,7 @@ public class ProfileAccountFragment extends Fragment {
         backButton= view.findViewById(R.id.back);
         userEmail = view.findViewById(R.id.UserEmail);
         userPhoneNumber = view.findViewById(R.id.userPhoneNumber);
-
+        scaleUIElements(view);
         backButton.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
 
         loadUserData();
@@ -107,6 +109,101 @@ public class ProfileAccountFragment extends Fragment {
                     });
         } else {
             Log.w(TAG, "No user logged in or fragment not attached");
+        }
+    }
+    private void scaleUIElements(View view) {
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        int screenWidth = displayMetrics.widthPixels;
+        float density = displayMetrics.density;
+        float scaleFactor = Math.min(screenWidth / (360 * density), 1.5f); // Reference width: 360dp, cap at 1.5x
+
+        // Scale Back Button
+        ImageView back = view.findViewById(R.id.back);
+        if (back != null) {
+            ViewGroup.LayoutParams params = back.getLayoutParams();
+            params.width = (int) (32 * density * scaleFactor);
+            params.height = (int) (32 * density * scaleFactor);
+            ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) back.getLayoutParams();
+            marginParams.leftMargin = (int) (16 * density * scaleFactor);
+            marginParams.topMargin = (int) (40 * density * scaleFactor);
+            back.setLayoutParams(params);
+        }
+
+        // Scale Account Title
+        TextView accountTitle = view.findViewById(R.id.AccountTitle);
+        if (accountTitle != null) {
+            accountTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28 * scaleFactor);
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) accountTitle.getLayoutParams();
+            params.bottomMargin = (int) (32 * density * scaleFactor);
+            accountTitle.setLayoutParams(params);
+        }
+
+        // Scale Email Section
+        ImageView emailIcon = view.findViewById(R.id.emailIcon);
+        if (emailIcon != null) {
+            ViewGroup.LayoutParams params = emailIcon.getLayoutParams();
+            params.width = (int) (40 * density * scaleFactor);
+            params.height = (int) (40 * density * scaleFactor);
+            ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) emailIcon.getLayoutParams();
+            marginParams.leftMargin = (int) (24 * density * scaleFactor);
+            emailIcon.setLayoutParams(params);
+        }
+        TextView emailLabel = view.findViewById(R.id.emailLabel);
+        if (emailLabel != null) {
+            emailLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18 * scaleFactor);
+        }
+        if (userEmail != null) {
+            userEmail.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16 * scaleFactor);
+        }
+
+        // Scale Phone Section
+        ImageView phoneIcon = view.findViewById(R.id.phoneIcon);
+        if (phoneIcon != null) {
+            ViewGroup.LayoutParams params = phoneIcon.getLayoutParams();
+            params.width = (int) (40 * density * scaleFactor);
+            params.height = (int) (40 * density * scaleFactor);
+            ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) phoneIcon.getLayoutParams();
+            marginParams.leftMargin = (int) (24 * density * scaleFactor);
+            phoneIcon.setLayoutParams(params);
+        }
+        TextView phoneLabel = view.findViewById(R.id.phoneLabel);
+        if (phoneLabel != null) {
+            phoneLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18 * scaleFactor);
+        }
+        if (userPhoneNumber != null) {
+            userPhoneNumber.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16 * scaleFactor);
+        }
+        ImageView paymentIcon = view.findViewById(R.id.paymentIcon);
+        if (phoneIcon != null) {
+            ViewGroup.LayoutParams params = paymentIcon.getLayoutParams();
+            params.width = (int) (40 * density * scaleFactor);
+            params.height = (int) (40 * density * scaleFactor);
+            ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) paymentIcon.getLayoutParams();
+            marginParams.leftMargin = (int) (24 * density * scaleFactor);
+            paymentIcon.setLayoutParams(params);
+        }
+        TextView paymentLabel = view.findViewById(R.id.paymentLabel);
+        if (paymentLabel != null) {
+            paymentLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18 * scaleFactor);
+        }
+        if (userPhoneNumber != null) {
+            userPhoneNumber.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16 * scaleFactor);
+        }
+        TextView paymentText = view.findViewById(R.id.paymentText);
+        if (paymentText != null) {
+            paymentText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18 * scaleFactor);
+        }
+        if (userPhoneNumber != null) {
+            userPhoneNumber.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16 * scaleFactor);
+        }
+        ImageView selectPayment = view.findViewById(R.id.selectPayment);
+        if (selectPayment != null) {
+            ViewGroup.LayoutParams params = selectPayment.getLayoutParams();
+            params.width = (int) (40 * density * scaleFactor);
+            params.height = (int) (40* density * scaleFactor);
+            ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) selectPayment.getLayoutParams();
+            marginParams.rightMargin = (int) (24 * density * scaleFactor);
+            selectPayment.setLayoutParams(params);
         }
     }
 

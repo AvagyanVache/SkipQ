@@ -38,49 +38,47 @@
         android:gravity="center"
         android:layout_marginTop="20dp"
         android:padding="8dp"
-        android:background="@drawable/ripple_effect"
-        app:layout_constraintStart_toEndOf="@+id/backButton"
-        app:layout_constraintEnd_toStartOf="@+id/restaurantInfo"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="0.6">
+    android:background="@drawable/ripple_effect"
+    app:layout_constraintStart_toEndOf="@+id/backButton"
+    app:layout_constraintEnd_toStartOf="@+id/restaurantInfo"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintWidth_percent="0.6">
 
-        <TextView
-            android:id="@+id/location_text"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Select Location"
-            android:gravity="center"
-            android:textColor="@color/black"
-            android:layout_marginTop="10dp"
-            android:textSize="20sp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="10dp"
-            android:ellipsize="end"
-            android:maxLines="1" />
-
-        <ImageView
-            android:id="@+id/dropdownLocation"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:rotation="270"
-            android:background="@drawable/ripple_effect"
-            app:srcCompat="@drawable/back_btn"
-  />
-    </LinearLayout>
+    <TextView
+        android:id="@+id/location_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Select Location"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="10dp"
+        android:textSize="20sp"
+    android:ellipsize="end"
+    android:maxLines="1" />
 
     <ImageView
-        android:id="@+id/restaurantInfo"
+        android:id="@+id/dropdownLocation"
         android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginTop="35dp"
-        android:background="@drawable/ripple_effect"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/info"
-        app:tint="@color/black" />
+    android:layout_height="30dp"
+    android:rotation="270"
+    android:background="@drawable/ripple_effect"
+    app:srcCompat="@drawable/back_btn" />
+</LinearLayout>
 
+<ImageView
+android:id="@+id/restaurantInfo"
+android:layout_width="30dp"
+    android:layout_height="30dp"
+    android:layout_marginEnd="20dp"
+    android:layout_marginTop="35dp"
+    android:background="@drawable/ripple_effect"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:srcCompat="@drawable/info"
+    app:tint="@color/black" />
     <TextView
             android:id="@+id/address_text"
             android:layout_width="0dp"
