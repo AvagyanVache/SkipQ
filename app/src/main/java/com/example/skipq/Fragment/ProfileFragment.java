@@ -122,9 +122,62 @@ public class ProfileFragment extends Fragment {
         logoPickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null) {
                 logoUri = result.getData().getData();
-                Glide.with(this).load(logoUri).into(restaurantLogo);
-                Log.d(TAG, "Logo selected: " + logoUri);
-                checkForChanges();
+                if (logoUri != null && isAdded()) {
+                    Glide.with(this).load(logoUri).into(restaurantLogo);
+                    Log.d(TAG, "Logo selected: " + logoUri);
+
+                    // Upload the new logo to Firebase Storage
+                    if (!isNetworkAvailable()) {
+                        Log.w(TAG, "No internet connection");
+                        Toast.makeText(getContext(), "No internet connection", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    String sanitizedName = restaurantId.replaceAll("[^a-zA-Z0-9]", "_");
+                    StorageReference logoRef = storage.getReference().child("restaurant_logos/" + sanitizedName + "_logo.jpg");
+                    logoRef.putFile(logoUri)
+                            .addOnSuccessListener(taskSnapshot -> logoRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                                String logoUrl = uri.toString();
+                                Log.d(TAG, "Logo uploaded successfully, URL: " + logoUrl);
+
+                                // Update Firestore with the new logo URL
+                                Map<String, Object> updates = new HashMap<>();
+                                updates.put("logoUrl", logoUrl);
+                                db.collection("FoodPlaces").document(restaurantId)
+                                        .update(updates)
+                                        .addOnSuccessListener(aVoid -> {
+                                            Log.d(TAG, "Restaurant logo URL updated in Firestore: " + logoUrl);
+                                            Toast.makeText(getContext(), "Restaurant logo updated", Toast.LENGTH_SHORT).show();
+
+                                            // Update users collection with logoUrl as profilePictureUrl
+                                            FirebaseUser user = mAuth.getCurrentUser();
+                                            if (user != null) {
+                                                Map<String, Object> userUpdates = new HashMap<>();
+                                                userUpdates.put("profilePictureUrl", logoUrl);
+                                                db.collection("users").document(user.getUid())
+                                                        .set(userUpdates, SetOptions.merge())
+                                                        .addOnSuccessListener(aVoid2 -> Log.d(TAG, "User profile picture URL updated: " + logoUrl))
+                                                        .addOnFailureListener(e -> Log.e(TAG, "Failed to update user profile picture URL", e));
+                                            }
+
+                                            // Update originalLogoUrl to reflect the new URL
+                                            originalLogoUrl = logoUrl;
+                                            logoUri = null; // Reset logoUri
+                                            checkForChanges(); // Update save button visibility
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Log.e(TAG, "Failed to update restaurant logo URL in Firestore", e);
+                                            Toast.makeText(getContext(), "Failed to update logo", Toast.LENGTH_SHORT).show();
+                                        });
+                            }))
+                            .addOnFailureListener(e -> {
+                                Log.e(TAG, "Failed to upload logo to Storage", e);
+                                Toast.makeText(getContext(), "Failed to upload logo: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            });
+                } else {
+                    Log.w(TAG, "Logo URI is null");
+                    Toast.makeText(getContext(), "Failed to select logo", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
